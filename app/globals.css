@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: #10B981;
+  --secondary: #0F172A;
+  --background: #FAFAFA;
+  --card-bg: #FFFFFF;
+  --text-color: #0F172A;
+  --accent: #F59E0B;
+  --font-family: 'Inter', sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--text-color);
+  font-family: var(--font-family);
+}
+
+/* Ocultar scrollbar pero mantener scroll */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Color picker styles */
+input[type="color"] {
+  -webkit-appearance: none;
+  appearance: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 8px;
+}
+
+/* Scrollbar personalizada para el panel admin */
+.admin-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.admin-scroll::-webkit-scrollbar-track {
+  background: rgba(127, 127, 127, 0.1);
+  border-radius: 3px;
+}
+.admin-scroll::-webkit-scrollbar-thumb {
+  background: rgba(127, 127, 127, 0.3);
+  border-radius: 3px;
+}
+.admin-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(127, 127, 127, 0.5);
+}
+
+/* Animaciones para el simulador móvil */
+@keyframes phone-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+.phone-frame {
+  animation: phone-pulse 0.3s ease-in-out;
+}
+
+.dark {
+  color-scheme: dark;
+}
