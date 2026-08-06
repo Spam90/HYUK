@@ -32,6 +32,3 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-# consolidacion de codigo
-codigo_consolidado.txt
