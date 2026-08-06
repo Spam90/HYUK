@@ -6,6 +6,9 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata = {
   title: 'SAS - Catálogo Digital',
   description: 'Catálogo y menú digital con pedidos a WhatsApp',
+  icons: {
+    icon: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({ children }) {
