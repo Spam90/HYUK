@@ -6,6 +6,8 @@ import { Plus, Edit2, Trash2, Search, FolderOpen, ArrowLeft, GripVertical } from
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 
+export const dynamic = 'force-dynamic';
+
 export default function CategoriesPage() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);

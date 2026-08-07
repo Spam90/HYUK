@@ -259,6 +259,8 @@ function CustomizePanel() {
   );
 }
 
+export const dynamic = 'force-dynamic';
+
 export default function CustomizePage() {
   return (
     <ThemeProvider initialSettings={DEFAULT_SETTINGS}>
