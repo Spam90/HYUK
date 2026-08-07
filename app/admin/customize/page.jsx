@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Palette, LayoutGrid, Image as ImageIcon, MessageCircle, Save, RotateCcw, Check, ArrowLeft, Smartphone } from 'lucide-react';
+import { Palette, LayoutGrid, Image as ImageIcon, MessageCircle, Save, RotateCcw, Check, ArrowLeft, Smartphone, Loader2 } from 'lucide-react';
 import ThemeProvider, { useTheme } from '@/components/theme/ThemeProvider';
 import { CartProvider } from '@/context/CartContext';
 import { DEFAULT_SETTINGS } from '@/lib/theme/defaults';
+import { createClient } from '@/lib/supabase/client';
 import ColorControls from '@/components/admin/controls/ColorControls';
 import LayoutControls from '@/components/admin/controls/LayoutControls';
 import BannerControls from '@/components/admin/controls/BannerControls';
@@ -21,20 +22,77 @@ const TABS = [
 ];
 
 function CustomizePanel() {
-  const { settings, updateSettings, resetSettings } = useTheme();
+  const { settings, updateSettings, resetSettings, updateFullSettings } = useTheme();
   const [activeTab, setActiveTab] = useState('colors');
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Simular guardado
-  const handleSave = () => {
+  // Cargar settings desde Supabase al montar
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+
+        if (!user) {
+          setError('No hay sesión activa');
+          setIsLoading(false);
+          return;
+        }
+
+        const { data, error: fetchError } = await supabase
+          .from('profiles')
+          .select('settings')
+          .eq('id', user.id)
+          .single();
+
+        if (fetchError) throw fetchError;
+
+        if (data?.settings) {
+          updateFullSettings(data.settings);
+        }
+      } catch (err) {
+        console.error('Error cargando settings:', err);
+        setError('Error al cargar la configuración');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadSettings();
+  }, [updateFullSettings]);
+
+  // Guardar cambios en Supabase
+  const handleSave = async () => {
     setIsSaving(true);
-    // En producción: guardar en Supabase
-    setTimeout(() => {
-      setIsSaving(false);
+    setError(null);
+
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        throw new Error('No hay sesión activa');
+      }
+
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ settings })
+        .eq('id', user.id);
+
+      if (updateError) throw updateError;
+
+      // Mostrar notificación de éxito
       setIsSaved(true);
       setTimeout(() => setIsSaved(false), 2000);
-    }, 1000);
+    } catch (err) {
+      console.error('Error guardando settings:', err);
+      setError('Error al guardar los cambios');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Renderizar controles según tab activo
@@ -85,7 +143,7 @@ function CustomizePanel() {
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={handleSave}
-              disabled={isSaving}
+              disabled={isSaving || isLoading}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-theme-lg text-sm font-bold text-white shadow-lg transition-all ${
                 isSaved ? 'bg-green-500' : ''
               }`}
@@ -97,7 +155,10 @@ function CustomizePanel() {
                   Guardado
                 </>
               ) : isSaving ? (
-                <span className="animate-pulse">Guardando...</span>
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Guardando...
+                </>
               ) : (
                 <>
                   <Save className="w-4 h-4" />
@@ -109,57 +170,76 @@ function CustomizePanel() {
         </div>
       </header>
 
+      {/* Notificación de error */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-theme-lg mx-4 mt-4">
+          {error}
+        </div>
+      )}
+
+      {/* Loading state */}
+      {isLoading && (
+        <div className="flex items-center justify-center h-[calc(100vh-64px)]">
+          <div className="text-center">
+            <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4" style={{ color: settings.theme.primaryColor }} />
+            <p className="text-text/60">Cargando configuración...</p>
+          </div>
+        </div>
+      )}
+
       {/* Split-screen layout */}
-      <div className="flex h-[calc(100vh-64px)]">
-        {/* Panel izquierdo - Controles */}
-        <div className="w-full lg:w-[420px] xl:w-[480px] border-r border-secondary/10 flex flex-col bg-card/50">
-          {/* Tabs */}
-          <div className="flex border-b border-secondary/10 overflow-x-auto no-scrollbar">
-            {TABS.map((tab) => {
-              const Icon = tab.icon;
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-1.5 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors relative ${
-                    isActive ? 'text-primary' : 'text-text/50 hover:text-text'
-                  }`}
+      {!isLoading && (
+        <div className="flex h-[calc(100vh-64px)]">
+          {/* Panel izquierdo - Controles */}
+          <div className="w-full lg:w-[420px] xl:w-[480px] border-r border-secondary/10 flex flex-col bg-card/50">
+            {/* Tabs */}
+            <div className="flex border-b border-secondary/10 overflow-x-auto no-scrollbar">
+              {TABS.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-1.5 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors relative ${
+                      isActive ? 'text-primary' : 'text-text/50 hover:text-text'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    {tab.label}
+                    {isActive && (
+                      <motion.div
+                        layoutId="tab-underline"
+                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
+                      />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Contenido de controles */}
+            <div className="flex-1 overflow-y-auto admin-scroll p-4">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  <Icon className="w-4 h-4" />
-                  {tab.label}
-                  {isActive && (
-                    <motion.div
-                      layoutId="tab-underline"
-                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
-                    />
-                  )}
-                </button>
-              );
-            })}
+                  {renderControls()}
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </div>
 
-          {/* Contenido de controles */}
-          <div className="flex-1 overflow-y-auto admin-scroll p-4">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTab}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-              >
-                {renderControls()}
-              </motion.div>
-            </AnimatePresence>
+          {/* Panel derecho - Preview */}
+          <div className="hidden lg:flex flex-1 items-center justify-center bg-gradient-to-br from-secondary/5 to-primary/5 p-8">
+            <PhonePreview settings={settings} />
           </div>
         </div>
-
-        {/* Panel derecho - Preview */}
-        <div className="hidden lg:flex flex-1 items-center justify-center bg-gradient-to-br from-secondary/5 to-primary/5 p-8">
-          <PhonePreview settings={settings} />
-        </div>
-      </div>
+      )}
 
       {/* Preview móvil (solo en pantallas pequeñas) */}
       <div className="lg:hidden fixed bottom-4 right-4 z-40">
