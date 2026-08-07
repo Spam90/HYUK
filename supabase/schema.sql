@@ -134,3 +134,7 @@ CREATE POLICY "Owner manage product options" ON product_options
       AND p.store_id = auth.uid()
     )
   );
+
+-- Política para lectura pública de perfiles (catálogo público)
+CREATE POLICY "Public read profiles" ON profiles
+  FOR SELECT USING (true);
