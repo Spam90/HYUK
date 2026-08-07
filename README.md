@@ -259,10 +259,14 @@ Este proyecto es propietario. Todos los derechos reservados.
 - **Base de datos**: Schema completo con RLS, triggers e índices
 
 ### 📁 Archivos creados o modificados en este paso
-- `app/admin/products/page.jsx` - CRUD de productos
-- `app/admin/categories/page.jsx` - CRUD de categorías
-- `app/admin/page.jsx` - Dashboard con navegación actualizada
-- `supabase/schema.sql` - Política RLS para lectura pública de profiles
+- `app/admin/products/page.jsx` - CRUD de productos con lazy loading de Supabase
+- `app/admin/categories/page.jsx` - CRUD de categorías con lazy loading de Supabase
+- `app/admin/page.jsx` - Dashboard con navegación actualizada (Categorías, Productos)
+- `app/admin/customize/page.jsx` - Panel de personalización con manejo de errores mejorado
+- `app/login/page.jsx` - Redirección inteligente con parámetro `?redirect=`
+- `app/signup/page.jsx` - Redirección inteligente después de registro
+- `app/auth/callback/route.js` - Ruta de callback para confirmación de email
+- `supabase/schema.sql` - Políticas RLS para profiles, fix error 406
 - `public/favicon.ico` - Favicon para corregir error 404
 
 ### 🚀 Siguientes pasos recomendados / Faltantes
@@ -279,3 +283,6 @@ Este proyecto es propietario. Todos los derechos reservados.
 - **Rate limit Supabase**: El endpoint `/signup` puede retornar 429 si se intentan muchos registros seguidos (limitación de Supabase, no es bug)
 - **Framer Motion warning**: `NotFoundError: Failed to execute 'removeChild'` - Warning menor al desmontar componentes, no crítico
 - **Imágenes**: Actualmente se usan URLs externas, falta implementar almacenamiento propio
+- **Configuración de Supabase Auth**: Para que la confirmación de email funcione correctamente, configurar en Supabase Dashboard:
+  - Site URL: `https://hyuk.vercel.app`
+  - Redirect URLs: `https://hyuk.vercel.app/auth/callback`
