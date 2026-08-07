@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { X, Plus, Minus, Trash2, MessageCircle, MapPin, User, CreditCard, Bike, Store } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useTheme } from '@/components/theme/ThemeProvider';
-import { formatPrice, generateWhatsAppMessage, buildWhatsAppUrl } from '@/lib/whatsapp/checkout';
+import { formatPrice, generateWhatsAppUrl } from '@/lib/whatsapp/checkout';
 
 export default function CartDrawer({ store, settings }) {
   const { 
@@ -78,8 +78,8 @@ export default function CartDrawer({ store, settings }) {
       return;
     }
 
-    // Generar mensaje
-    const message = generateWhatsAppMessage({
+    // Generar URL de WhatsApp
+    const whatsappUrl = generateWhatsAppUrl({
       storeName,
       storePhone,
       cartItems,
@@ -92,8 +92,6 @@ export default function CartDrawer({ store, settings }) {
       },
       total: cartTotal,
     });
-
-    const whatsappUrl = buildWhatsAppUrl(storePhone, message);
     
     // Abrir WhatsApp
     window.open(whatsappUrl, '_blank');
