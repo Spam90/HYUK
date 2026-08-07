@@ -286,3 +286,142 @@ Este proyecto es propietario. Todos los derechos reservados.
 - **Configuración de Supabase Auth**: Para que la confirmación de email funcione correctamente, configurar en Supabase Dashboard:
   - Site URL: `https://hyuk.vercel.app`
   - Redirect URLs: `https://hyuk.vercel.app/auth/callback`
+
+---
+
+## 🚀 Guía de Despliegue en Producción
+
+### 1. Configuración de Supabase
+
+#### Paso 1: Crear proyecto en Supabase
+1. Ir a [https://supabase.com](https://supabase.com)
+2. Crear una cuenta o iniciar sesión
+3. Click en "New Project"
+4. Elegir organización, nombre del proyecto y contraseña de la base de datos
+5. Esperar 2-3 minutos mientras se crea el proyecto
+
+#### Paso 2: Obtener credenciales de Supabase
+1. En el dashboard de Supabase, ir a **Settings** (icono de engranaje) → **API**
+2. Copiar los siguientes valores:
+   - **Project URL** (ej: `https://xyz123.supabase.co`)
+   - **anon/public key** (comienza con `eyJ...`)
+
+#### Paso 3: Ejecutar el schema SQL
+1. En Supabase, ir a **SQL Editor** (icono de base de datos en el menú lateral)
+2. Click en **New query**
+3. Abrir el archivo `supabase/schema.sql` del proyecto
+4. Copiar **todo el contenido** del archivo
+5. Pegarlo en el editor de SQL de Supabase
+6. Click en **Run** (o presionar `Ctrl+Enter`)
+7. Verificar que no haya errores (deberías ver "Success. No rows returned")
+
+#### Paso 4: Configurar autenticación
+1. Ir a **Authentication** → **URL Configuration**
+2. Configurar:
+   - **Site URL**: `https://hyuk.vercel.app` (o tu dominio personalizado)
+   - **Redirect URLs**: Agregar las siguientes URLs (una por línea):
+     ```
+     https://hyuk.vercel.app/auth/callback
+     https://hyuk.vercel.app/admin/customize
+     http://localhost:3000/auth/callback
+     http://localhost:3000/admin/customize
+     ```
+
+### 2. Configuración de Vercel
+
+#### Paso 1: Preparar el repositorio
+1. Subir el código a GitHub (ya debería estar sincronizado)
+2. Ir a [https://vercel.com](https://vercel.com)
+3. Iniciar sesión con tu cuenta de GitHub
+
+#### Paso 2: Importar proyecto
+1. Click en **Add New...** → **Project**
+2. Seleccionar el repositorio `HYUK` de la lista
+3. Vercel detectará automáticamente que es un proyecto Next.js
+
+#### Paso 3: Configurar variables de entorno
+1. En la sección **Environment Variables**, agregar:
+   - **Name**: `NEXT_PUBLIC_SUPABASE_URL`
+   - **Value**: (pegar la URL de Supabase del paso 2.2)
+   - **Environment**: Marcar ✅ Production, ✅ Preview, ✅ Development
+   
+   - **Name**: `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - **Value**: (pegar la anon key de Supabase del paso 2.2)
+   - **Environment**: Marcar ✅ Production, ✅ Preview, ✅ Development
+
+#### Paso 4: Deploy
+1. Click en **Deploy**
+2. Esperar 2-3 minutos mientras Vercel compila y despliega
+3. Una vez finalizado, verás un mensaje "Congratulations!" y la URL de tu proyecto
+
+#### Paso 5: Verificar despliegue
+1. Abrir la URL proporcionada por Vercel (ej: `https://hyuk.vercel.app`)
+2. Verificar que la landing page cargue correctamente
+3. Probar el flujo de registro en `/signup`
+4. Verificar que el email de confirmación llegue y redirija correctamente
+
+### 3. Configuración de Dominio Personalizado (Opcional)
+
+Si tienes un dominio propio (ej: `mitienda.com`):
+
+1. En Vercel, ir a **Settings** → **Domains**
+2. Agregar tu dominio
+3. Vercel te dará instrucciones para configurar los DNS en tu proveedor de dominio
+4. Actualizar las URLs en Supabase Auth con tu nuevo dominio
+
+### 4. Verificación Post-Despliegue
+
+- [ ] Landing page carga correctamente
+- [ ] Registro de usuario funciona
+- [ ] Email de confirmación llega y redirige correctamente
+- [ ] Login funciona
+- [ ] Panel de personalización carga
+- [ ] CRUD de categorías funciona
+- [ ] CRUD de productos funciona
+- [ ] Catálogo público se muestra correctamente
+- [ ] Carrito de compras funciona
+- [ ] Generación de pedido por WhatsApp funciona
+
+---
+
+## 📊 Estado Actual del Proyecto
+
+### ✅ Módulos completados
+- **Landing Page comercial**: Hero, features, presets, pricing, CTA, footer
+- **Autenticación completa**: Registro, login, logout, confirmación de email
+- **Panel de personalización**: Editor visual split-screen con vista previa en tiempo real
+- **Gestión de productos**: CRUD completo con búsqueda y filtros
+- **Gestión de categorías**: CRUD completo con generación de slugs
+- **Catálogo público**: Vista por slug con temas dinámicos
+- **Carrito de compras**: Context API con persistencia en sesión
+- **Checkout WhatsApp**: Generador de mensajes formateados con emojis
+- **Motor de temas**: Variables CSS dinámicas, 6 fuentes Google, 4 modos de borde
+- **SEO dinámico**: Metadatos por tienda, Open Graph, Twitter Cards
+- **Middleware**: Protección de rutas `/admin/*` con redirección a login
+- **Base de datos**: Schema completo con RLS, triggers e índices
+- **Lazy loading**: Cliente Supabase carga solo en cliente para evitar errores de build
+- **Responsive**: Todas las páginas son mobile-first
+
+### 📁 Archivos creados o modificados en este paso
+- `app/page.jsx` - Landing page comercial completa con animaciones
+- `app/[slug]/page.jsx` - SEO dinámico mejorado con Open Graph y Twitter Cards
+- `app/layout.jsx` - Metadatos globales actualizados
+- `.env.example` - Variables de entorno documentadas
+- `README.md` - Guía de despliegue completa agregada
+
+### 🚀 Siguientes pasos recomendados / Faltantes
+- **Subida de imágenes**: Implementar Supabase Storage para banners y productos
+- **Gestión de opciones de producto**: CRUD de variantes/tamaños/extras
+- **Dashboard de pedidos**: Ver pedidos recibidos por WhatsApp
+- **Analytics**: Métricas de visitas y conversiones
+- **Notificaciones**: Email/SMS cuando llega un pedido
+- **Multi-idioma**: Soporte i18n para múltiples idiomas
+- **Métodos de pago**: Integración con pasarelas de pago online
+- **Skeleton loaders**: Estados de carga visuales mientras se obtienen datos
+- **Estados vacíos mejorados**: Mensajes más amigables para categorías sin productos
+
+### ⚠️ Errores o advertencias pendientes
+- **Rate limit Supabase**: El endpoint `/signup` puede retornar 429 si se intentan muchos registros seguidos (limitación de Supabase, no es bug)
+- **Framer Motion warning**: `NotFoundError: Failed to execute 'removeChild'` - Warning menor al desmontar componentes, no crítico
+- **Imágenes**: Actualmente se usan URLs externas, falta implementar almacenamiento propio
+- **Configuración de Supabase Auth**: Requiere configuración manual en el dashboard de Supabase (ver sección de despliegue)
