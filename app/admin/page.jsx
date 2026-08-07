@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Palette, Package, ShoppingBag, Settings, ExternalLink, LogOut, Store } from 'lucide-react';
+import { Palette, Package, ShoppingBag, Settings, ExternalLink, LogOut, Store, FolderOpen } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 
 export default function AdminDashboard() {
@@ -27,18 +27,18 @@ export default function AdminDashboard() {
 
         <nav className="flex-1 space-y-1">
           <a
-            href="/admin"
-            className="flex items-center gap-3 px-4 py-3 rounded-theme-lg bg-primary/10 text-primary font-medium"
-          >
-            <Package className="w-4 h-4" />
-            Dashboard
-          </a>
-          <a
             href="/admin/customize"
             className="flex items-center gap-3 px-4 py-3 rounded-theme-lg text-text/60 hover:bg-secondary/5 hover:text-text transition-colors"
           >
             <Palette className="w-4 h-4" />
             Personalizar
+          </a>
+          <a
+            href="/admin/categories"
+            className="flex items-center gap-3 px-4 py-3 rounded-theme-lg text-text/60 hover:bg-secondary/5 hover:text-text transition-colors"
+          >
+            <FolderOpen className="w-4 h-4" />
+            Categorías
           </a>
           <a
             href="/admin/products"

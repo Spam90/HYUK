@@ -241,3 +241,41 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-anon-key
 ## 📄 Licencia
 
 Este proyecto es propietario. Todos los derechos reservados.
+
+---
+
+## 📊 Estado Actual del Proyecto
+
+### ✅ Módulos completados
+- **Autenticación completa**: Registro, login, logout con Supabase Auth
+- **Panel de personalización**: Editor visual split-screen con vista previa en tiempo real
+- **Gestión de productos**: CRUD completo (crear, editar, eliminar, buscar)
+- **Gestión de categorías**: CRUD completo con generación automática de slugs
+- **Catálogo público**: Vista por slug con temas dinámicos
+- **Carrito de compras**: Context API con persistencia en sesión
+- **Checkout WhatsApp**: Generador de mensajes formateados con emojis
+- **Motor de temas**: Variables CSS dinámicas, 6 fuentes Google, 4 modos de borde
+- **Middleware**: Protección de rutas `/admin/*` con redirección a login
+- **Base de datos**: Schema completo con RLS, triggers e índices
+
+### 📁 Archivos creados o modificados en este paso
+- `app/admin/products/page.jsx` - CRUD de productos
+- `app/admin/categories/page.jsx` - CRUD de categorías
+- `app/admin/page.jsx` - Dashboard con navegación actualizada
+- `supabase/schema.sql` - Política RLS para lectura pública de profiles
+- `public/favicon.ico` - Favicon para corregir error 404
+
+### 🚀 Siguientes pasos recomendados / Faltantes
+- **Subida de imágenes**: Implementar Supabase Storage para banners y productos
+- **Gestión de opciones de producto**: CRUD de variantes/tamaños/extras
+- **Dashboard de pedidos**: Ver pedidos recibidos por WhatsApp
+- **Analytics**: Métricas de visitas y conversiones
+- **SEO avanzado**: Sitemap.xml y metadatos por tienda
+- **Notificaciones**: Email/SMS cuando llega un pedido
+- **Multi-idioma**: Soporte i18n para múltiples idiomas
+- **Métodos de pago**: Integración con pasarelas de pago online
+
+### ⚠️ Errores o advertencias pendientes
+- **Rate limit Supabase**: El endpoint `/signup` puede retornar 429 si se intentan muchos registros seguidos (limitación de Supabase, no es bug)
+- **Framer Motion warning**: `NotFoundError: Failed to execute 'removeChild'` - Warning menor al desmontar componentes, no crítico
+- **Imágenes**: Actualmente se usan URLs externas, falta implementar almacenamiento propio
