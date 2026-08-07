@@ -28,12 +28,21 @@ function CustomizePanel() {
   const [isSaved, setIsSaved] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Lazy load Supabase client to avoid build errors
+  const [supabase, setSupabase] = useState(null);
+  
+  useEffect(() => {
+    import('@/lib/supabase/client').then(({ createClient }) => {
+      setSupabase(createClient());
+    });
+  }, []);
 
   // Cargar settings desde Supabase al montar
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const supabase = createClient();
+        if (!supabase) return;
         const { data: { user } } = await supabase.auth.getUser();
 
         if (!user) {
@@ -74,7 +83,9 @@ function CustomizePanel() {
     setError(null);
 
     try {
-      const supabase = createClient();
+      if (!supabase) {
+        throw new Error('Cliente de Supabase no inicializado');
+      }
       const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) {

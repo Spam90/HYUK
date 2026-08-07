@@ -1,9 +1,10 @@
 'use client';
 
+'use client';
+
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Edit2, Trash2, Search, Package, ArrowLeft } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
@@ -16,7 +17,15 @@ export default function ProductsPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const router = useRouter();
-  const supabase = createClient();
+  
+  // Lazy load Supabase client to avoid build errors
+  const [supabase, setSupabase] = useState(null);
+  
+  useEffect(() => {
+    import('@/lib/supabase/client').then(({ createClient }) => {
+      setSupabase(createClient());
+    });
+  }, []);
 
   const [formData, setFormData] = useState({
     name: '',

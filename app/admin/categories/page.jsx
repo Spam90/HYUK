@@ -1,9 +1,10 @@
 'use client';
 
+'use client';
+
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Edit2, Trash2, Search, FolderOpen, ArrowLeft, GripVertical } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
@@ -15,7 +16,15 @@ export default function CategoriesPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const router = useRouter();
-  const supabase = createClient();
+  
+  // Lazy load Supabase client to avoid build errors
+  const [supabase, setSupabase] = useState(null);
+  
+  useEffect(() => {
+    import('@/lib/supabase/client').then(({ createClient }) => {
+      setSupabase(createClient());
+    });
+  }, []);
 
   const [formData, setFormData] = useState({
     name: '',
