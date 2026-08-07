@@ -1,29 +1,47 @@
 import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
 
-// Verificar que las variables de entorno de Supabase existan
-const hasSupabaseConfig = () =>
-  Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+// Rutas públicas que no requieren autenticación
+const PUBLIC_PATHS = ['/login', '/signup', '/demo', '/'];
 
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
 
-  // Solo proteger rutas de admin
-  if (pathname.startsWith('/admin')) {
-    // Si no hay configuración de Supabase, permitir acceso (modo demo)
-    if (!hasSupabaseConfig()) {
-      return NextResponse.next();
-    }
+  // Solo procesar rutas de admin
+  if (!pathname.startsWith('/admin')) {
+    return NextResponse.next();
   }
 
-  // Para rutas no protegidas, continuar normalmente
-  return NextResponse.next();
+  // Permitir acceso a rutas públicas
+  if (PUBLIC_PATHS.some(path => pathname === path || pathname.startsWith(path + '/'))) {
+    return NextResponse.next();
+  }
+
+  // Verificar sesión en Supabase
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      // Redirigir a login si no hay sesión
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    // Usuario autenticado, permitir acceso
+    return NextResponse.next();
+  } catch (error) {
+    console.error('Error en middleware:', error);
+    return NextResponse.next();
+  }
 }
 
 export const config = {
   matcher: [
     /*
-     * Solo procesar rutas de admin para protección de autenticación.
-     * Todas las demás rutas se sirven directamente sin middleware.
+     * Proteger rutas de admin - requiere autenticación.
+     * Rutas públicas (/login, /signup, /demo, /) se sirven sin middleware.
      */
     '/admin/:path*',
   ],
