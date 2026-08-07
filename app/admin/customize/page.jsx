@@ -48,14 +48,18 @@ function CustomizePanel() {
           .eq('id', user.id)
           .single();
 
-        if (fetchError) throw fetchError;
+        if (fetchError) {
+          console.error('Error fetching settings:', fetchError);
+          throw fetchError;
+        }
 
         if (data?.settings) {
           updateFullSettings(data.settings);
         }
       } catch (err) {
         console.error('Error cargando settings:', err);
-        setError('Error al cargar la configuración');
+        const errorMessage = err?.message || 'Error al cargar la configuración';
+        setError(errorMessage);
       } finally {
         setIsLoading(false);
       }
@@ -173,7 +177,8 @@ function CustomizePanel() {
       {/* Notificación de error */}
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-theme-lg mx-4 mt-4">
-          {error}
+          <p className="font-medium">Error:</p>
+          <p className="text-sm">{typeof error === 'object' ? JSON.stringify(error) : error}</p>
         </div>
       )}
 

@@ -104,6 +104,7 @@ CREATE TRIGGER update_products_updated_at
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- Políticas RLS (Row Level Security)
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE product_options ENABLE ROW LEVEL SECURITY;
@@ -138,3 +139,7 @@ CREATE POLICY "Owner manage product options" ON product_options
 -- Política para lectura pública de perfiles (catálogo público)
 CREATE POLICY "Public read profiles" ON profiles
   FOR SELECT USING (true);
+
+-- Política para que el usuario pueda actualizar su propio perfil
+CREATE POLICY "Owner update profile" ON profiles
+  FOR UPDATE USING (auth.uid() = id);
