@@ -45,8 +45,10 @@ export default function SignupPage() {
         if (profileError) throw profileError;
       }
 
-      // Redirigir al dashboard
-      window.location.href = '/admin/customize';
+      // Redirigir al dashboard (o a la URL de redirect si existe)
+      const urlParams = new URLSearchParams(window.location.search);
+      const redirect = urlParams.get('redirect');
+      window.location.href = redirect || '/admin/customize';
     } catch (err) {
       setError(err.message || 'Error al registrarse');
     } finally {
