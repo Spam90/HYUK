@@ -32,12 +32,12 @@ export default function CategoryNav({
 
   return (
     <div className="relative">
-      {/* Animated Indicator */}
+      {/* Animated Indicator - Tiendanube Style */}
       <motion.div
-        className="absolute top-2 h-10 rounded-full shadow-lg"
+        className="absolute top-3 h-9 rounded-full shadow-md"
         style={{
           backgroundColor: settings.theme.primaryColor,
-          boxShadow: `0 4px 12px ${settings.theme.primaryColor}40`,
+          boxShadow: `0 2px 8px ${settings.theme.primaryColor}30`,
         }}
         animate={indicatorStyle}
         transition={{
@@ -47,10 +47,10 @@ export default function CategoryNav({
         }}
       />
 
-      {/* Categories Container */}
+      {/* Categories Container - Tiendanube Style */}
       <div
         ref={navRef}
-        className="relative flex gap-2 overflow-x-auto no-scrollbar py-2 px-1"
+        className="flex gap-2 overflow-x-auto no-scrollbar py-3 px-4"
       >
         {/* All Categories Button */}
         <button
@@ -61,9 +61,10 @@ export default function CategoryNav({
           className={`
             relative z-10 flex items-center gap-2 px-4 py-2 rounded-full
             text-sm font-medium whitespace-nowrap
-            transition-colors duration-200
+            transition-all duration-200
           `}
           style={{
+            backgroundColor: activeCategory === 'all' ? settings.theme.primaryColor : 'transparent',
             color: activeCategory === 'all' ? 'white' : settings.theme.textColor,
           }}
         >
@@ -84,9 +85,10 @@ export default function CategoryNav({
               className={`
                 relative z-10 flex items-center gap-2 px-4 py-2 rounded-full
                 text-sm font-medium whitespace-nowrap
-                transition-colors duration-200
+                transition-all duration-200
               `}
               style={{
+                backgroundColor: isActive ? settings.theme.primaryColor : 'transparent',
                 color: isActive ? 'white' : settings.theme.textColor,
               }}
             >

@@ -26,7 +26,6 @@ export default function CartDrawer({ store, settings }) {
   const [deliveryMethod, setDeliveryMethod] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
 
   // Bloquear scroll cuando el drawer está abierto
   useEffect(() => {
@@ -134,7 +133,7 @@ export default function CartDrawer({ store, settings }) {
     <AnimatePresence>
       {isCartOpen && (
         <>
-          {/* Backdrop with blur */}
+          {/* Backdrop with blur - Tiendanube Style */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -143,41 +142,38 @@ export default function CartDrawer({ store, settings }) {
             onClick={closeCart}
           />
 
-          {/* Bottom Sheet / Drawer */}
+          {/* Cart Drawer - Tiendanube Style */}
           <motion.div
-            initial={{ y: '100%', opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: '100%', opacity: 0 }}
+            initial={{ x: '100%', opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: '100%', opacity: 0 }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 z-50 max-h-[90vh] bg-white dark:bg-zinc-900 rounded-t-[2rem] shadow-2xl flex flex-col safe-bottom"
+            className="fixed right-0 inset-y-0 z-50 w-full max-w-md bg-white dark:bg-zinc-900 shadow-2xl flex flex-col"
           >
-            {/* Handle Bar */}
-            <div className="flex justify-center pt-3 pb-2">
-              <div className="w-12 h-1.5 bg-gray-300 dark:bg-zinc-700 rounded-full" />
-            </div>
-
-            {/* Header */}
-            <div className="px-6 py-4 border-b border-gray-100 dark:border-zinc-800 flex items-center justify-between">
+            {/* Header - Tiendanube Style */}
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-zinc-800 flex items-center justify-between bg-white dark:bg-zinc-900">
               <div className="flex items-center gap-3">
                 <div 
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg"
+                  className="w-10 h-10 rounded-xl flex items-center justify-center text-white"
                   style={{ 
                     backgroundColor: theme.primaryColor,
-                    boxShadow: `0 4px 12px ${theme.primaryColor}40`
+                    boxShadow: `0 2px 8px ${theme.primaryColor}40`
                   }}
                 >
-                  <ShoppingBag className="w-6 h-6" />
+                  <ShoppingBag className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg text-gray-900 dark:text-white">Tu Pedido</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <h3 className="font-bold text-base text-gray-900 dark:text-white">
+                    Mi carrito
+                  </h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
                     {cartItems.length} {cartItems.length === 1 ? 'producto' : 'productos'}
                   </p>
                 </div>
               </div>
               <button
                 onClick={closeCart}
-                className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 transition-colors"
+                className="w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 transition-colors"
               >
                 <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
               </button>
@@ -197,7 +193,7 @@ export default function CartDrawer({ store, settings }) {
                 </p>
                 <button
                   onClick={closeCart}
-                  className="px-6 py-3 rounded-2xl text-white font-semibold shadow-lg transition-transform active:scale-95"
+                  className="px-6 py-3 rounded-xl text-white font-semibold shadow-lg transition-transform active:scale-95"
                   style={{ 
                     backgroundColor: theme.primaryColor,
                     boxShadow: `0 4px 12px ${theme.primaryColor}40`
@@ -208,7 +204,7 @@ export default function CartDrawer({ store, settings }) {
               </div>
             ) : (
               <>
-                {/* Items List */}
+                {/* Items List - Tiendanube Style */}
                 <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
                   {cartItems.map((item) => (
                     <motion.div
@@ -217,14 +213,14 @@ export default function CartDrawer({ store, settings }) {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, x: -50 }}
-                      className="flex gap-3 bg-gray-50 dark:bg-zinc-800/50 rounded-2xl p-3 border border-gray-100 dark:border-zinc-800"
+                      className="flex gap-3 bg-gray-50 dark:bg-zinc-800/50 rounded-xl p-3 border border-gray-100 dark:border-zinc-800"
                     >
-                      {/* Image */}
-                      <div className="w-20 h-20 rounded-xl overflow-hidden relative shrink-0 bg-gray-100 dark:bg-zinc-800">
+                      {/* Image - Square */}
+                      <div className="w-20 h-20 rounded-lg overflow-hidden relative shrink-0 bg-gray-200 dark:bg-zinc-700">
                         {item.imageUrl ? (
                           <Image src={item.imageUrl} alt={item.name} fill className="object-cover" sizes="80px" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-3xl">🍽️</div>
+                          <div className="w-full h-full flex items-center justify-center text-2xl">🍽️</div>
                         )}
                       </div>
 
@@ -232,7 +228,7 @@ export default function CartDrawer({ store, settings }) {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1">
-                            <h5 className="text-sm font-semibold text-gray-900 dark:text-white leading-tight">
+                            <h5 className="text-sm font-semibold text-gray-900 dark:text-white leading-tight line-clamp-2">
                               {item.name}
                             </h5>
                             {item.selectedOptions?.length > 0 && (
@@ -256,15 +252,15 @@ export default function CartDrawer({ store, settings }) {
                           </button>
                         </div>
 
-                        {/* Quantity Controls */}
+                        {/* Quantity Controls - Compact Gray Box */}
                         <div className="flex items-center justify-between mt-2">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 bg-white dark:bg-zinc-700 rounded-lg p-1 border border-gray-200 dark:border-zinc-600">
                             <motion.button
                               whileTap={{ scale: 0.85 }}
                               onClick={() => updateQuantity(item.key, item.quantity - 1)}
-                              className="w-8 h-8 rounded-full flex items-center justify-center bg-white dark:bg-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-600 transition-colors border border-gray-200 dark:border-zinc-600"
+                              className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-600 transition-colors"
                             >
-                              <Minus className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                              <Minus className="w-3.5 h-3.5 text-gray-600 dark:text-gray-300" />
                             </motion.button>
                             <span className="text-sm font-bold text-gray-900 dark:text-white w-6 text-center">
                               {item.quantity}
@@ -272,13 +268,13 @@ export default function CartDrawer({ store, settings }) {
                             <motion.button
                               whileTap={{ scale: 0.85 }}
                               onClick={() => updateQuantity(item.key, item.quantity + 1)}
-                              className="w-8 h-8 rounded-full flex items-center justify-center text-white shadow-md"
+                              className="w-7 h-7 rounded-md flex items-center justify-center text-white"
                               style={{ 
                                 backgroundColor: theme.primaryColor,
-                                boxShadow: `0 2px 8px ${theme.primaryColor}40`
+                                boxShadow: `0 1px 4px ${theme.primaryColor}40`
                               }}
                             >
-                              <Plus className="w-4 h-4" />
+                              <Plus className="w-3.5 h-3.5" />
                             </motion.button>
                           </div>
                           <p className="text-sm font-bold text-gray-900 dark:text-white">
@@ -288,23 +284,31 @@ export default function CartDrawer({ store, settings }) {
                       </div>
                     </motion.div>
                   ))}
-
-                  {/* Clear Cart */}
-                  <button
-                    onClick={clearCart}
-                    className="w-full py-2 text-xs text-gray-400 hover:text-red-500 transition-colors text-center"
-                  >
-                    Vaciar carrito
-                  </button>
                 </div>
 
-                {/* Checkout Form */}
-                <div className="border-t border-gray-100 dark:border-zinc-800 p-6 space-y-4 bg-white dark:bg-zinc-900">
+                {/* Checkout Section - Tiendanube Style */}
+                <div className="border-t border-gray-200 dark:border-zinc-800 p-6 space-y-4 bg-white dark:bg-zinc-900">
+                  {/* Subtotal */}
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Subtotal</span>
+                    <span className="text-lg font-bold text-gray-900 dark:text-white">
+                      {formatPrice(cartTotal)}
+                    </span>
+                  </div>
+
+                  {/* Shipping Notice */}
+                  <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
+                    <MapPin className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
+                    <p className="text-xs text-blue-800 dark:text-blue-300">
+                      El costo de envío se calculará al finalizar la compra
+                    </p>
+                  </div>
+
                   {/* Customer Name */}
                   {checkoutConfig.requireClientName && (
-                    <div className="flex items-center gap-3 bg-gray-50 dark:bg-zinc-800/50 rounded-2xl p-3.5 border border-gray-100 dark:border-zinc-800">
-                      <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-zinc-800 flex items-center justify-center">
-                        <User className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                    <div className="flex items-center gap-3 bg-gray-50 dark:bg-zinc-800/50 rounded-xl p-3 border border-gray-200 dark:border-zinc-800">
+                      <div className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
+                        <User className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                       </div>
                       <input
                         type="text"
@@ -318,9 +322,8 @@ export default function CartDrawer({ store, settings }) {
 
                   {/* Delivery Method */}
                   {checkoutConfig.deliveryMethods?.length > 0 && (
-                    <div className="bg-gray-50 dark:bg-zinc-800/50 rounded-2xl p-3.5 border border-gray-100 dark:border-zinc-800">
-                      <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2.5 flex items-center gap-2">
-                        <Bike className="w-4 h-4" />
+                    <div className="bg-gray-50 dark:bg-zinc-800/50 rounded-xl p-3 border border-gray-200 dark:border-zinc-800">
+                      <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
                         Tipo de entrega
                       </p>
                       <div className="flex flex-wrap gap-2">
@@ -331,24 +334,18 @@ export default function CartDrawer({ store, settings }) {
                               key={method}
                               onClick={() => setDeliveryMethod(method)}
                               className={`
-                                flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-medium
-                                transition-all duration-200 active:scale-95
+                                flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium
+                                transition-all duration-200
                               `}
                               style={isSelected ? { 
                                 backgroundColor: theme.primaryColor,
-                                color: 'white',
-                                boxShadow: `0 2px 8px ${theme.primaryColor}40`
+                                color: 'white'
                               } : {
                                 backgroundColor: 'white',
                                 color: 'gray',
                                 border: '1px solid #e5e7eb'
                               }}
                             >
-                              {method.includes('domicilio') || method.includes('Domicilio') ? (
-                                <Bike className="w-3.5 h-3.5" />
-                              ) : (
-                                <Store className="w-3.5 h-3.5" />
-                              )}
                               {method}
                             </button>
                           );
@@ -359,9 +356,9 @@ export default function CartDrawer({ store, settings }) {
 
                   {/* Address */}
                   {checkoutConfig.askForAddress && (
-                    <div className="flex items-center gap-3 bg-gray-50 dark:bg-zinc-800/50 rounded-2xl p-3.5 border border-gray-100 dark:border-zinc-800">
-                      <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-zinc-800 flex items-center justify-center">
-                        <MapPin className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                    <div className="flex items-center gap-3 bg-gray-50 dark:bg-zinc-800/50 rounded-xl p-3 border border-gray-200 dark:border-zinc-800">
+                      <div className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
+                        <MapPin className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                       </div>
                       <input
                         type="text"
@@ -375,9 +372,8 @@ export default function CartDrawer({ store, settings }) {
 
                   {/* Payment Method */}
                   {checkoutConfig.askForPaymentMethod && (
-                    <div className="bg-gray-50 dark:bg-zinc-800/50 rounded-2xl p-3.5 border border-gray-100 dark:border-zinc-800">
-                      <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2.5 flex items-center gap-2">
-                        <CreditCard className="w-4 h-4" />
+                    <div className="bg-gray-50 dark:bg-zinc-800/50 rounded-xl p-3 border border-gray-200 dark:border-zinc-800">
+                      <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
                         Método de pago
                       </p>
                       <div className="flex flex-wrap gap-2">
@@ -388,13 +384,12 @@ export default function CartDrawer({ store, settings }) {
                               key={method}
                               onClick={() => setPaymentMethod(method)}
                               className={`
-                                px-4 py-2 rounded-xl text-xs font-medium
-                                transition-all duration-200 active:scale-95
+                                px-3 py-1.5 rounded-lg text-xs font-medium
+                                transition-all duration-200
                               `}
                               style={isSelected ? { 
                                 backgroundColor: theme.primaryColor,
-                                color: 'white',
-                                boxShadow: `0 2px 8px ${theme.primaryColor}40`
+                                color: 'white'
                               } : {
                                 backgroundColor: 'white',
                                 color: 'gray',
@@ -409,34 +404,26 @@ export default function CartDrawer({ store, settings }) {
                     </div>
                   )}
 
-                  {/* Total and Checkout Button */}
-                  <div className="flex items-center justify-between pt-2">
-                    <div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">Total del pedido</p>
-                      <p className="text-2xl font-bold" style={{ color: theme.primaryColor }}>
-                        {formatPrice(cartTotal)}
-                      </p>
-                    </div>
-                    <motion.button
-                      whileTap={{ scale: 0.95 }}
-                      onClick={handleWhatsAppCheckout}
-                      disabled={isSubmitting}
-                      className="flex items-center gap-2 px-6 py-3.5 rounded-2xl text-sm font-bold text-white shadow-lg disabled:opacity-60"
-                      style={{ 
-                        backgroundColor: '#25D366',
-                        boxShadow: '0 4px 15px rgba(37, 211, 102, 0.3)',
-                      }}
-                    >
-                      {isSubmitting ? (
-                        <span className="animate-pulse">Procesando...</span>
-                      ) : (
-                        <>
-                          <MessageCircle className="w-5 h-5" />
-                          Pedir por WhatsApp
-                        </>
-                      )}
-                    </motion.button>
-                  </div>
+                  {/* WhatsApp Button - Full Width */}
+                  <motion.button
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleWhatsAppCheckout}
+                    disabled={isSubmitting}
+                    className="w-full py-4 text-base font-bold text-white shadow-lg rounded-xl flex items-center justify-center gap-2 disabled:opacity-60"
+                    style={{ 
+                      backgroundColor: '#25D366',
+                      boxShadow: '0 4px 15px rgba(37, 211, 102, 0.3)',
+                    }}
+                  >
+                    {isSubmitting ? (
+                      <span className="animate-pulse">Procesando...</span>
+                    ) : (
+                      <>
+                        <MessageCircle className="w-5 h-5" />
+                        Finalizar compra por WhatsApp
+                      </>
+                    )}
+                  </motion.button>
                 </div>
               </>
             )}

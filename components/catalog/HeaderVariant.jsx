@@ -1,7 +1,8 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Store, MapPin, Phone, Clock, ChevronDown } from 'lucide-react';
+import { Store, MapPin, Phone, Clock, ChevronDown, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 export default function HeaderVariant({ 
   store, 
@@ -9,6 +10,19 @@ export default function HeaderVariant({
   style = 'banner-large' 
 }) {
   const { theme, banner } = settings;
+  const [currentAnnouncement, setCurrentAnnouncement] = useState(0);
+  const [isVisible, setIsVisible] = useState(true);
+
+  // Marquee animation for multiple announcements
+  useEffect(() => {
+    if (!banner?.announcementText || !banner?.showAnnouncementBar) return;
+
+    const interval = setInterval(() => {
+      setCurrentAnnouncement(prev => (prev + 1) % 2); // Toggle between 2 states for demo
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [banner?.announcementText, banner?.showAnnouncementBar]);
 
   const headerStyles = {
     'minimal': {
@@ -33,6 +47,30 @@ export default function HeaderVariant({
 
   return (
     <header className={currentStyle.container}>
+      {/* Top Promotional Bar - Tiendanube Style */}
+      {banner?.showAnnouncementBar && banner?.announcementText && isVisible && (
+        <div 
+          className="relative overflow-hidden"
+          style={{ 
+            backgroundColor: theme.primaryColor,
+            color: 'white'
+          }}
+        >
+          <div className="relative py-2.5 px-4">
+            <motion.div
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              className="flex items-center justify-center gap-2 text-sm font-medium"
+            >
+              <span className="inline-block w-2 h-2 bg-white rounded-full animate-pulse" />
+              <p className="text-center">
+                {banner.announcementText}
+              </p>
+            </motion.div>
+          </div>
+        </div>
+      )}
+
       {/* Background Banner with Gradient Overlay */}
       {style === 'banner-large' && banner?.imageUrl && (
         <div className="absolute inset-0">
