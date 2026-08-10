@@ -48,9 +48,15 @@ export default function AdminDashboard() {
         supabase.from('categories').select('count', { count: 'exact', head: true }).eq('store_id', user.id),
       ]);
 
+      // Get real stats from orders table
+      const { count: ordersCount } = await supabase
+        .from('orders')
+        .select('count', { count: 'exact', head: true })
+        .eq('store_id', user.id);
+
       setStats({
-        visits: Math.floor(Math.random() * 100) + 10, // Demo data
-        whatsappClicks: Math.floor(Math.random() * 50) + 5, // Demo data
+        visits: ordersCount || 0,
+        whatsappClicks: ordersCount || 0,
         activeProducts: productsRes.count || 0,
         categories: categoriesRes.count || 0,
       });
@@ -81,7 +87,7 @@ export default function AdminDashboard() {
       color: 'bg-blue-500',
       bgColor: 'bg-blue-50 dark:bg-blue-900/20',
       textColor: 'text-blue-600 dark:text-blue-400',
-      trend: '+12%',
+      trend: null,
     },
     {
       label: 'Clics a WhatsApp',
@@ -90,7 +96,7 @@ export default function AdminDashboard() {
       color: 'bg-green-500',
       bgColor: 'bg-green-50 dark:bg-green-900/20',
       textColor: 'text-green-600 dark:text-green-400',
-      trend: '+8%',
+      trend: null,
     },
     {
       label: 'Productos Activos',
