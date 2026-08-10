@@ -52,10 +52,10 @@ export default function CartDrawer({ store, settings }) {
   const storeName = store?.store_name || store?.full_name || 'Mi Tienda';
   const storePhone = store?.whatsapp_number || store?.phone || '';
 
-  // Generar enlace de WhatsApp
-  const handleWhatsAppCheckout = () => {
+  // Generar URL de WhatsApp y guardar pedido
+  const handleWhatsAppCheckout = async () => {
     setIsSubmitting(true);
-    
+
     // Validar campos requeridos
     if (checkoutConfig.requireClientName && !customerName) {
       alert('Por favor ingresa tu nombre');
@@ -78,30 +78,55 @@ export default function CartDrawer({ store, settings }) {
       return;
     }
 
-    // Generar URL de WhatsApp
-    const whatsappUrl = generateWhatsAppUrl({
-      storeName,
-      storePhone,
-      cartItems,
-      checkoutConfig,
-      customerInfo: {
-        name: customerName,
-        address: customerAddress,
-        deliveryMethod,
-        paymentMethod,
-      },
-      total: cartTotal,
-    });
-    
-    // Abrir WhatsApp
-    window.open(whatsappUrl, '_blank');
-    
-    // Limpiar carrito después de un momento
-    setTimeout(() => {
+    try {
+      // Guardar pedido en la base de datos
+      const { createOrder } = await import('@/lib/orders');
+      const orderResult = await createOrder({
+        customerName: customerName,
+        customerPhone: '',
+        deliveryAddress: customerAddress,
+        deliveryMethod: deliveryMethod,
+        paymentMethod: paymentMethod,
+        items: cartItems,
+        total: cartTotal,
+        notes: '',
+      });
+
+      if (!orderResult.success) {
+        console.error('Error guardando pedido:', orderResult.error);
+        // Continuar de todas formas para enviar por WhatsApp
+      } else {
+        console.log('Pedido guardado exitosamente:', orderResult.order.id);
+      }
+
+      // Generar URL de WhatsApp
+      const whatsappUrl = generateWhatsAppUrl({
+        storeName,
+        storePhone,
+        cartItems,
+        checkoutConfig,
+        customerInfo: {
+          name: customerName,
+          address: customerAddress,
+          deliveryMethod,
+          paymentMethod,
+        },
+        total: cartTotal,
+      });
+      
+      // Abrir WhatsApp
+      window.open(whatsappUrl, '_blank');
+      
+      // Limpiar carrito
       clearCart();
       closeCart();
+      
+    } catch (error) {
+      console.error('Error en checkout:', error);
+      alert('Error al procesar el pedido. Por favor intenta de nuevo.');
+    } finally {
       setIsSubmitting(false);
-    }, 1500);
+    }
   };
 
   return (

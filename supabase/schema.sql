@@ -336,3 +336,88 @@ CREATE POLICY "Owner delete product options" ON product_options
 --   ('UUID_DEL_PERFIL_DEMO', 'UUID_CATEGORIA_PLATOS_FUERTES', 'Pizza Margherita', 'Salsa de tomate, mozzarella fresca y albahaca', 18.99, 'https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400', null, true, 2),
 --   ('UUID_DEL_PERFIL_DEMO', 'UUID_CATEGORIA_PLATOS_FUERTES', 'Pasta Carbonara', 'Spaghetti con salsa carbonara, panceta y queso pecorino', 16.99, 'https://images.unsplash.com/photo-1612874742237-6526221588e3?w=400', 'Nuevo', true, 3),
 --   ('UUID_DEL_PERFIL_DEMO', 'UUID_CATEGORIA_BEBIDAS', 'Limonada Fresca', 'Limones frescos exprimidos con hielo y menta', 4.99, 'https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=400', null, true, 1);
+
+-- =============================================
+-- 8. TABLA DE PEDIDOS
+-- =============================================
+
+CREATE TABLE IF NOT EXISTS orders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  store_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  customer_name TEXT NOT NULL,
+  customer_phone TEXT,
+  delivery_address TEXT,
+  delivery_method TEXT,
+  payment_method TEXT,
+  items JSONB NOT NULL DEFAULT '[]'::jsonb,
+  total_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'preparing', 'completed', 'cancelled')),
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Índice para búsquedas por tienda y estado
+CREATE INDEX IF NOT EXISTS idx_orders_store_id ON orders(store_id);
+CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
+CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC);
+
+-- Trigger para actualizar updated_at en orders
+CREATE TRIGGER update_orders_updated_at
+  BEFORE UPDATE ON orders
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Políticas RLS para orders
+ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+
+-- El dueño puede ver sus propios pedidos
+CREATE POLICY "Owner read orders" ON orders
+  FOR SELECT USING (auth.uid() = store_id);
+
+-- El dueño puede actualizar el estado de sus pedidos
+CREATE POLICY "Owner update orders" ON orders
+  FOR UPDATE USING (auth.uid() = store_id);
+
+-- Cualquier persona puede crear un pedido (público)
+CREATE POLICY "Public insert orders" ON orders
+  FOR INSERT WITH CHECK (true);
+
+-- =============================================
+-- 9. STORAGE PARA IMÁGENES (Supabase Storage)
+-- =============================================
+
+-- Crear bucket para almacenamiento de imágenes
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'store-assets',
+  'store-assets',
+  true,
+  5242880, -- 5MB límite
+  ARRAY['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']::text[]
+) ON CONFLICT (id) DO NOTHING;
+
+-- Políticas RLS para Storage
+-- Lectura pública de objetos
+CREATE POLICY "Public read store assets" ON storage.objects
+  FOR SELECT USING (bucket_id = 'store-assets');
+
+-- Usuarios autenticados pueden subir archivos a su propia carpeta
+CREATE POLICY "Owner upload store assets" ON storage.objects
+  FOR INSERT WITH CHECK (
+    bucket_id = 'store-assets' 
+    AND auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+-- Usuarios autenticados pueden actualizar sus propios archivos
+CREATE POLICY "Owner update store assets" ON storage.objects
+  FOR UPDATE USING (
+    bucket_id = 'store-assets' 
+    AND auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+-- Usuarios autenticados pueden eliminar sus propios archivos
+CREATE POLICY "Owner delete store assets" ON storage.objects
+  FOR DELETE USING (
+    bucket_id = 'store-assets' 
+    AND auth.uid()::text = (storage.foldername(name))[1]
+  );
