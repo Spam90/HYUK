@@ -1,170 +1,297 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Store, Smartphone, Palette, MessageCircle, ArrowRight, Check, Star, Zap, Globe, BarChart3 } from 'lucide-react';
+import { 
+  Store, Smartphone, MessageCircle, Palette, Zap, Shield, 
+  ArrowRight, Play, CheckCircle, Star, TrendingUp, Users 
+} from 'lucide-react';
 import Link from 'next/link';
 
 export default function HomePage() {
-  const features = [
-    {
-      icon: Palette,
-      title: 'Personalización Extrema',
-      description: 'Colores, tipografías, layouts y estilos completamente personalizables. Sin código.',
-      color: '#10B981',
+  const presets = [
+    { 
+      id: 'elegant', 
+      name: 'Elegante', 
+      colors: ['#1a1a1a', '#d4af37', '#f5f5f5'],
+      description: 'Diseño sofisticado y minimalista'
     },
+    { 
+      id: 'fast-food', 
+      name: 'Comida Rápida', 
+      colors: ['#ff6b35', '#f7c548', '#fff'],
+      description: 'Colores vibrantes y energéticos'
+    },
+    { 
+      id: 'botanical', 
+      name: 'Botánica', 
+      colors: ['#2d5016', '#8fb339', '#f1f8e9'],
+      description: 'Natural y fresco'
+    },
+    { 
+      id: 'neon', 
+      name: 'Neón Nocturno', 
+      colors: ['#0f0f0f', '#ff00ff', '#00ffff'],
+      description: 'Estilo urbano y moderno'
+    },
+    { 
+      id: 'minimal', 
+      name: 'Minimalista', 
+      colors: ['#ffffff', '#000000', '#f5f5f5'],
+      description: 'Limpio y profesional'
+    },
+  ];
+
+  const benefits = [
     {
-      icon: Smartphone,
-      title: 'Vista Previa en Tiempo Real',
-      description: 'Simulador de iPhone integrado. Ve los cambios al instante mientras editas.',
-      color: '#8B5CF6',
+      icon: Zap,
+      title: 'Configuración en 5 minutos',
+      description: 'Sin código, sin complicaciones. Crea tu catálogo en minutos.',
+      color: 'bg-yellow-500',
+      bgColor: 'bg-yellow-50 dark:bg-yellow-900/20',
     },
     {
       icon: MessageCircle,
       title: 'Pedidos a WhatsApp',
-      description: 'Recibe pedidos directamente en tu WhatsApp con mensajes formateados y profesionales.',
-      color: '#F59E0B',
+      description: 'Recibe pedidos directamente sin comisiones por venta.',
+      color: 'bg-green-500',
+      bgColor: 'bg-green-50 dark:bg-green-900/20',
     },
     {
-      icon: Globe,
-      title: 'Tu Propio Dominio',
-      description: 'Cada tienda tiene su URL única: hyuk.vercel.app/mi-tienda. Fácil de compartir.',
-      color: '#3B82F6',
+      icon: Palette,
+      title: 'Personalización total',
+      description: 'Colores, fuentes, logos y layouts a tu gusto.',
+      color: 'bg-purple-500',
+      bgColor: 'bg-purple-50 dark:bg-purple-900/20',
     },
     {
-      icon: Zap,
-      title: 'Rápido y Optimizado',
-      description: 'Carga instantánea, SEO optimizado y experiencia de app nativa en móviles.',
-      color: '#EF4444',
-    },
-    {
-      icon: BarChart3,
-      title: 'Analytics y Métricas',
-      description: 'Visualiza visitas, pedidos y conversiones. Toma decisiones basadas en datos.',
-      color: '#06B6D4',
-    },
-  ];
-
-  const presets = [
-    { name: 'Comida Rápida', emoji: '🍔', colors: ['#EF4444', '#F59E0B'] },
-    { name: 'Botánica', emoji: '🌿', colors: ['#10B981', '#059669'] },
-    { name: 'Elegante', emoji: '💎', colors: ['#6366F1', '#8B5CF6'] },
-    { name: 'Neón', emoji: '✨', colors: ['#EC4899', '#8B5CF6'] },
-  ];
-
-  const plans = [
-    {
-      name: 'Gratis',
-      price: '$0',
-      period: 'para siempre',
-      features: ['Hasta 10 productos', '1 categoría', 'Personalización básica', 'Pedidos a WhatsApp'],
-      cta: 'Comenzar Gratis',
-      href: '/signup',
-      highlighted: false,
-    },
-    {
-      name: 'Pro',
-      price: '$19',
-      period: 'por mes',
-      features: ['Productos ilimitados', 'Categorías ilimitadas', 'Personalización completa', 'Analytics avanzado', 'Soporte prioritario'],
-      cta: 'Comenzar Prueba Gratis',
-      href: '/signup',
-      highlighted: true,
+      icon: Smartphone,
+      title: '100% Optimizado para móviles',
+      description: 'La mejor experiencia para tus clientes.',
+      color: 'bg-blue-500',
+      bgColor: 'bg-blue-50 dark:bg-blue-900/20',
     },
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10" />
-        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-72 h-72 bg-accent/10 rounded-full blur-3xl" />
+    <div className="min-h-screen bg-white dark:bg-zinc-950">
+      {/* Hero Section - Tiendanube Style */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-gray-50 to-white dark:from-zinc-900 dark:to-zinc-950">
+        <div className="max-w-7xl mx-auto px-4 py-16 md:py-24">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            {/* Left Content */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="text-center md:text-left"
+            >
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-6 leading-tight">
+                Crea tu catálogo digital hoy y recibe pedidos en{' '}
+                <span className="text-green-600 dark:text-green-400">WhatsApp</span>
+              </h1>
+              <p className="text-lg md:text-xl text-gray-600 dark:text-gray-400 mb-8">
+                La plataforma más fácil para crear tu tienda online. Sin comisiones, sin complicaciones.
+              </p>
+              
+              {/* CTAs */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
+                <Link
+                  href="/signup"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-primary text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-105"
+                >
+                  Crear mi tienda gratis
+                  <ArrowRight className="w-5 h-5" />
+                </Link>
+                <Link
+                  href="/demo"
+                  className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white border-2 border-gray-200 dark:border-zinc-700 rounded-xl font-semibold hover:border-primary transition-all"
+                >
+                  <Play className="w-5 h-5" />
+                  Ver tienda de ejemplo
+                </Link>
+              </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 py-20 md:py-32">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center max-w-4xl mx-auto"
-          >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-              <Star className="w-4 h-4" />
-              La plataforma #1 para catálogos digitales
-            </div>
+              {/* Social Proof */}
+              <div className="mt-8 flex items-center justify-center md:justify-start gap-6 text-sm text-gray-600 dark:text-gray-400">
+                <div className="flex items-center gap-2">
+                  <div className="flex -space-x-2">
+                    {[1, 2, 3, 4, 5].map(i => (
+                      <div key={i} className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent border-2 border-white dark:border-zinc-900" />
+                    ))}
+                  </div>
+                  <span className="font-medium">+500 tiendas activas</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                  <span className="font-medium">4.9/5</span>
+                </div>
+              </div>
+            </motion.div>
 
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-text mb-6 leading-tight">
-              Tu Menú Digital,
-              <span className="text-primary"> Personalizado</span>
-              <br />
-              y Listo en Minutos
-            </h1>
+            {/* Right Content - Phone Mockup */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="relative flex justify-center"
+            >
+              {/* Phone Frame */}
+              <div className="relative">
+                {/* Ambient Glow */}
+                <div 
+                  className="absolute -inset-8 rounded-[3rem] opacity-20 blur-3xl"
+                  style={{ 
+                    background: 'linear-gradient(135deg, #10B981, #F59E0B)' 
+                  }}
+                />
 
-            <p className="text-lg md:text-xl text-text/60 mb-8 max-w-2xl mx-auto">
-              Crea tu catálogo digital con personalización extrema. Recibe pedidos directamente en WhatsApp.
-              Sin código, sin complicaciones.
-            </p>
+                {/* Phone */}
+                <div className="relative bg-gradient-to-br from-zinc-800 via-zinc-900 to-black rounded-[2.5rem] p-3 shadow-2xl">
+                  <div className="bg-gradient-to-br from-zinc-700 via-zinc-800 to-zinc-900 rounded-[2rem] p-1.5">
+                    <div className="relative rounded-[1.75rem] overflow-hidden bg-white" style={{ aspectRatio: '9/19.5' }}>
+                      {/* Dynamic Island */}
+                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-black rounded-b-2xl z-20" />
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link
-                href="/signup"
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-theme-lg bg-primary text-white font-bold shadow-xl hover:shadow-2xl transition-all hover:scale-105"
-              >
-                Crear mi menú gratis
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-              <Link
-                href="/demo"
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-theme-lg bg-card border-2 border-secondary/20 text-text font-bold hover:border-primary/40 transition-all"
-              >
-                <Smartphone className="w-5 h-5" />
-                Ver Demo Interactiva
-              </Link>
-            </div>
+                      {/* Screen Content */}
+                      <div className="h-full overflow-hidden bg-gray-50">
+                        {/* Header */}
+                        <div className="pt-10 pb-3 px-4 bg-primary text-white text-center">
+                          <p className="text-sm font-medium">Mi Tienda</p>
+                        </div>
 
-            <p className="text-sm text-text/40 mt-6">
-              No requiere tarjeta de crédito · Configuración en 5 minutos
-            </p>
-          </motion.div>
+                        {/* Products */}
+                        <div className="p-3 space-y-2">
+                          {[1, 2, 3].map(i => (
+                            <div key={i} className="bg-white rounded-lg p-2 shadow-sm">
+                              <div className="flex gap-2">
+                                <div className="w-16 h-16 rounded-lg bg-gray-200" />
+                                <div className="flex-1">
+                                  <p className="text-xs font-semibold text-gray-900">Producto {i}</p>
+                                  <p className="text-[10px] text-gray-500">Descripción corta</p>
+                                  <p className="text-sm font-bold text-primary mt-1">$99.00</p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Floating Notification - Tiendanube Style */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20, x: 20 }}
+                  animate={{ opacity: 1, y: 0, x: 0 }}
+                  transition={{ delay: 1 }}
+                  className="absolute -right-4 top-20 bg-white dark:bg-zinc-800 rounded-xl p-3 shadow-2xl border border-gray-200 dark:border-zinc-700 max-w-[200px]"
+                >
+                  <div className="flex items-start gap-2">
+                    <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center shrink-0">
+                      <CheckCircle className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-gray-900 dark:text-white">¡Nuevo pedido!</p>
+                      <p className="text-[10px] text-gray-600 dark:text-gray-400">$1,200 recibido por WhatsApp</p>
+                    </div>
+                  </div>
+                </motion.div>
+              </div>
+            </motion.div>
+          </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20 bg-card">
+      {/* Presets Gallery - Tiendanube Style */}
+      <section className="py-16 md:py-24 bg-gray-50 dark:bg-zinc-900">
         <div className="max-w-7xl mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-12"
           >
-            <h2 className="text-3xl md:text-5xl font-bold text-text mb-4">
-              Todo lo que necesitas para vender más
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              Diseños que enamoran
             </h2>
-            <p className="text-lg text-text/60 max-w-2xl mx-auto">
-              Herramientas poderosas diseñadas para hacer crecer tu negocio
+            <p className="text-lg text-gray-600 dark:text-gray-400">
+              Elige entre múltiples estilos profesionales
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {presets.map((preset, index) => (
+              <motion.div
+                key={preset.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="group bg-white dark:bg-zinc-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all cursor-pointer"
+              >
+                {/* Preview */}
+                <div 
+                  className="aspect-[3/4] relative overflow-hidden"
+                  style={{
+                    background: `linear-gradient(135deg, ${preset.colors[0]}, ${preset.colors[1]})`
+                  }}
+                >
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm" />
+                  </div>
+                </div>
+
+                {/* Info */}
+                <div className="p-4">
+                  <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
+                    {preset.name}
+                  </h3>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
+                    {preset.description}
+                  </p>
+                  <button className="w-full py-2 rounded-lg bg-gray-100 dark:bg-zinc-700 text-gray-900 dark:text-white text-sm font-medium hover:bg-gray-200 dark:hover:bg-zinc-600 transition-colors">
+                    Previsualizar
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Benefits Grid - Bento Grid Tiendanube Style */}
+      <section className="py-16 md:py-24 bg-white dark:bg-zinc-950">
+        <div className="max-w-7xl mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              ¿Por qué elegir HYUK?
+            </h2>
+            <p className="text-lg text-gray-600 dark:text-gray-400">
+              Todo lo que necesitas para vender online
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+            {benefits.map((benefit, index) => {
+              const Icon = benefit.icon;
               return (
                 <motion.div
-                  key={feature.title}
+                  key={benefit.title}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
-                  className="bg-background rounded-theme-xl p-6 border border-secondary/10 hover:border-primary/40 transition-all hover:shadow-lg"
+                  className={`${benefit.bgColor} rounded-2xl p-6 md:p-8 border border-gray-200 dark:border-zinc-800 hover:shadow-lg transition-all`}
                 >
-                  <div
-                    className="w-12 h-12 rounded-theme-lg flex items-center justify-center mb-4"
-                    style={{ backgroundColor: `${feature.color}20` }}
-                  >
-                    <Icon className="w-6 h-6" style={{ color: feature.color }} />
+                  <div className={`w-12 h-12 rounded-xl ${benefit.color} bg-opacity-10 flex items-center justify-center mb-4`}>
+                    <Icon className={`w-6 h-6 ${benefit.color.replace('bg-', 'text-')}`} />
                   </div>
-                  <h3 className="text-xl font-bold text-text mb-2">{feature.title}</h3>
-                  <p className="text-text/60">{feature.description}</p>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                    {benefit.title}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {benefit.description}
+                  </p>
                 </motion.div>
               );
             })}
@@ -172,138 +299,24 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Presets Showcase */}
-      <section className="py-20 bg-background">
-        <div className="max-w-7xl mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-3xl md:text-5xl font-bold text-text mb-4">
-              Diseños para cada tipo de negocio
-            </h2>
-            <p className="text-lg text-text/60 max-w-2xl mx-auto">
-              Elige entre múltiples estilos predefinidos o crea el tuyo propio desde cero
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {presets.map((preset, index) => (
-              <motion.div
-                key={preset.name}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className="relative aspect-[9/16] rounded-theme-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all cursor-pointer group"
-                style={{
-                  background: `linear-gradient(135deg, ${preset.colors[0]}40, ${preset.colors[1]}40)`,
-                }}
-              >
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-                  <div className="text-6xl mb-4 group-hover:scale-110 transition-transform">
-                    {preset.emoji}
-                  </div>
-                  <h3 className="text-xl font-bold text-text">{preset.name}</h3>
-                </div>
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Section */}
-      <section className="py-20 bg-card">
-        <div className="max-w-7xl mx-auto px-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-3xl md:text-5xl font-bold text-text mb-4">
-              Planes simples y transparentes
-            </h2>
-            <p className="text-lg text-text/60 max-w-2xl mx-auto">
-              Comienza gratis y escala cuando lo necesites
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {plans.map((plan, index) => (
-              <motion.div
-                key={plan.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.2 }}
-                className={`relative rounded-theme-xl p-8 border-2 ${
-                  plan.highlighted
-                    ? 'border-primary shadow-2xl scale-105'
-                    : 'border-secondary/10 shadow-lg'
-                }`}
-              >
-                {plan.highlighted && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-4 py-1 bg-primary text-white text-sm font-bold rounded-full">
-                    Más Popular
-                  </div>
-                )}
-
-                <div className="text-center mb-6">
-                  <h3 className="text-2xl font-bold text-text mb-2">{plan.name}</h3>
-                  <div className="flex items-baseline justify-center gap-2">
-                    <span className="text-5xl font-bold text-text">{plan.price}</span>
-                    <span className="text-text/60">/{plan.period}</span>
-                  </div>
-                </div>
-
-                <ul className="space-y-3 mb-8">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-3">
-                      <Check className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                      <span className="text-text/80">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <Link
-                  href={plan.href}
-                  className={`block w-full py-3 rounded-theme-lg font-bold text-center transition-all ${
-                    plan.highlighted
-                      ? 'bg-primary text-white shadow-lg hover:shadow-xl'
-                      : 'bg-secondary/10 text-text hover:bg-secondary/20'
-                  }`}
-                >
-                  {plan.cta}
-                </Link>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-br from-primary to-accent">
+      {/* CTA Final */}
+      <section className="py-16 md:py-24 bg-primary">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
           >
-            <h2 className="text-3xl md:text-5xl font-bold text-white mb-6">
-              ¿Listo para crear tu catálogo digital?
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              ¿Listo para comenzar?
             </h2>
             <p className="text-xl text-white/90 mb-8">
-              Únete a cientos de negocios que ya usan HYUK
+              Crea tu catálogo digital en menos de 5 minutos
             </p>
             <Link
               href="/signup"
-              className="inline-flex items-center gap-2 px-8 py-4 rounded-theme-lg bg-white text-primary font-bold shadow-xl hover:shadow-2xl transition-all hover:scale-105"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-primary rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all hover:scale-105"
             >
-              Comenzar Ahora - Es Gratis
+              Crear mi tienda gratis
               <ArrowRight className="w-5 h-5" />
             </Link>
           </motion.div>
@@ -311,45 +324,9 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-card border-t border-secondary/10 py-12">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-            <div className="col-span-1 md:col-span-2">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-10 h-10 rounded-theme-lg bg-primary flex items-center justify-center text-white">
-                  <Store className="w-5 h-5" />
-                </div>
-                <span className="text-xl font-bold text-text">HYUK</span>
-              </div>
-              <p className="text-text/60 max-w-sm">
-                La plataforma de catálogos digitales con personalización extrema y pedidos a WhatsApp.
-              </p>
-            </div>
-
-            <div>
-              <h4 className="font-bold text-text mb-4">Producto</h4>
-              <ul className="space-y-2">
-                <li><Link href="/#features" className="text-text/60 hover:text-primary transition-colors">Características</Link></li>
-                <li><Link href="/#pricing" className="text-text/60 hover:text-primary transition-colors">Precios</Link></li>
-                <li><Link href="/demo" className="text-text/60 hover:text-primary transition-colors">Demo</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-bold text-text mb-4">Empresa</h4>
-              <ul className="space-y-2">
-                <li><Link href="/signup" className="text-text/60 hover:text-primary transition-colors">Comenzar</Link></li>
-                <li><Link href="/login" className="text-text/60 hover:text-primary transition-colors">Iniciar Sesión</Link></li>
-                <li><a href="mailto:contacto@hyuk.app" className="text-text/60 hover:text-primary transition-colors">Contacto</a></li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="border-t border-secondary/10 pt-8 text-center">
-            <p className="text-sm text-text/40">
-              © {new Date().getFullYear()} HYUK. Todos los derechos reservados.
-            </p>
-          </div>
+      <footer className="bg-gray-50 dark:bg-zinc-900 border-t border-gray-200 dark:border-zinc-800 py-8">
+        <div className="max-w-7xl mx-auto px-4 text-center text-sm text-gray-600 dark:text-gray-400">
+          <p>© 2024 HYUK. Todos los derechos reservados.</p>
         </div>
       </footer>
     </div>

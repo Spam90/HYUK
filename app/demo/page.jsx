@@ -1,175 +1,86 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Palette, ExternalLink, MessageCircle, Store } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import ThemeProvider from '@/components/theme/ThemeProvider';
 import { CartProvider } from '@/context/CartContext';
-import HeaderVariant from '@/components/catalog/HeaderVariant';
-import CategoryNav from '@/components/catalog/CategoryNav';
-import ProductGrid from '@/components/catalog/ProductGrid';
-import CartDrawer from '@/components/catalog/CartDrawer';
 import { DEFAULT_SETTINGS } from '@/lib/theme/defaults';
+import CatalogView from '@/app/[slug]/CatalogView';
 
-// Datos de demo
-const DEMO_CATEGORIES = [
-  { id: 'cat-1', name: 'Entradas', icon: 'utensils', sort_order: 1 },
-  { id: 'cat-2', name: 'Platos Principales', icon: 'chefhat', sort_order: 2 },
-  { id: 'cat-3', name: 'Postres', icon: 'cake', sort_order: 3 },
-  { id: 'cat-4', name: 'Bebidas', icon: 'coffee', sort_order: 4 },
-];
-
-const DEMO_PRODUCTS = [
-  {
-    id: 'prod-1',
-    name: 'Hamburguesa Clásica',
-    description: 'Carne 100% res, queso cheddar, lechuga, tomate y salsa especial',
-    price: 350,
-    image_url: null,
-    category_id: 'cat-2',
-    is_available: true,
-    is_featured: true,
-    badge: 'Popular',
-    options: [
-      {
-        name: 'Tamaño',
-        choices: [
-          { label: 'Simple', priceDelta: 0 },
-          { label: 'Doble', priceDelta: 100 },
-          { label: 'Triple', priceDelta: 200 },
-        ],
-        is_required: true,
-      },
-      {
-        name: 'Extras',
-        choices: [
-          { label: 'Queso extra', priceDelta: 50 },
-          { label: 'Tocino', priceDelta: 75 },
-          { label: 'Huevo', priceDelta: 40 },
-        ],
-        is_required: false,
-      },
-    ],
-  },
-  {
-    id: 'prod-2',
-    name: 'Pizza Margherita',
-    description: 'Salsa de tomate, mozzarella fresca y albahaca',
-    price: 450,
-    image_url: null,
-    category_id: 'cat-2',
-    is_available: true,
-    is_featured: false,
-    badge: null,
-    options: [],
-  },
-  {
-    id: 'prod-3',
-    name: 'Ensalada César',
-    description: 'Lechuga romana, pollo a la parrilla, crutones y aderezo césar',
-    price: 280,
-    image_url: null,
-    category_id: 'cat-1',
-    is_available: true,
-    is_featured: false,
-    badge: null,
-    options: [],
-  },
-  {
-    id: 'prod-4',
-    name: 'Cheesecake de Fresa',
-    description: 'Base de galleta, crema de queso y fresas frescas',
-    price: 220,
-    image_url: null,
-    category_id: 'cat-3',
-    is_available: true,
-    is_featured: false,
-    badge: 'Nuevo',
-    options: [],
-  },
-  {
-    id: 'prod-5',
-    name: 'Limonada Natural',
-    description: 'Limonada fresca con hierbabuena',
-    price: 90,
-    image_url: null,
-    category_id: 'cat-4',
-    is_available: true,
-    is_featured: false,
-    badge: null,
-    options: [],
-  },
-  {
-    id: 'prod-6',
-    name: 'Café Latte',
-    description: 'Espresso con leche vaporizada',
-    price: 120,
-    image_url: null,
-    category_id: 'cat-4',
-    is_available: false,
-    is_featured: false,
-    badge: null,
-    options: [],
-  },
-];
-
-const DEMO_STORE = {
-  store_name: 'Mi Restaurante Demo',
-  full_name: 'Mi Restaurante Demo',
-  logo_url: '',
-  whatsapp_number: '18091234567',
-};
+export const dynamic = 'force-dynamic';
 
 export default function DemoPage() {
-  const [activeCategory, setActiveCategory] = useState(null);
-
-  const filteredProducts = activeCategory
-    ? DEMO_PRODUCTS.filter(p => p.category_id === activeCategory)
-    : DEMO_PRODUCTS;
+  const [showBanner, setShowBanner] = useState(true);
+  const router = useRouter();
 
   return (
-    <ThemeProvider initialSettings={DEFAULT_SETTINGS}>
-      <CartProvider>
-        <div className="min-h-screen bg-background text-text">
-          {/* Announcement Bar */}
-          <div
-            className="text-center text-white text-sm py-2 px-4 font-medium"
-            style={{ backgroundColor: DEFAULT_SETTINGS.theme.primaryColor }}
+    <div className="min-h-screen bg-gray-50 dark:bg-zinc-950">
+      {/* Floating Demo Banner - Tiendanube Style */}
+      <AnimatePresence>
+        {showBanner && (
+          <motion.div
+            initial={{ y: -100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -100, opacity: 0 }}
+            className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-primary to-emerald-600 text-white shadow-lg"
           >
-            🚚 Envíos gratis en pedidos mayores a $1,000
-          </div>
-
-          <HeaderVariant store={DEMO_STORE} settings={DEFAULT_SETTINGS} />
-
-          <CategoryNav
-            categories={DEMO_CATEGORIES}
-            activeCategory={activeCategory}
-            onSelectCategory={setActiveCategory}
-            settings={DEFAULT_SETTINGS}
-          />
-
-          <main className="max-w-3xl mx-auto px-4 py-6">
-            <ProductGrid
-              products={filteredProducts}
-              settings={DEFAULT_SETTINGS}
-              categories={DEMO_CATEGORIES}
-            />
-
-            <footer className="mt-16 pb-8 text-center">
-              <div
-                className="mx-auto w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg"
-                style={{ backgroundColor: DEFAULT_SETTINGS.theme.primaryColor }}
-              >
-                <span className="text-xl font-bold">M</span>
+            <div className="max-w-7xl mx-auto px-4 py-3">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
+                    <Store className="w-4 h-4" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium">
+                      Estás viendo una demo en vivo de HYUK
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => router.push('/signup')}
+                    className="hidden sm:flex items-center gap-1.5 px-4 py-2 bg-white text-primary rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors shrink-0"
+                  >
+                    <Palette className="w-4 h-4" />
+                    Probar a personalizar esta tienda
+                  </button>
+                  <button
+                    onClick={() => setShowBanner(false)}
+                    className="w-8 h-8 rounded-lg bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors shrink-0"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-              <p className="mt-3 text-sm font-semibold text-text">Mi Restaurante Demo</p>
-              <p className="text-xs text-text/40 mt-1">
-                Catálogo Digital © {new Date().getFullYear()} | Hecho con SAS
-              </p>
-            </footer>
-          </main>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-          <CartDrawer store={DEMO_STORE} settings={DEFAULT_SETTINGS} />
+      {/* Mobile CTA Button (visible when banner is closed) */}
+      {!showBanner && (
+        <div className="fixed top-4 left-4 right-4 z-40 sm:hidden">
+          <button
+            onClick={() => router.push('/signup')}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary text-white rounded-xl shadow-lg font-medium"
+          >
+            <Palette className="w-4 h-4" />
+            Personalizar esta tienda
+          </button>
         </div>
-      </CartProvider>
-    </ThemeProvider>
+      )}
+
+      {/* Catalog Content */}
+      <div className={showBanner ? 'pt-16' : ''}>
+        <ThemeProvider initialSettings={DEFAULT_SETTINGS}>
+          <CartProvider>
+            <CatalogView />
+          </CartProvider>
+        </ThemeProvider>
+      </div>
+    </div>
   );
 }
