@@ -49,7 +49,7 @@ export async function middleware(request) {
         .from('profiles')
         .select('id')
         .eq('slug', subdomain)
-        .single();
+        .maybeSingle();
 
       if (store) {
         // Reescribir la URL a /[slug] manteniendo la URL original en el navegador

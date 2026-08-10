@@ -23,6 +23,7 @@ export default function SignupPage() {
         email,
         password,
         options: {
+          emailRedirectTo: `${window.location.origin}/admin/customize`,
           data: {
             full_name: name,
           },
@@ -31,7 +32,7 @@ export default function SignupPage() {
 
       if (error) throw error;
 
-      // Crear perfil del usuario
+      // Crear perfil del usuario con settings por defecto
       if (data.user) {
         const { error: profileError } = await supabase
           .from('profiles')
@@ -40,9 +41,53 @@ export default function SignupPage() {
             full_name: name,
             email: email,
             slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+            settings: {
+              theme: {
+                primaryColor: '#10B981',
+                secondaryColor: '#0F172A',
+                backgroundColor: '#FAFAFA',
+                cardBackgroundColor: '#FFFFFF',
+                textColor: '#0F172A',
+                accentColor: '#F59E0B',
+                borderRadius: 'rounded-2xl',
+                fontFamily: 'font-sans',
+                mode: 'light'
+              },
+              layout: {
+                productGrid: 'grid-2-col',
+                headerStyle: 'banner-large',
+                categoryStyle: 'pills-scroll',
+                productCardStyle: 'modern-shadow'
+              },
+              banner: {
+                imageUrl: '',
+                tagline: '¡Los mejores productos a un clic!',
+                showAnnouncementBar: true,
+                announcementText: '🚚 Envíos gratis en pedidos mayores a $1,000'
+              },
+              whatsapp_checkout: {
+                customMessageHeader: '🛒 *¡NUEVO PEDIDO DE CLIENTE!*',
+                askForAddress: true,
+                askForPaymentMethod: true,
+                paymentOptions: ['Efectivo', 'Transferencia / Zelle', 'Tarjeta al recibir'],
+                requireClientName: true,
+                deliveryMethods: ['A domicilio', 'Retiro en local']
+              }
+            },
           });
 
         if (profileError) throw profileError;
+      }
+
+      // Intentar iniciar sesión para asegurar que la sesión se mantenga
+      // (especialmente si la confirmación de email está habilitada)
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) {
+        console.warn('Auto-login after signup failed:', signInError.message);
       }
 
       // Redirigir al dashboard (o a la URL de redirect si existe)
