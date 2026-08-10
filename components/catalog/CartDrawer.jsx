@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
-import { X, Plus, Minus, Trash2, MessageCircle, MapPin, User, CreditCard, Bike, Store } from 'lucide-react';
+import { X, Plus, Minus, Trash2, MessageCircle, MapPin, User, CreditCard, Bike, Store, ShoppingBag } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useTheme } from '@/components/theme/ThemeProvider';
 import { formatPrice, generateWhatsAppUrl } from '@/lib/whatsapp/checkout';
@@ -26,6 +26,7 @@ export default function CartDrawer({ store, settings }) {
   const [deliveryMethod, setDeliveryMethod] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Bloquear scroll cuando el drawer está abierto
   useEffect(() => {
@@ -133,94 +134,111 @@ export default function CartDrawer({ store, settings }) {
     <AnimatePresence>
       {isCartOpen && (
         <>
-          {/* Overlay */}
+          {/* Backdrop with blur */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md"
             onClick={closeCart}
           />
 
-          {/* Drawer */}
+          {/* Bottom Sheet / Drawer */}
           <motion.div
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
+            initial={{ y: '100%', opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: '100%', opacity: 0 }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed right-0 inset-y-0 z-50 w-full max-w-md bg-card shadow-2xl flex flex-col"
+            className="fixed bottom-0 left-0 right-0 z-50 max-h-[90vh] bg-white dark:bg-zinc-900 rounded-t-[2rem] shadow-2xl flex flex-col safe-bottom"
           >
-            {/* Header del drawer */}
-            <div className="p-4 border-b border-secondary/10 flex items-center justify-between">
-              <div className="flex items-center gap-2">
+            {/* Handle Bar */}
+            <div className="flex justify-center pt-3 pb-2">
+              <div className="w-12 h-1.5 bg-gray-300 dark:bg-zinc-700 rounded-full" />
+            </div>
+
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-gray-100 dark:border-zinc-800 flex items-center justify-between">
+              <div className="flex items-center gap-3">
                 <div 
-                  className="w-10 h-10 rounded-theme-md flex items-center justify-center text-white"
-                  style={{ backgroundColor: theme.primaryColor }}
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg"
+                  style={{ 
+                    backgroundColor: theme.primaryColor,
+                    boxShadow: `0 4px 12px ${theme.primaryColor}40`
+                  }}
                 >
-                  <MessageCircle className="w-5 h-5" />
+                  <ShoppingBag className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-text">Tu Pedido</h3>
-                  <p className="text-xs text-text/50">
+                  <h3 className="font-bold text-lg text-gray-900 dark:text-white">Tu Pedido</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     {cartItems.length} {cartItems.length === 1 ? 'producto' : 'productos'}
                   </p>
                 </div>
               </div>
               <button
                 onClick={closeCart}
-                className="w-9 h-9 rounded-full flex items-center justify-center bg-secondary/10 hover:bg-secondary/20 transition-colors"
+                className="w-10 h-10 rounded-full flex items-center justify-center bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 transition-colors"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
               </button>
             </div>
 
-            {/* Contenido del carrito */}
+            {/* Content */}
             {cartItems.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-                <div className="text-6xl mb-4">🛒</div>
-                <h4 className="text-lg font-semibold text-text">Tu carrito está vacío</h4>
-                <p className="text-sm text-text/50 mt-1">
+                <div className="w-20 h-20 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center mb-4">
+                  <ShoppingBag className="w-10 h-10 text-gray-400" />
+                </div>
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  Tu carrito está vacío
+                </h4>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
                   Agrega productos de nuestro catálogo para hacer tu pedido
                 </p>
                 <button
                   onClick={closeCart}
-                  className="mt-6 px-6 py-3 rounded-theme-lg text-white font-semibold shadow-lg transition-transform active:scale-95"
-                  style={{ backgroundColor: theme.primaryColor }}
+                  className="px-6 py-3 rounded-2xl text-white font-semibold shadow-lg transition-transform active:scale-95"
+                  style={{ 
+                    backgroundColor: theme.primaryColor,
+                    boxShadow: `0 4px 12px ${theme.primaryColor}40`
+                  }}
                 >
                   Ver catálogo
                 </button>
               </div>
             ) : (
               <>
-                {/* Lista de items */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {/* Items List */}
+                <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
                   {cartItems.map((item) => (
                     <motion.div
                       key={item.key}
                       layout
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, x: 50 }}
-                      className="flex gap-3 bg-background rounded-theme-lg p-3 border border-secondary/5"
+                      exit={{ opacity: 0, x: -50 }}
+                      className="flex gap-3 bg-gray-50 dark:bg-zinc-800/50 rounded-2xl p-3 border border-gray-100 dark:border-zinc-800"
                     >
-                      {/* Imagen */}
-                      <div className="w-16 h-16 rounded-theme-md overflow-hidden relative shrink-0 bg-secondary/5">
+                      {/* Image */}
+                      <div className="w-20 h-20 rounded-xl overflow-hidden relative shrink-0 bg-gray-100 dark:bg-zinc-800">
                         {item.imageUrl ? (
-                          <Image src={item.imageUrl} alt={item.name} fill className="object-cover" sizes="64px" />
+                          <Image src={item.imageUrl} alt={item.name} fill className="object-cover" sizes="80px" />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-xl">🍽️</div>
+                          <div className="w-full h-full flex items-center justify-center text-3xl">🍽️</div>
                         )}
                       </div>
 
-                      {/* Info del item */}
+                      {/* Info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <h5 className="text-sm font-semibold text-text leading-tight">{item.name}</h5>
+                          <div className="flex-1">
+                            <h5 className="text-sm font-semibold text-gray-900 dark:text-white leading-tight">
+                              {item.name}
+                            </h5>
                             {item.selectedOptions?.length > 0 && (
-                              <div className="mt-0.5 space-y-0.5">
+                              <div className="mt-1 space-y-0.5">
                                 {item.selectedOptions.map((opt, idx) => (
-                                  <p key={idx} className="text-xs text-text/50">
+                                  <p key={idx} className="text-xs text-gray-500 dark:text-gray-400">
                                     • {opt.label}
                                   </p>
                                 ))}
@@ -232,35 +250,38 @@ export default function CartDrawer({ store, settings }) {
                           </div>
                           <button
                             onClick={() => removeItem(item.key)}
-                            className="text-text/30 hover:text-red-500 transition-colors p-1"
+                            className="text-gray-400 hover:text-red-500 transition-colors p-1"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
 
-                        {/* Controles de cantidad */}
+                        {/* Quantity Controls */}
                         <div className="flex items-center justify-between mt-2">
                           <div className="flex items-center gap-2">
                             <motion.button
                               whileTap={{ scale: 0.85 }}
                               onClick={() => updateQuantity(item.key, item.quantity - 1)}
-                              className="w-7 h-7 rounded-full flex items-center justify-center bg-secondary/10 hover:bg-secondary/20 transition-colors"
+                              className="w-8 h-8 rounded-full flex items-center justify-center bg-white dark:bg-zinc-700 hover:bg-gray-100 dark:hover:bg-zinc-600 transition-colors border border-gray-200 dark:border-zinc-600"
                             >
-                              <Minus className="w-3.5 h-3.5" />
+                              <Minus className="w-4 h-4 text-gray-600 dark:text-gray-300" />
                             </motion.button>
-                            <span className="text-sm font-bold text-text w-6 text-center">
+                            <span className="text-sm font-bold text-gray-900 dark:text-white w-6 text-center">
                               {item.quantity}
                             </span>
                             <motion.button
                               whileTap={{ scale: 0.85 }}
                               onClick={() => updateQuantity(item.key, item.quantity + 1)}
-                              className="w-7 h-7 rounded-full flex items-center justify-center text-white"
-                              style={{ backgroundColor: theme.primaryColor }}
+                              className="w-8 h-8 rounded-full flex items-center justify-center text-white shadow-md"
+                              style={{ 
+                                backgroundColor: theme.primaryColor,
+                                boxShadow: `0 2px 8px ${theme.primaryColor}40`
+                              }}
                             >
-                              <Plus className="w-3.5 h-3.5" />
+                              <Plus className="w-4 h-4" />
                             </motion.button>
                           </div>
-                          <p className="text-sm font-bold text-text">
+                          <p className="text-sm font-bold text-gray-900 dark:text-white">
                             {formatPrice(item.price * item.quantity)}
                           </p>
                         </div>
@@ -268,36 +289,38 @@ export default function CartDrawer({ store, settings }) {
                     </motion.div>
                   ))}
 
-                  {/* Botón limpiar */}
+                  {/* Clear Cart */}
                   <button
                     onClick={clearCart}
-                    className="w-full py-2 text-xs text-text/40 hover:text-red-500 transition-colors text-center"
+                    className="w-full py-2 text-xs text-gray-400 hover:text-red-500 transition-colors text-center"
                   >
                     Vaciar carrito
                   </button>
                 </div>
 
-                {/* Formulario de checkout */}
-                <div className="border-t border-secondary/10 p-4 space-y-3 bg-background/50">
-                  {/* Nombre del cliente */}
+                {/* Checkout Form */}
+                <div className="border-t border-gray-100 dark:border-zinc-800 p-6 space-y-4 bg-white dark:bg-zinc-900">
+                  {/* Customer Name */}
                   {checkoutConfig.requireClientName && (
-                    <div className="flex items-center gap-2 bg-card rounded-theme-lg p-3 border border-secondary/5">
-                      <User className="w-4 h-4 text-text/40 shrink-0" />
+                    <div className="flex items-center gap-3 bg-gray-50 dark:bg-zinc-800/50 rounded-2xl p-3.5 border border-gray-100 dark:border-zinc-800">
+                      <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-zinc-800 flex items-center justify-center">
+                        <User className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                      </div>
                       <input
                         type="text"
                         value={customerName}
                         onChange={(e) => setCustomerName(e.target.value)}
                         placeholder="Tu nombre *"
-                        className="flex-1 bg-transparent text-sm text-text placeholder:text-text/30 focus:outline-none"
+                        className="flex-1 bg-transparent text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none"
                       />
                     </div>
                   )}
 
-                  {/* Método de entrega */}
+                  {/* Delivery Method */}
                   {checkoutConfig.deliveryMethods?.length > 0 && (
-                    <div className="bg-card rounded-theme-lg p-3 border border-secondary/5">
-                      <p className="text-xs font-semibold text-text/60 mb-2 flex items-center gap-1.5">
-                        <Bike className="w-3.5 h-3.5" />
+                    <div className="bg-gray-50 dark:bg-zinc-800/50 rounded-2xl p-3.5 border border-gray-100 dark:border-zinc-800">
+                      <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2.5 flex items-center gap-2">
+                        <Bike className="w-4 h-4" />
                         Tipo de entrega
                       </p>
                       <div className="flex flex-wrap gap-2">
@@ -307,17 +330,24 @@ export default function CartDrawer({ store, settings }) {
                             <button
                               key={method}
                               onClick={() => setDeliveryMethod(method)}
-                              className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium border transition-all active:scale-95 ${
-                                isSelected
-                                  ? 'text-white border-transparent'
-                                  : 'border-secondary/15 text-text/60'
-                              }`}
-                              style={isSelected ? { backgroundColor: theme.primaryColor } : {}}
+                              className={`
+                                flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-medium
+                                transition-all duration-200 active:scale-95
+                              `}
+                              style={isSelected ? { 
+                                backgroundColor: theme.primaryColor,
+                                color: 'white',
+                                boxShadow: `0 2px 8px ${theme.primaryColor}40`
+                              } : {
+                                backgroundColor: 'white',
+                                color: 'gray',
+                                border: '1px solid #e5e7eb'
+                              }}
                             >
                               {method.includes('domicilio') || method.includes('Domicilio') ? (
-                                <Bike className="w-3 h-3" />
+                                <Bike className="w-3.5 h-3.5" />
                               ) : (
-                                <Store className="w-3 h-3" />
+                                <Store className="w-3.5 h-3.5" />
                               )}
                               {method}
                             </button>
@@ -327,25 +357,27 @@ export default function CartDrawer({ store, settings }) {
                     </div>
                   )}
 
-                  {/* Dirección */}
+                  {/* Address */}
                   {checkoutConfig.askForAddress && (
-                    <div className="flex items-center gap-2 bg-card rounded-theme-lg p-3 border border-secondary/5">
-                      <MapPin className="w-4 h-4 text-text/40 shrink-0" />
+                    <div className="flex items-center gap-3 bg-gray-50 dark:bg-zinc-800/50 rounded-2xl p-3.5 border border-gray-100 dark:border-zinc-800">
+                      <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-zinc-800 flex items-center justify-center">
+                        <MapPin className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                      </div>
                       <input
                         type="text"
                         value={customerAddress}
                         onChange={(e) => setCustomerAddress(e.target.value)}
                         placeholder="Dirección de entrega *"
-                        className="flex-1 bg-transparent text-sm text-text placeholder:text-text/30 focus:outline-none"
+                        className="flex-1 bg-transparent text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none"
                       />
                     </div>
                   )}
 
-                  {/* Método de pago */}
+                  {/* Payment Method */}
                   {checkoutConfig.askForPaymentMethod && (
-                    <div className="bg-card rounded-theme-lg p-3 border border-secondary/5">
-                      <p className="text-xs font-semibold text-text/60 mb-2 flex items-center gap-1.5">
-                        <CreditCard className="w-3.5 h-3.5" />
+                    <div className="bg-gray-50 dark:bg-zinc-800/50 rounded-2xl p-3.5 border border-gray-100 dark:border-zinc-800">
+                      <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2.5 flex items-center gap-2">
+                        <CreditCard className="w-4 h-4" />
                         Método de pago
                       </p>
                       <div className="flex flex-wrap gap-2">
@@ -355,12 +387,19 @@ export default function CartDrawer({ store, settings }) {
                             <button
                               key={method}
                               onClick={() => setPaymentMethod(method)}
-                              className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all active:scale-95 ${
-                                isSelected
-                                  ? 'text-white border-transparent'
-                                  : 'border-secondary/15 text-text/60'
-                              }`}
-                              style={isSelected ? { backgroundColor: theme.primaryColor } : {}}
+                              className={`
+                                px-4 py-2 rounded-xl text-xs font-medium
+                                transition-all duration-200 active:scale-95
+                              `}
+                              style={isSelected ? { 
+                                backgroundColor: theme.primaryColor,
+                                color: 'white',
+                                boxShadow: `0 2px 8px ${theme.primaryColor}40`
+                              } : {
+                                backgroundColor: 'white',
+                                color: 'gray',
+                                border: '1px solid #e5e7eb'
+                              }}
                             >
                               {method}
                             </button>
@@ -370,10 +409,10 @@ export default function CartDrawer({ store, settings }) {
                     </div>
                   )}
 
-                  {/* Total y botón de confirmación */}
+                  {/* Total and Checkout Button */}
                   <div className="flex items-center justify-between pt-2">
                     <div>
-                      <p className="text-xs text-text/50">Total del pedido</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Total del pedido</p>
                       <p className="text-2xl font-bold" style={{ color: theme.primaryColor }}>
                         {formatPrice(cartTotal)}
                       </p>
@@ -382,7 +421,7 @@ export default function CartDrawer({ store, settings }) {
                       whileTap={{ scale: 0.95 }}
                       onClick={handleWhatsAppCheckout}
                       disabled={isSubmitting}
-                      className="flex items-center gap-2 px-5 py-3.5 rounded-theme-lg text-sm font-bold text-white shadow-lg disabled:opacity-60"
+                      className="flex items-center gap-2 px-6 py-3.5 rounded-2xl text-sm font-bold text-white shadow-lg disabled:opacity-60"
                       style={{ 
                         backgroundColor: '#25D366',
                         boxShadow: '0 4px 15px rgba(37, 211, 102, 0.3)',
