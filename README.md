@@ -289,6 +289,89 @@ Este proyecto es propietario. Todos los derechos reservados.
 
 ---
 
+## 📊 Estado Actual del Proyecto
+
+### ✅ Módulos completados
+
+#### MÓDULO 1: Esquema de Base de Datos e Inicialización ✅
+- **Tabla `profiles`**: Extendida con `slug`, `business_name`, `tagline`, `phone_whatsapp`, `plan_type` y `settings` JSONB
+- **Tabla `categories`**: CRUD completo con RLS, índices y triggers
+- **Tabla `products`**: CRUD completo con precio, imagen, badge, disponibilidad y opciones JSONB
+- **Tabla `product_options`**: Para variantes de productos (tamaños, extras, etc.)
+- **Triggers**: Actualización automática de `updated_at` en todas las tablas
+- **Políticas RLS**: 
+  - Lectura pública de perfiles, categorías activas y productos disponibles
+  - Escritura restringida al dueño autenticado
+- **Seed Data**: Documentado con ejemplos de inserción de datos demo (perfil, 3 categorías, 6 productos)
+- **Índices**: Optimizados para búsquedas por `slug`, `store_id`, `category_id`
+
+#### MÓDULO 2: Configuración de Clientes y Estado Global ✅
+- **`lib/supabase/client.js`**: Cliente Supabase para navegador con `createBrowserClient`
+- **`lib/supabase/server.js`**: Cliente Supabase para Server Components con cookies
+- **`lib/theme/defaults.js`**: 
+  - `DEFAULT_SETTINGS` con estructura completa de tema, layout, banner y WhatsApp
+  - 5 presets de colores (Elegante, Comida Rápida, Botánica, Neón, Minimalista)
+  - 6 opciones de tipografía Google Fonts
+  - 4 opciones de border radius
+  - 5 layouts de productos
+  - 4 estilos de header
+  - 4 estilos de categorías
+  - 4 estilos de tarjetas
+  - Mapeos de fuentes y bordes a CSS
+- **`context/CartContext.jsx`**: 
+  - Estado del carrito con `cartItems`, `isCartOpen`
+  - Funciones: `addItem`, `removeItem`, `updateQuantity`, `clearCart`
+  - Cálculo de `cartCount` y `cartTotal` con `useMemo`
+  - Soporte para opciones de producto con precio dinámico
+- **`lib/whatsapp/checkout.js`**: 
+  - `generateWhatsAppUrl()`: Genera URL completa de WhatsApp
+  - `generateWhatsAppMessage()`: Formatea mensaje con emojis, saltos de línea y detalles
+  - `formatPrice()`: Formatea precios en español
+  - `calculateCartTotal()`: Calcula total del carrito
+  - `getItemUnitPrice()`: Calcula precio unitario con opciones
+  - `getItemDescription()`: Genera descripción del producto con opciones
+
+#### MÓDULO 3: Motor Inyector de Temas Dinámicos ✅
+- **`components/theme/ThemeProvider.jsx`**:
+  - Componente cliente que recibe `settings` como prop
+  - Inyecta variables CSS dinámicas en `:root`:
+    - `--primary`, `--secondary`, `--background`, `--card-bg`, `--text-color`, `--accent`
+    - `--radius-sm`, `--radius-md`, `--radius-lg`, `--radius-xl`
+    - `--font-family`
+  - Carga dinámicamente Google Fonts según la selección
+  - Soporte para modo oscuro/claro con clase `dark`
+  - Merge de settings con defaults para garantizar todas las keys
+  - Funciones: `updateSettings`, `updateFullSettings`, `resetSettings`
+  - Context API para consumo global con `useTheme()`
+
+### 📁 Archivos creados o modificados en este paso
+- `supabase/schema.sql` - Esquema completo reestructurado con seed data
+- `lib/supabase/client.js` - Cliente Supabase browser (verificado)
+- `lib/supabase/server.js` - Cliente Supabase server (verificado)
+- `lib/theme/defaults.js` - Defaults, presets y opciones (verificado)
+- `context/CartContext.jsx` - Contexto del carrito (verificado)
+- `lib/whatsapp/checkout.js` - Utilidades de WhatsApp (verificado)
+- `components/theme/ThemeProvider.jsx` - Motor de temas dinámicos (verificado)
+
+### 🚀 Siguientes pasos recomendados / Faltantes
+- **Subida de imágenes**: Implementar Supabase Storage para banners y productos
+- **Gestión de opciones de producto**: CRUD de variantes/tamaños/extras en panel admin
+- **Dashboard de pedidos**: Ver pedidos recibidos por WhatsApp
+- **Analytics**: Métricas de visitas y conversiones
+- **Notificaciones**: Email/SMS cuando llega un pedido
+- **Multi-idioma**: Soporte i18n para múltiples idiomas
+- **Métodos de pago**: Integración con pasarelas de pago online
+- **Skeleton loaders**: Estados de carga visuales mientras se obtienen datos
+- **Estados vacíos mejorados**: Mensajes más amigables para categorías sin productos
+
+### ⚠️ Errores o advertencias pendientes
+- **Rate limit Supabase**: El endpoint `/signup` puede retornar 429 si se intentan muchos registros seguidos (limitación de Supabase, no es bug)
+- **Framer Motion warning**: `NotFoundError: Failed to execute 'removeChild'` - Warning menor al desmontar componentes, no crítico
+- **Imágenes**: Actualmente se usan URLs externas, falta implementar almacenamiento propio
+- **Configuración de Supabase Auth**: Requiere configuración manual en el dashboard de Supabase (ver sección de despliegue)
+
+---
+
 ## 🚀 Guía de Despliegue en Producción
 
 ### 1. Configuración de Supabase
