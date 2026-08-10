@@ -1,266 +1,277 @@
-// Script para ejecutar el esquema SQL en Supabase
-// Uso: node scripts/setup-supabase.js
-// Requiere: SUPABASE_ACCESS_TOKEN y PROJECT_REF como variables de entorno
-const SUPABASE_ACCESS_TOKEN = process.env.SUPABASE_ACCESS_TOKEN;
-const PROJECT_REF = process.env.SUPABASE_PROJECT_REF;
+#!/usr/bin/env node
 
-if (!SUPABASE_ACCESS_TOKEN || !PROJECT_REF) {
-  console.error('❌ Error: Se requieren las variables de entorno SUPABASE_ACCESS_TOKEN y SUPABASE_PROJECT_REF');
-  console.error('');
-  console.error('Ejemplo:');
-  console.error('  SET SUPABASE_ACCESS_TOKEN=sbp_...');
-  console.error('  SET SUPABASE_PROJECT_REF=tu-project-ref');
-  console.error('  node scripts/setup-supabase.js');
-  process.exit(1);
-}
+/**
+ * Script de verificación y configuración de Supabase para HYUK
+ * 
+ * Uso:
+ * 1. Asegúrate de tener un archivo .env.local con:
+ *    NEXT_PUBLIC_SUPABASE_URL=tu-url
+ *    NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-key
+ * 
+ * 2. Ejecuta: node scripts/setup-supabase.js
+ */
 
-// Construir el SQL completo desde cero
-const fullSql = [
-  '-- =============================================',
-  '-- ESQUEMA COMPLETO SUPABASE - Catálogo Digital',
-  '-- =============================================',
-  '',
-  '-- Crear tabla profiles si no existe (requerida por Supabase Auth)',
-  'CREATE TABLE IF NOT EXISTS public.profiles (',
-  '  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,',
-  '  full_name TEXT,',
-  '  email TEXT,',
-  '  store_name TEXT,',
-  '  slug TEXT UNIQUE,',
-  '  logo_url TEXT,',
-  '  whatsapp_number TEXT,',
-  '  phone TEXT,',
-  '  settings JSONB DEFAULT $json$',
-  '{',
-  '  "theme": {',
-  '    "primaryColor": "#10B981",',
-  '    "secondaryColor": "#0F172A",',
-  '    "backgroundColor": "#FAFAFA",',
-  '    "cardBackgroundColor": "#FFFFFF",',
-  '    "textColor": "#0F172A",',
-  '    "accentColor": "#F59E0B",',
-  '    "borderRadius": "rounded-2xl",',
-  '    "fontFamily": "font-sans",',
-  '    "mode": "light"',
-  '  },',
-  '  "layout": {',
-  '    "productGrid": "grid-2-col",',
-  '    "headerStyle": "banner-large",',
-  '    "categoryStyle": "pills-scroll",',
-  '    "productCardStyle": "modern-shadow"',
-  '  },',
-  '  "banner": {',
-  '    "imageUrl": "",',
-  '    "tagline": "¡Los mejores productos a un clic!",',
-  '    "showAnnouncementBar": true,',
-  '    "announcementText": "🚚 Envíos gratis en pedidos mayores a $1,000"',
-  '  },',
-  '  "whatsapp_checkout": {',
-  '    "customMessageHeader": "🛒 *¡NUEVO PEDIDO DE CLIENTE!*",',
-  '    "askForAddress": true,',
-  '    "askForPaymentMethod": true,',
-  '    "paymentOptions": ["Efectivo", "Transferencia / Zelle", "Tarjeta al recibir"],',
-  '    "requireClientName": true,',
-  '    "deliveryMethods": ["A domicilio", "Retiro en local"]',
-  '  }',
-  '}$json$::jsonb,',
-  '  created_at TIMESTAMPTZ DEFAULT now(),',
-  '  updated_at TIMESTAMPTZ DEFAULT now()',
-  ');',
-  '',
-  '-- Trigger para actualizar updated_at en profiles',
-  'CREATE OR REPLACE FUNCTION update_profiles_updated_at()',
-  'RETURNS TRIGGER AS $func$',
-  'BEGIN',
-  '  NEW.updated_at = now();',
-  '  RETURN NEW;',
-  'END;',
-  '$func$ LANGUAGE plpgsql;',
-  '',
-  'DROP TRIGGER IF EXISTS update_profiles_updated_at ON profiles;',
-  'CREATE TRIGGER update_profiles_updated_at',
-  '  BEFORE UPDATE ON profiles',
-  '  FOR EACH ROW EXECUTE FUNCTION update_profiles_updated_at();',
-  '',
-  '-- RLS para profiles',
-  'ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;',
-  '',
-  '-- Políticas para profiles',
-  'DROP POLICY IF EXISTS "Public read profiles" ON profiles;',
-  'CREATE POLICY "Public read profiles" ON profiles',
-  '  FOR SELECT USING (true);',
-  '',
-  'DROP POLICY IF EXISTS "Owner manage profiles" ON profiles;',
-  'CREATE POLICY "Owner manage profiles" ON profiles',
-  '  FOR ALL USING (auth.uid() = id);',
-  '',
-  '-- =============================================',
-  '-- Tabla de categorías',
-  '-- =============================================',
-  'CREATE TABLE IF NOT EXISTS categories (',
-  '  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),',
-  '  store_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,',
-  '  name TEXT NOT NULL,',
-  '  slug TEXT NOT NULL,',
-  '  icon TEXT,',
-  '  image_url TEXT,',
-  '  sort_order INTEGER DEFAULT 0,',
-  '  is_active BOOLEAN DEFAULT true,',
-  '  created_at TIMESTAMPTZ DEFAULT now(),',
-  '  updated_at TIMESTAMPTZ DEFAULT now()',
-  ');',
-  '',
-  '-- Tabla de productos',
-  'CREATE TABLE IF NOT EXISTS products (',
-  '  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),',
-  '  store_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,',
-  '  category_id UUID REFERENCES categories(id) ON DELETE SET NULL,',
-  '  name TEXT NOT NULL,',
-  '  description TEXT,',
-  '  price DECIMAL(10,2) NOT NULL DEFAULT 0,',
-  '  compare_at_price DECIMAL(10,2),',
-  '  image_url TEXT,',
-  '  is_available BOOLEAN DEFAULT true,',
-  '  is_featured BOOLEAN DEFAULT false,',
-  '  badge TEXT,',
-  '  sort_order INTEGER DEFAULT 0,',
-  '  options JSONB DEFAULT $json$[]$json$::jsonb,',
-  '  created_at TIMESTAMPTZ DEFAULT now(),',
-  '  updated_at TIMESTAMPTZ DEFAULT now()',
-  ');',
-  '',
-  '-- Tabla de variantes/opciones de producto',
-  'CREATE TABLE IF NOT EXISTS product_options (',
-  '  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),',
-  '  product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,',
-  '  name TEXT NOT NULL,',
-  '  choices JSONB DEFAULT $json$[]$json$::jsonb,',
-  '  is_required BOOLEAN DEFAULT false,',
-  '  sort_order INTEGER DEFAULT 0',
-  ');',
-  '',
-  '-- Índices para rendimiento',
-  'CREATE INDEX IF NOT EXISTS idx_categories_store ON categories(store_id);',
-  'CREATE INDEX IF NOT EXISTS idx_products_store ON products(store_id);',
-  'CREATE INDEX IF NOT EXISTS idx_products_category ON products(category_id);',
-  'CREATE INDEX IF NOT EXISTS idx_product_options_product ON product_options(product_id);',
-  '',
-  '-- Trigger para actualizar updated_at',
-  'CREATE OR REPLACE FUNCTION update_updated_at()',
-  'RETURNS TRIGGER AS $func$',
-  'BEGIN',
-  '  NEW.updated_at = now();',
-  '  RETURN NEW;',
-  'END;',
-  '$func$ LANGUAGE plpgsql;',
-  '',
-  'DROP TRIGGER IF EXISTS update_categories_updated_at ON categories;',
-  'CREATE TRIGGER update_categories_updated_at',
-  '  BEFORE UPDATE ON categories',
-  '  FOR EACH ROW EXECUTE FUNCTION update_updated_at();',
-  '',
-  'DROP TRIGGER IF EXISTS update_products_updated_at ON products;',
-  'CREATE TRIGGER update_products_updated_at',
-  '  BEFORE UPDATE ON products',
-  '  FOR EACH ROW EXECUTE FUNCTION update_updated_at();',
-  '',
-  '-- Políticas RLS (Row Level Security)',
-  'ALTER TABLE categories ENABLE ROW LEVEL SECURITY;',
-  'ALTER TABLE products ENABLE ROW LEVEL SECURITY;',
-  'ALTER TABLE product_options ENABLE ROW LEVEL SECURITY;',
-  '',
-  '-- Políticas para categorías',
-  'DROP POLICY IF EXISTS "Public read categories" ON categories;',
-  'CREATE POLICY "Public read categories" ON categories',
-  '  FOR SELECT USING (is_active = true);',
-  '',
-  'DROP POLICY IF EXISTS "Owner manage categories" ON categories;',
-  'CREATE POLICY "Owner manage categories" ON categories',
-  '  FOR ALL USING (auth.uid() = store_id);',
-  '',
-  '-- Políticas para productos',
-  'DROP POLICY IF EXISTS "Public read products" ON products;',
-  'CREATE POLICY "Public read products" ON products',
-  '  FOR SELECT USING (is_available = true);',
-  '',
-  'DROP POLICY IF EXISTS "Owner manage products" ON products;',
-  'CREATE POLICY "Owner manage products" ON products',
-  '  FOR ALL USING (auth.uid() = store_id);',
-  '',
-  '-- Políticas para opciones de producto',
-  'DROP POLICY IF EXISTS "Public read product options" ON product_options;',
-  'CREATE POLICY "Public read product options" ON product_options',
-  '  FOR SELECT USING (true);',
-  '',
-  'DROP POLICY IF EXISTS "Owner manage product options" ON product_options;',
-  'CREATE POLICY "Owner manage product options" ON product_options',
-  '  FOR ALL USING (',
-  '    EXISTS (',
-  '      SELECT 1 FROM products p',
-  '      WHERE p.id = product_options.product_id',
-  '      AND p.store_id = auth.uid()',
-  '    )',
-  '  );'
-].join('\n');
+require('dotenv').config({ path: '.env.local' });
+const { createClient } = require('@supabase/supabase-js');
 
-// Función para ejecutar SQL
-async function executeSql(query) {
-  const response = await fetch(
-    'https://api.supabase.com/v1/projects/' + PROJECT_REF + '/database/query',
-    {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Bearer ' + SUPABASE_ACCESS_TOKEN,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ query }),
-    }
-  );
+// Colores para consola
+const colors = {
+  reset: '\x1b[0m',
+  green: '\x1b[32m',
+  red: '\x1b[31m',
+  yellow: '\x1b[33m',
+  blue: '\x1b[34m',
+  cyan: '\x1b[36m',
+};
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error('Error ejecutando SQL (' + response.status + '): ' + errorText);
+const log = {
+  info: (msg) => console.log(`${colors.blue}ℹ${colors.reset} ${msg}`),
+  success: (msg) => console.log(`${colors.green}✓${colors.reset} ${msg}`),
+  error: (msg) => console.log(`${colors.red}✗${colors.reset} ${msg}`),
+  warning: (msg) => console.log(`${colors.yellow}⚠${colors.reset} ${msg}`),
+  title: (msg) => console.log(`\n${colors.cyan}${msg}${colors.reset}\n`),
+};
+
+async function checkSupabaseConnection() {
+  log.title('🔍 Verificando conexión con Supabase...');
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    log.error('Variables de entorno no configuradas');
+    console.log('   Asegúrate de tener en .env.local:');
+    console.log('   - NEXT_PUBLIC_SUPABASE_URL');
+    console.log('   - NEXT_PUBLIC_SUPABASE_ANON_KEY');
+    process.exit(1);
   }
 
-  return response.json();
-}
-
-// Ejecutar el esquema
-async function main() {
-  console.log('🚀 Configurando Supabase...');
-  console.log('📦 Proyecto: ' + PROJECT_REF);
-  console.log('');
-
   try {
-    // Ejecutar el esquema completo
-    console.log('📝 Ejecutando esquema SQL...');
-    const result = await executeSql(fullSql);
-    console.log('✅ Esquema ejecutado exitosamente!');
-    console.log('');
-
-    // Verificar tablas creadas
-    console.log('🔍 Verificando tablas...');
-    const tablesQuery = 
-      "SELECT table_name " +
-      "FROM information_schema.tables " +
-      "WHERE table_schema = 'public' " +
-      "AND table_name IN ('profiles', 'categories', 'products', 'product_options') " +
-      "ORDER BY table_name;";
-    const tables = await executeSql(tablesQuery);
+    const supabase = createClient(supabaseUrl, supabaseKey);
     
-    if (tables && tables.length > 0) {
-      console.log('📋 Tablas encontradas:');
-      tables.forEach(t => console.log('  ✅ ' + t.table_name));
-    } else {
-      console.log('⚠️ No se encontraron tablas. Verificando...');
+    // Intentar una consulta simple para verificar la conexión
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('count')
+      .limit(1);
+
+    if (error && error.code !== '42P01') { // Ignorar error de tabla no existente
+      throw error;
     }
 
-    console.log('');
-    console.log('🎉 Configuración completada!');
+    log.success('Conexión exitosa con Supabase');
+    log.info(`URL: ${supabaseUrl}`);
+    return supabase;
   } catch (error) {
-    console.error('❌ Error:', error.message);
+    log.error('Error al conectar con Supabase');
+    console.log(`   ${error.message}`);
     process.exit(1);
   }
 }
 
+async function checkTables(supabase) {
+  log.title('📊 Verificando tablas de la base de datos...');
+
+  const tables = [
+    { name: 'profiles', required: true },
+    { name: 'categories', required: true },
+    { name: 'products', required: true },
+    { name: 'product_options', required: true },
+    { name: 'orders', required: true },
+  ];
+
+  let allTablesExist = true;
+
+  for (const table of tables) {
+    try {
+      const { data, error } = await supabase
+        .from(table.name)
+        .select('count')
+        .limit(1);
+
+      if (error && error.code === '42P01') {
+        log.error(`Tabla '${table.name}' NO EXISTE`);
+        if (table.required) {
+          allTablesExist = false;
+          console.log(`   ⚠ Esta tabla es requerida. Ejecuta el schema.sql en Supabase.`);
+        }
+      } else if (error) {
+        log.warning(`Tabla '${table.name}' - Error al verificar: ${error.message}`);
+      } else {
+        log.success(`Tabla '${table.name}' existe`);
+      }
+    } catch (error) {
+      log.error(`Error al verificar tabla '${table.name}': ${error.message}`);
+      allTablesExist = false;
+    }
+  }
+
+  return allTablesExist;
+}
+
+async function checkStorage(supabase) {
+  log.title('📦 Verificando Storage (Supabase Storage)...');
+
+  try {
+    // Intentar listar los buckets
+    const { data: buckets, error } = await supabase.storage.listBuckets();
+
+    if (error) {
+      log.error('Error al verificar Storage');
+      console.log(`   ${error.message}`);
+      return false;
+    }
+
+    const storeAssetsBucket = buckets.find(bucket => bucket.name === 'store-assets');
+
+    if (!storeAssetsBucket) {
+      log.warning("Bucket 'store-assets' NO EXISTE");
+      console.log('   ℹ Para crearlo, ejecuta en Supabase SQL Editor:');
+      console.log('   INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)');
+      console.log("   VALUES ('store-assets', 'store-assets', true, 5242880, ARRAY['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']::text[])");
+      console.log('   ON CONFLICT (id) DO NOTHING;');
+      return false;
+    }
+
+    log.success("Bucket 'store-assets' existe");
+    log.info(`   - Público: ${storeAssetsets.public ? 'Sí' : 'No'}`);
+    log.info(`   - Límite de tamaño: ${(storeAssetsBucket.file_size_limit / 1024 / 1024).toFixed(1)}MB`);
+    log.info(`   - Tipos permitidos: ${storeAssetsBucket.allowed_mime_types?.join(', ') || 'Todos'}`);
+    
+    return true;
+  } catch (error) {
+    log.error(`Error al verificar Storage: ${error.message}`);
+    return false;
+  }
+}
+
+async function checkRLSPolicies(supabase) {
+  log.title('🔒 Verificando políticas RLS...');
+
+  const policies = [
+    { table: 'profiles', policy: 'Public read profiles' },
+    { table: 'categories', policy: 'Public read active categories' },
+    { table: 'products', policy: 'Public read available products' },
+    { table: 'orders', policy: 'Public insert orders' },
+  ];
+
+  let allPoliciesExist = true;
+
+  for (const { table, policy } of policies) {
+    try {
+      // Intentar acceder a los datos para verificar RLS
+      const { data, error } = await supabase
+        .from(table)
+        .select('*')
+        .limit(1);
+
+      // Si no hay error de permisos, las políticas están funcionando
+      if (error && error.code === '42501') {
+        log.error(`RLS en '${table}' - Sin permisos de lectura`);
+        allPoliciesExist = false;
+      } else if (error && error.code === '42P01') {
+        log.warning(`Tabla '${table}' no existe, saltando verificación de RLS`);
+      } else {
+        log.success(`RLS en '${table}' - Configurado correctamente`);
+      }
+    } catch (error) {
+      log.error(`Error al verificar RLS en '${table}': ${error.message}`);
+      allPoliciesExist = false;
+    }
+  }
+
+  return allPoliciesExist;
+}
+
+async function checkAuthConfiguration() {
+  log.title('🔐 Verificando configuración de Auth...');
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const projectRef = supabaseUrl?.split('//')[1]?.split('.')[0];
+
+  if (!projectRef) {
+    log.warning('No se pudo extraer el project ref de la URL');
+    return;
+  }
+
+  log.info('Configuración requerida en Supabase Dashboard:');
+  console.log('   1. Ve a Authentication → URL Configuration');
+  console.log('   2. Configura Site URL:');
+  console.log(`      https://hyuk.vercel.app (o tu dominio)`);
+  console.log('   3. Agrega Redirect URLs:');
+  console.log('      https://hyuk.vercel.app/auth/callback');
+  console.log('      https://hyuk.vercel.app/admin/customize');
+  console.log('      http://localhost:3000/auth/callback');
+  console.log('      http://localhost:3000/admin/customize');
+  log.success('Configuración de Auth documentada');
+}
+
+async function generateReport(results) {
+  log.title('📋 Reporte de Verificación');
+
+  console.log('Resumen:');
+  console.log(`  ${results.connection ? colors.green + '✓' : colors.red + '✗'} Conexión a Supabase`);
+  console.log(`  ${results.tables ? colors.green + '✓' : colors.red + '✗'} Tablas de base de datos`);
+  console.log(`  ${results.storage ? colors.green + '✓' : colors.red + '✗'} Storage (imágenes)`);
+  console.log(`  ${results.rls ? colors.green + '✓' : colors.red + '✗'} Políticas RLS`);
+  console.log(`  ${results.auth ? colors.green + '✓' : colors.yellow + '⚠'} Configuración de Auth`);
+
+  console.log('\nPróximos pasos:');
+  
+  if (!results.tables) {
+    console.log(`  1. ${colors.yellow}Ejecuta el schema.sql en Supabase SQL Editor${colors.reset}`);
+  }
+  if (!results.storage) {
+    console.log(`  2. ${colors.yellow}Crea el bucket 'store-assets' en Supabase Storage${colors.reset}`);
+  }
+  if (!results.rls) {
+    console.log(`  3. ${colors.yellow}Verifica las políticas RLS en Supabase${colors.reset}`);
+  }
+
+  if (results.tables && results.storage && results.rls) {
+    console.log(`  ${colors.green}✓ Todo está listo! Puedes iniciar la aplicación con: npm run dev${colors.reset}`);
+  }
+}
+
+async function main() {
+  console.log('\n' + '='.repeat(60));
+  console.log('  🚀 HYUK - Verificación de Supabase');
+  console.log('='.repeat(60) + '\n');
+
+  const results = {
+    connection: false,
+    tables: false,
+    storage: false,
+    rls: false,
+    auth: false,
+  };
+
+  try {
+    const supabase = await checkSupabaseConnection();
+    results.connection = true;
+
+    results.tables = await checkTables(supabase);
+    results.storage = await checkStorage(supabase);
+    results.rls = await checkRLSPolicies(supabase);
+    await checkAuthConfiguration();
+    results.auth = true;
+
+    await generateReport(results);
+
+    console.log('\n' + '='.repeat(60));
+    console.log('  Verificación completada');
+    console.log('='.repeat(60) + '\n');
+
+    // Exit code: 0 si todo está bien, 1 si hay problemas
+    const allGood = results.tables && results.storage && results.rls;
+    process.exit(allGood ? 0 : 1);
+
+  } catch (error) {
+    log.error('Error durante la verificación');
+    console.error(error);
+    process.exit(1);
+  }
+}
+
+// Ejecutar script
 main();
