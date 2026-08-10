@@ -55,7 +55,7 @@ function CustomizePanel() {
           .from('profiles')
           .select('settings')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         if (fetchError) {
           console.error('Error fetching settings:', fetchError);
@@ -64,6 +64,15 @@ function CustomizePanel() {
 
         if (data?.settings) {
           updateFullSettings(data.settings);
+        } else {
+          // Create profile if it doesn't exist
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert({ id: user.id, settings: settings });
+          
+          if (insertError) {
+            console.error('Error creating profile:', insertError);
+          }
         }
       } catch (err) {
         console.error('Error cargando settings:', err);
@@ -94,8 +103,7 @@ function CustomizePanel() {
 
       const { data, error: updateError } = await supabase
         .from('profiles')
-        .update({ settings })
-        .eq('id', user.id)
+        .upsert({ id: user.id, settings })
         .select()
         .single();
 

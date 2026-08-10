@@ -36,7 +36,7 @@ export default function AdminDashboard() {
         .from('profiles')
         .select('slug')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
 
       if (profile?.slug) {
         setStoreUrl(`${profile.slug}.hyuk.app`);
