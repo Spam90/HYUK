@@ -485,6 +485,43 @@ Si tienes un dominio propio (ej: `mitienda.com`):
 - **Lazy loading**: Cliente Supabase carga solo en cliente para evitar errores de build
 - **Responsive**: Todas las páginas son mobile-first
 
+#### MÓDULO 4: Panel de Administración y Editor Visual ✅
+- **`app/admin/products/page.jsx`**: CRUD completo de productos con lazy loading de Supabase
+- **`app/admin/categories/page.jsx`**: CRUD completo de categorías con lazy loading
+- **`app/admin/customize/page.jsx`**: Editor split-screen con:
+  - Carga de settings desde Supabase
+  - Estado reactivo local
+  - Botón guardar con spinner y notificaciones
+  - 4 tabs de configuración (Colores, Layout, Banner, WhatsApp)
+- **`components/admin/controls/ColorControls.jsx`**: Paleta de colores completa
+- **`components/admin/controls/LayoutControls.jsx`**: Selector de presets y layouts
+- **`components/admin/controls/BannerControls.jsx`**: Configuración de banners
+- **`components/admin/controls/WhatsAppControls.jsx`**: Ajustes de WhatsApp
+- **`components/admin/PhonePreview.jsx`**: Simulador iPhone con CatalogView en tiempo real
+
+#### MÓDULO 5: Catálogo Público y Checkout ✅
+- **`app/[slug]/page.jsx`**: Server Component con:
+  - Obtención de perfil, categorías y productos por slug
+  - SEO dinámico con Open Graph y Twitter Cards
+  - Redirección 404 si la tienda no existe
+  - Integración con ThemeProvider y CartProvider
+- **`components/catalog/HeaderVariant.jsx`**: 4 variantes de header
+- **`components/catalog/CategoryNav.jsx`**: Navegación de categorías con scroll
+- **`components/catalog/ProductCardVariant.jsx`**: Tarjetas con 4 estilos
+- **`components/catalog/ProductGrid.jsx`**: Layouts adaptativos (1, 2, 3 columnas)
+- **`components/catalog/CartDrawer.jsx`**: Drawer deslizable con:
+  - Animaciones framer-motion
+  - Lista de productos con cantidades
+  - Formulario de datos del cliente
+  - Botón de envío por WhatsApp
+
+#### MÓDULO 6: Middleware y Rutas Protegidas ✅
+- **`middleware.js`**: Protección completa de `/admin/*` con:
+  - Verificación de sesión Supabase
+  - Redirección a login con parámetro `?redirect=`
+  - Rutas públicas permitidas (`/`, `/login`, `/signup`, `/demo`)
+- **`app/demo/page.jsx`**: Vista de prueba pública con datos mock y DEFAULT_SETTINGS
+
 ### 📁 Archivos creados o modificados en este paso
 - `app/page.jsx` - Landing page comercial completa con animaciones
 - `app/[slug]/page.jsx` - SEO dinámico mejorado con Open Graph y Twitter Cards
