@@ -92,19 +92,27 @@ function CustomizePanel() {
         throw new Error('No hay sesión activa');
       }
 
-      const { error: updateError } = await supabase
+      const { data, error: updateError } = await supabase
         .from('profiles')
         .update({ settings })
-        .eq('id', user.id);
+        .eq('id', user.id)
+        .select()
+        .single();
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Error saving settings:', updateError);
+        alert(`Error al guardar: ${updateError.message || 'Verifica que el schema SQL esté ejecutado correctamente'}`);
+        return;
+      }
 
-      // Mostrar notificación de éxito
       setIsSaved(true);
-      setTimeout(() => setIsSaved(false), 2000);
+      setTimeout(() => setIsSaved(false), 3000);
+      console.log('Settings saved successfully:', data);
     } catch (err) {
-      console.error('Error guardando settings:', err);
-      setError('Error al guardar los cambios');
+      console.error('Error saving settings:', err);
+      const errorMessage = err?.message || 'Error al guardar la configuración';
+      setError(errorMessage);
+      alert(`Error: ${errorMessage}`);
     } finally {
       setIsSaving(false);
     }

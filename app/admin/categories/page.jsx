@@ -71,7 +71,10 @@ export default function CategoriesPage() {
     e.preventDefault();
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        alert('Debes iniciar sesión para guardar categorías');
+        return;
+      }
 
       const categoryData = {
         ...formData,
@@ -79,18 +82,29 @@ export default function CategoriesPage() {
         store_id: user.id,
       };
 
+      let error;
       if (editingCategory) {
-        await supabase.from('categories').update(categoryData).eq('id', editingCategory.id);
+        const result = await supabase.from('categories').update(categoryData).eq('id', editingCategory.id);
+        error = result.error;
       } else {
-        await supabase.from('categories').insert(categoryData);
+        const result = await supabase.from('categories').insert(categoryData);
+        error = result.error;
+      }
+
+      if (error) {
+        console.error('Error saving category:', error);
+        alert(`Error al guardar: ${error.message || 'Verifica que el schema SQL esté ejecutado correctamente'}`);
+        return;
       }
 
       setShowModal(false);
       setEditingCategory(null);
       resetForm();
       loadCategories();
+      alert('Categoría guardada exitosamente');
     } catch (error) {
       console.error('Error saving category:', error);
+      alert(`Error inesperado: ${error.message}`);
     }
   };
 

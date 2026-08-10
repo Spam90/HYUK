@@ -65,7 +65,10 @@ export default function ProductsPage() {
     e.preventDefault();
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        alert('Debes iniciar sesión para guardar productos');
+        return;
+      }
 
       const productData = {
         ...formData,
@@ -75,18 +78,29 @@ export default function ProductsPage() {
         badge: formData.badge || null,
       };
 
+      let error;
       if (editingProduct) {
-        await supabase.from('products').update(productData).eq('id', editingProduct.id);
+        const result = await supabase.from('products').update(productData).eq('id', editingProduct.id);
+        error = result.error;
       } else {
-        await supabase.from('products').insert(productData);
+        const result = await supabase.from('products').insert(productData);
+        error = result.error;
+      }
+
+      if (error) {
+        console.error('Error saving product:', error);
+        alert(`Error al guardar: ${error.message || 'Verifica que el schema SQL esté ejecutado correctamente'}`);
+        return;
       }
 
       setShowModal(false);
       setEditingProduct(null);
       resetForm();
       loadData();
+      alert('Producto guardado exitosamente');
     } catch (error) {
       console.error('Error saving product:', error);
+      alert(`Error inesperado: ${error.message}`);
     }
   };
 
