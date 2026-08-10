@@ -14,20 +14,40 @@ export async function generateMetadata({ params }) {
 
   if (!store) {
     return {
-      title: 'Tienda no encontrada',
+      title: 'Tienda no encontrada - HYUK',
+      description: 'Esta tienda no existe o ha sido eliminada.',
     };
   }
 
   const settings = store.settings || DEFAULT_SETTINGS;
   const storeName = store.store_name || store.full_name || 'Mi Tienda';
+  const tagline = settings.banner?.tagline || 'Los mejores productos a un clic';
+  const bannerImage = settings.banner?.imageUrl || '';
 
   return {
-    title: `${storeName} - Catálogo Digital`,
-    description: settings.banner?.tagline || `Explora el catálogo de ${storeName}`,
+    title: `${storeName} - ${tagline}`,
+    description: tagline,
+    keywords: [storeName, 'catálogo digital', 'menú digital', 'pedidos whatsapp', 'tienda online'],
     openGraph: {
-      title: `${storeName} - Catálogo Digital`,
-      description: settings.banner?.tagline || `Explora el catálogo de ${storeName}`,
-      images: settings.banner?.imageUrl ? [{ url: settings.banner.imageUrl }] : [],
+      title: `${storeName} - ${tagline}`,
+      description: tagline,
+      type: 'website',
+      locale: 'es_ES',
+      siteName: 'HYUK',
+      images: bannerImage ? [
+        {
+          url: bannerImage,
+          width: 1200,
+          height: 630,
+          alt: storeName,
+        }
+      ] : [],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${storeName} - ${tagline}`,
+      description: tagline,
+      images: bannerImage ? [bannerImage] : [],
     },
   };
 }
