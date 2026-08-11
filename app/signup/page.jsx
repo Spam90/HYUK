@@ -90,10 +90,8 @@ export default function SignupPage() {
         console.warn('Auto-login after signup failed:', signInError.message);
       }
 
-      // Redirigir al dashboard (o a la URL de redirect si existe)
-      const urlParams = new URLSearchParams(window.location.search);
-      const redirect = urlParams.get('redirect');
-      window.location.href = redirect || '/admin/customize';
+      // Redirigir al onboarding
+      window.location.href = '/onboarding';
     } catch (err) {
       setError(err.message || 'Error al registrarse');
     } finally {

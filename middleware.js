@@ -4,6 +4,9 @@ import { createClient } from '@/lib/supabase/server';
 // Rutas públicas que no requieren autenticación
 const PUBLIC_PATHS = ['/login', '/signup', '/demo', '/'];
 
+// Rutas que requieren onboarding completado
+const ONBOARDING_PATHS = ['/onboarding'];
+
 // Dominio base (desde variable de entorno o default para desarrollo)
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'localhost:3000';
 
@@ -66,13 +69,39 @@ export async function middleware(request) {
   // 2. PROTECCIÓN DE RUTAS DE ADMIN
   // =============================================
 
-  // Solo procesar rutas de admin
-  if (!pathname.startsWith('/admin')) {
+  // Solo procesar rutas de admin y onboarding
+  if (!pathname.startsWith('/admin') && !ONBOARDING_PATHS.some(path => pathname === path || pathname.startsWith(path + '/'))) {
     return NextResponse.next();
   }
 
   // Permitir acceso a rutas públicas
   if (PUBLIC_PATHS.some(path => pathname === path || pathname.startsWith(path + '/'))) {
+    return NextResponse.next();
+  }
+
+  // Verificar si el usuario necesita completar onboarding
+  if (pathname === '/onboarding' || pathname.startsWith('/onboarding/')) {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    // Verificar si el usuario ya completó el onboarding
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('slug, business_name')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    // Si ya tiene slug y nombre de negocio, redirigir al admin
+    if (profile?.slug && profile?.business_name) {
+      return NextResponse.redirect(new URL('/admin', request.url));
+    }
+
+    // Si no ha completado onboarding, permitir acceso
     return NextResponse.next();
   }
 
