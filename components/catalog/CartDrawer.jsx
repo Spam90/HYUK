@@ -25,6 +25,7 @@ export default function CartDrawer({ store, settings }) {
   const [customerAddress, setCustomerAddress] = useState('');
   const [deliveryMethod, setDeliveryMethod] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
+  const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Bloquear scroll cuando el drawer está abierto
@@ -46,6 +47,7 @@ export default function CartDrawer({ store, settings }) {
       setCustomerAddress('');
       setDeliveryMethod('');
       setPaymentMethod('');
+      setNotes('');
     }
   }, [isCartOpen]);
 
@@ -110,6 +112,7 @@ export default function CartDrawer({ store, settings }) {
           address: customerAddress,
           deliveryMethod,
           paymentMethod,
+          notes: notes.trim(),
         },
         total: cartTotal,
       });
@@ -408,6 +411,20 @@ export default function CartDrawer({ store, settings }) {
                       </div>
                     </div>
                   )}
+
+                  {/* Additional Notes */}
+                  <div className="bg-gray-50 dark:bg-zinc-800/50 rounded-xl p-3 border border-gray-200 dark:border-zinc-800">
+                    <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      Notas adicionales (opcional)
+                    </p>
+                    <textarea
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="Ej: Sin cebolla, llamar al llegar, etc."
+                      rows="2"
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-primary/50 resize-none"
+                    />
+                  </div>
 
                    {/* WhatsApp Button - High Impact */}
                    <motion.button
