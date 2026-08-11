@@ -1,16 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, ShoppingBag, X, ChevronRight } from 'lucide-react';
 import ThemeProvider from '@/components/theme/ThemeProvider';
-import { CartProvider } from '@/context/CartContext';
+import { CartProvider, useCart } from '@/context/CartContext';
 import HeaderVariant from '@/components/catalog/HeaderVariant';
 import CategoryNav from '@/components/catalog/CategoryNav';
 import ProductGrid from '@/components/catalog/ProductGrid';
 import CartDrawer from '@/components/catalog/CartDrawer';
 
-export default function CatalogView({ store, categories, products, settings }) {
+// Componente interno para acceder al carrito
+function CatalogContent({ store, categories, products, settings }) {
   const [activeCategory, setActiveCategory] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const { cartItems, openCart, totalItems } = useCart();
 
   // Demo data if no props provided
   const demoStore = store || {
@@ -114,6 +118,17 @@ export default function CatalogView({ store, categories, products, settings }) {
 
   const showGroupedLayout = !activeCategory && groupedByCategory.length > 0;
 
+  // Búsqueda en tiempo real (filtrado local)
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return null;
+    
+    const query = searchQuery.toLowerCase();
+    return demoProducts.filter(product => 
+      product.name.toLowerCase().includes(query) ||
+      product.description?.toLowerCase().includes(query)
+    );
+  }, [searchQuery, demoProducts]);
+
   return (
     <ThemeProvider initialSettings={demoSettings}>
       <CartProvider>
@@ -137,8 +152,32 @@ export default function CatalogView({ store, categories, products, settings }) {
             onCartClick={() => {}} // CartProvider manejará esto vía context
           />
 
+          {/* Search Bar - Fixed */}
+          <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-secondary/10">
+            <div className="max-w-3xl mx-auto px-4 py-3">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text/30" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar productos..."
+                  className="w-full pl-10 pr-10 py-3 rounded-xl border border-secondary/10 bg-card text-sm text-text placeholder:text-text/30 focus:outline-none focus:border-primary/50 transition-colors"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-secondary/10 flex items-center justify-center hover:bg-secondary/20 transition-colors"
+                  >
+                    <X className="w-3 h-3 text-text/60" />
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Navegación de categorías */}
-          {demoCategories.length > 0 && (
+          {demoCategories.length > 0 && !searchQuery && (
             <CategoryNav
               categories={demoCategories}
               activeCategory={activeCategory}
@@ -185,8 +224,39 @@ export default function CatalogView({ store, categories, products, settings }) {
               </motion.div>
             )}
 
+            {/* Resultados de búsqueda */}
+            {searchQuery && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <div className="flex items-center gap-2 mb-4">
+                  <Search className="w-5 h-5 text-text/40" />
+                  <h2 className="text-lg font-bold text-text">
+                    Resultados para "{searchQuery}"
+                  </h2>
+                  <span className="text-sm text-text/40">
+                    ({searchResults?.length || 0} productos)
+                  </span>
+                </div>
+
+                {searchResults && searchResults.length > 0 ? (
+                  <ProductGrid
+                    products={searchResults}
+                    settings={demoSettings}
+                    categories={demoCategories}
+                  />
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-text/40 text-lg">No se encontraron productos</p>
+                    <p className="text-text/30 text-sm mt-2">Intenta con otra búsqueda</p>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
             {/* Vista agrupada por categorías */}
-            {showGroupedLayout && (
+            {showGroupedLayout && !searchQuery && (
               <div className="space-y-10">
                 {groupedByCategory.map((group, groupIndex) => (
                   <motion.section
@@ -253,9 +323,62 @@ export default function CatalogView({ store, categories, products, settings }) {
             </footer>
           </main>
 
+          {/* Floating Cart Bar */}
+          <AnimatePresence>
+            {totalItems > 0 && (
+              <motion.div
+                initial={{ y: 100, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 100, opacity: 0 }}
+                transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+                className="fixed bottom-4 left-4 right-4 md:left-auto md:right-8 md:w-96 z-40"
+              >
+                <button
+                  onClick={openCart}
+                  className="w-full bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl border border-gray-200 dark:border-zinc-800 p-4 flex items-center justify-between hover:shadow-3xl transition-shadow"
+                  style={{ 
+                    boxShadow: `0 8px 32px ${demoSettings.theme.primaryColor}30`
+                  }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div 
+                      className="w-12 h-12 rounded-xl flex items-center justify-center text-white relative"
+                      style={{ backgroundColor: demoSettings.theme.primaryColor }}
+                    >
+                      <ShoppingBag className="w-6 h-6" />
+                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-white text-xs font-bold flex items-center justify-center">
+                        {totalItems}
+                      </span>
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-medium text-text/60">
+                        {totalItems} {totalItems === 1 ? 'producto' : 'productos'}
+                      </p>
+                      <p className="text-lg font-bold text-text">
+                        Ver Pedido
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-text/40" />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Cart Drawer */}
           <CartDrawer store={demoStore} settings={demoSettings} />
         </div>
+      </CartProvider>
+    </ThemeProvider>
+  );
+}
+
+// Exportar el componente wrapper
+export default function CatalogViewWrapper(props) {
+  return (
+    <ThemeProvider initialSettings={props.settings}>
+      <CartProvider>
+        <CatalogContent {...props} />
       </CartProvider>
     </ThemeProvider>
   );
