@@ -16,7 +16,7 @@ export default function DemoPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-zinc-950">
+    <div className="min-h-screen bg-zinc-950">
       {/* Floating Demo Banner - Tiendanube Style */}
       <AnimatePresence>
         {showBanner && (
@@ -24,7 +24,7 @@ export default function DemoPage() {
             initial={{ y: -100, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -100, opacity: 0 }}
-            className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-primary to-emerald-600 text-white shadow-lg"
+            className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg"
           >
             <div className="max-w-7xl mx-auto px-4 py-3">
               <div className="flex items-center justify-between gap-4">
@@ -42,7 +42,7 @@ export default function DemoPage() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => router.push('/signup')}
-                    className="hidden sm:flex items-center gap-1.5 px-4 py-2 bg-white text-primary rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors shrink-0"
+                    className="hidden sm:flex items-center gap-1.5 px-4 py-2 bg-white text-emerald-600 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors shrink-0"
                   >
                     <Palette className="w-4 h-4" />
                     Probar a personalizar esta tienda
@@ -65,7 +65,7 @@ export default function DemoPage() {
         <div className="fixed top-4 left-4 right-4 z-40 sm:hidden">
           <button
             onClick={() => router.push('/signup')}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary text-white rounded-xl shadow-lg font-medium"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-emerald-500 text-white rounded-xl shadow-lg font-medium shadow-emerald-500/30"
           >
             <Palette className="w-4 h-4" />
             Personalizar esta tienda

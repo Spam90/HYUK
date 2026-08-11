@@ -136,44 +136,44 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-zinc-950">
+    <div className="min-h-screen bg-zinc-950">
       {/* Sidebar */}
-      <div className="fixed left-0 top-0 bottom-0 w-64 bg-white dark:bg-zinc-900 border-r border-gray-200 dark:border-zinc-800 p-4 hidden md:flex flex-col">
+      <div className="fixed left-0 top-0 bottom-0 w-64 bg-zinc-900/60 backdrop-blur-xl border-r border-zinc-800 p-4 hidden md:flex flex-col">
         <div className="flex items-center gap-2 mb-8">
-          <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white">
+          <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/30">
             <Store className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="font-bold text-gray-900 dark:text-white">HYUK Admin</h1>
-            <p className="text-xs text-gray-500">Panel de control</p>
+            <h1 className="font-bold text-zinc-100">HYUK Admin</h1>
+            <p className="text-xs text-zinc-400">Panel de control</p>
           </div>
         </div>
 
         <nav className="flex-1 space-y-1">
           <a
             href="/admin/customize"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-white transition-colors"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100 transition-colors"
           >
             <Palette className="w-4 h-4" />
             Personalizar
           </a>
           <a
             href="/admin/categories"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-white transition-colors"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100 transition-colors"
           >
             <ClipboardList className="w-4 h-4" />
             Categorías
           </a>
           <a
             href="/admin/products"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-white transition-colors"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100 transition-colors"
           >
             <ShoppingBag className="w-4 h-4" />
             Productos
           </a>
           <a
             href="/admin/orders"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-white transition-colors"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100 transition-colors"
           >
             <div className="relative">
               <Package className="w-4 h-4" />
@@ -183,21 +183,21 @@ export default function AdminDashboard() {
             </div>
             Pedidos
             {stats.pendingOrders > 0 && (
-              <span className="ml-auto px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-bold rounded-full">
+              <span className="ml-auto px-2 py-0.5 bg-red-500/20 text-red-400 text-xs font-bold rounded-full">
                 {stats.pendingOrders}
               </span>
             )}
           </a>
           <a
             href="/admin/analytics"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-white transition-colors"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100 transition-colors"
           >
             <TrendingUp className="w-4 h-4" />
             Analíticas
           </a>
           <a
             href="/admin/settings"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-white transition-colors"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100 transition-colors"
           >
             <Settings className="w-4 h-4" />
             Configuración
@@ -206,7 +206,7 @@ export default function AdminDashboard() {
 
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+          className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors"
         >
           <LogOut className="w-4 h-4" />
           Cerrar sesión
@@ -218,33 +218,33 @@ export default function AdminDashboard() {
         <div className="max-w-7xl mx-auto">
           {/* Mobile Header */}
           <div className="md:hidden mb-6 flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+            <h1 className="text-2xl font-bold text-zinc-100">Dashboard</h1>
             <button
               onClick={handleLogout}
-              className="p-2 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
+              className="p-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
               title="Cerrar sesión"
             >
               <LogOut className="w-5 h-5" />
             </button>
           </div>
 
-          {/* Store Status Banner - Tiendanube Style */}
+          {/* Store Status Banner */}
           {storeUrl && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-6 bg-white dark:bg-zinc-900 rounded-2xl p-4 md:p-6 border border-gray-200 dark:border-zinc-800 shadow-sm"
+              className="mb-6 bg-zinc-900/60 backdrop-blur-xl rounded-2xl p-4 md:p-6 border border-zinc-800 shadow-sm"
             >
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center shrink-0">
-                    <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0">
+                    <CheckCircle className="w-5 h-5 text-emerald-400" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
+                    <h3 className="font-semibold text-zinc-100 mb-1">
                       Tienda Activa
                     </h3>
-                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                    <div className="flex items-center gap-2 text-sm text-zinc-400">
                       <LinkIcon className="w-3.5 h-3.5 shrink-0" />
                       <span className="truncate">https://{storeUrl}</span>
                     </div>
@@ -252,7 +252,7 @@ export default function AdminDashboard() {
                 </div>
                 <button
                   onClick={copyToClipboard}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl text-sm font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors shrink-0"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 text-white rounded-xl text-sm font-medium hover:bg-emerald-600 transition-colors shrink-0 shadow-lg shadow-emerald-500/30"
                 >
                   {copied ? (
                     <>
@@ -270,7 +270,7 @@ export default function AdminDashboard() {
             </motion.div>
           )}
 
-          {/* KPI Cards - Tiendanube Style */}
+          {/* KPI Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-8">
             {kpiCards.map((kpi, index) => {
               const Icon = kpi.icon;
@@ -280,22 +280,22 @@ export default function AdminDashboard() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="bg-white dark:bg-zinc-900 rounded-2xl p-4 md:p-6 border border-gray-200 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow"
+                  className="bg-zinc-900/60 backdrop-blur-xl rounded-2xl p-4 md:p-6 border border-zinc-800 shadow-sm hover:border-zinc-700 transition-all"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className={`w-10 h-10 rounded-xl ${kpi.bgColor} flex items-center justify-center`}>
                       <Icon className={`w-5 h-5 ${kpi.textColor}`} />
                     </div>
                     {kpi.trend && (
-                      <span className="text-xs font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-lg">
+                      <span className="text-xs font-medium text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-lg">
                         {kpi.trend}
                       </span>
                     )}
                   </div>
-                  <p className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                  <p className="text-2xl md:text-3xl font-bold text-zinc-100 mb-1">
                     {kpi.value}
                   </p>
-                  <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-xs md:text-sm text-zinc-400">
                     {kpi.label}
                   </p>
                 </motion.div>
@@ -310,20 +310,20 @@ export default function AdminDashboard() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="group bg-white dark:bg-zinc-900 rounded-2xl p-6 border border-gray-200 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all"
+              className="group bg-zinc-900/60 backdrop-blur-xl rounded-2xl p-6 border border-zinc-800 shadow-sm hover:border-zinc-700 transition-all"
             >
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                  <Palette className="w-6 h-6 text-primary" />
+                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                  <Palette className="w-6 h-6 text-emerald-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
+                  <h3 className="font-semibold text-zinc-100 mb-1">
                     Personalizar Catálogo
                   </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                  <p className="text-sm text-zinc-400 mb-3">
                     Colores, layouts y estilos
                   </p>
-                  <span className="inline-flex items-center gap-1 text-sm font-medium text-primary group-hover:gap-2 transition-all">
+                  <span className="inline-flex items-center gap-1 text-sm font-medium text-emerald-400 group-hover:gap-2 transition-all">
                     Ir a personalizar
                     <ExternalLink className="w-4 h-4" />
                   </span>
@@ -336,20 +336,20 @@ export default function AdminDashboard() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="group bg-white dark:bg-zinc-900 rounded-2xl p-6 border border-gray-200 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all"
+              className="group bg-zinc-900/60 backdrop-blur-xl rounded-2xl p-6 border border-zinc-800 shadow-sm hover:border-zinc-700 transition-all"
             >
               <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                  <ShoppingBag className="w-6 h-6 text-accent" />
+                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                  <ShoppingBag className="w-6 h-6 text-emerald-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-1">
+                  <h3 className="font-semibold text-zinc-100 mb-1">
                     Gestionar Productos
                   </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                  <p className="text-sm text-zinc-400 mb-3">
                     Agrega y edita productos
                   </p>
-                  <span className="inline-flex items-center gap-1 text-sm font-medium text-primary group-hover:gap-2 transition-all">
+                  <span className="inline-flex items-center gap-1 text-sm font-medium text-emerald-400 group-hover:gap-2 transition-all">
                     Gestionar productos
                     <ExternalLink className="w-4 h-4" />
                   </span>
