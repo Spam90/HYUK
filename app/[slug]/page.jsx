@@ -23,34 +23,39 @@ export async function generateMetadata({ params }) {
   const storeName = store.store_name || store.full_name || 'Mi Tienda';
   const tagline = settings.banner?.tagline || 'Los mejores productos a un clic';
   const bannerImage = settings.banner?.imageUrl || '';
+  const storeDescription = store.description || `Catálogo digital de ${storeName}. Realiza tus pedidos fácilmente por WhatsApp.`;
 
   return {
-    title: `${storeName} - ${tagline}`,
-    description: tagline,
-    keywords: [storeName, 'catálogo digital', 'menú digital', 'pedidos whatsapp', 'tienda online'],
+    title: `${storeName} — Catálogo Digital & Pedidos por WhatsApp`,
+    description: storeDescription,
+    keywords: [storeName, 'catálogo digital', 'menú digital', 'pedidos whatsapp', 'tienda online', 'pedidos en línea'],
     openGraph: {
-      title: `${storeName} - ${tagline}`,
-      description: tagline,
+      title: `${storeName} — Catálogo Digital & Pedidos por WhatsApp`,
+      description: storeDescription,
       type: 'website',
-      locale: 'es_ES',
+      locale: 'es_DO',
       siteName: 'HYUK',
+      url: `https://hyuk.app/${params.slug}`,
       images: bannerImage ? [
         {
           url: bannerImage,
           width: 1200,
           height: 630,
-          alt: storeName,
+          alt: `${storeName} - Banner`,
         }
       ] : [],
     },
     twitter: {
       card: 'summary_large_image',
-      title: `${storeName} - ${tagline}`,
-      description: tagline,
+      title: `${storeName} — Catálogo Digital & Pedidos por WhatsApp`,
+      description: storeDescription,
       images: bannerImage ? [bannerImage] : [],
     },
   };
 }
+
+// Revalidar cada 60 segundos para balance entre rendimiento y actualización
+export const revalidate = 60;
 
 export default async function StorePage({ params }) {
   const supabase = createClient();
@@ -66,7 +71,7 @@ export default async function StorePage({ params }) {
     notFound();
   }
 
-  // Obtener categorías de la tienda
+  // Obtener categorías de la tienda con revalidación
   const { data: categories } = await supabase
     .from('categories')
     .select('*')
@@ -74,7 +79,7 @@ export default async function StorePage({ params }) {
     .eq('is_active', true)
     .order('sort_order');
 
-  // Obtener productos de la tienda
+  // Obtener productos de la tienda con revalidación
   const { data: products } = await supabase
     .from('products')
     .select('*')

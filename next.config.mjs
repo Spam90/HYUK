@@ -7,7 +7,16 @@ const nextConfig = {
         protocol: 'https',
         hostname: '**',
       },
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: 'supabase.com',
+      },
     ],
+    formats: ['image/avif', 'image/webp'],
   },
 };
 
