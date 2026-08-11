@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Plus, Edit2, Trash2, Search, Package, ArrowLeft, Image as ImageIcon, X } from 'lucide-react';
+import { motion, Reorder } from 'framer-motion';
+import { Plus, Edit2, Trash2, Search, Package, ArrowLeft, Image as ImageIcon, X, Upload, GripVertical, ChevronUp, ChevronDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
