@@ -133,7 +133,7 @@ export default function CartDrawer({ store, settings }) {
     <AnimatePresence>
       {isCartOpen && (
         <>
-          {/* Backdrop with blur - Tiendanube Style */}
+          {/* Backdrop with blur */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -142,15 +142,20 @@ export default function CartDrawer({ store, settings }) {
             onClick={closeCart}
           />
 
-          {/* Cart Drawer - Tiendanube Style */}
+          {/* Bottom Sheet - Mobile Native Style */}
           <motion.div
-            initial={{ x: '100%', opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: '100%', opacity: 0 }}
+            initial={{ y: '100%', opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: '100%', opacity: 0 }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-            className="fixed right-0 inset-y-0 z-50 w-full max-w-md bg-white dark:bg-zinc-900 shadow-2xl flex flex-col"
+            className="fixed bottom-0 left-0 right-0 z-50 max-h-[90vh] bg-white dark:bg-zinc-900 rounded-t-3xl shadow-2xl flex flex-col md:left-auto md:right-0 md:top-0 md:bottom-0 md:rounded-t-none md:rounded-l-3xl md:max-w-md"
           >
-            {/* Header - Tiendanube Style */}
+            {/* Header - Drag Handle for Mobile */}
+            <div className="md:hidden flex justify-center pt-3 pb-1">
+              <div className="w-12 h-1.5 bg-gray-300 dark:bg-zinc-700 rounded-full" />
+            </div>
+
+            {/* Header */}
             <div className="px-6 py-4 border-b border-gray-200 dark:border-zinc-800 flex items-center justify-between bg-white dark:bg-zinc-900">
               <div className="flex items-center gap-3">
                 <div 
@@ -404,26 +409,26 @@ export default function CartDrawer({ store, settings }) {
                     </div>
                   )}
 
-                  {/* WhatsApp Button - Full Width */}
-                  <motion.button
-                    whileTap={{ scale: 0.98 }}
-                    onClick={handleWhatsAppCheckout}
-                    disabled={isSubmitting}
-                    className="w-full py-4 text-base font-bold text-white shadow-lg rounded-xl flex items-center justify-center gap-2 disabled:opacity-60"
-                    style={{ 
-                      backgroundColor: '#25D366',
-                      boxShadow: '0 4px 15px rgba(37, 211, 102, 0.3)',
-                    }}
-                  >
-                    {isSubmitting ? (
-                      <span className="animate-pulse">Procesando...</span>
-                    ) : (
-                      <>
-                        <MessageCircle className="w-5 h-5" />
-                        Finalizar compra por WhatsApp
-                      </>
-                    )}
-                  </motion.button>
+                   {/* WhatsApp Button - High Impact */}
+                   <motion.button
+                     whileTap={{ scale: 0.98 }}
+                     onClick={handleWhatsAppCheckout}
+                     disabled={isSubmitting}
+                     className="w-full py-4 text-base font-bold text-white shadow-xl rounded-2xl flex items-center justify-center gap-2 disabled:opacity-60"
+                     style={{ 
+                       backgroundColor: '#25D366',
+                       boxShadow: '0 8px 24px rgba(37, 211, 102, 0.4)',
+                     }}
+                   >
+                     {isSubmitting ? (
+                       <span className="animate-pulse">Procesando...</span>
+                     ) : (
+                       <>
+                         <MessageCircle className="w-6 h-6" />
+                         <span className="text-lg">Finalizar compra por WhatsApp</span>
+                       </>
+                     )}
+                   </motion.button>
                 </div>
               </>
             )}

@@ -31,28 +31,30 @@ export default function CategoryNav({
   if (!categories || categories.length === 0) return null;
 
   return (
-    <div className="relative">
-      {/* Animated Indicator - Tiendanube Style */}
-      <motion.div
-        className="absolute top-3 h-9 rounded-full shadow-md"
-        style={{
-          backgroundColor: settings.theme.primaryColor,
-          boxShadow: `0 2px 8px ${settings.theme.primaryColor}30`,
-        }}
-        animate={indicatorStyle}
-        transition={{
-          type: 'spring',
-          stiffness: 300,
-          damping: 30,
-        }}
-      />
+    <div className="sticky top-0 z-40 backdrop-blur-md bg-background/80 border-b border-secondary/10">
+      <div className="relative">
+        {/* Animated Indicator - Tiendanube Style */}
+        <motion.div
+          layoutId="categoryIndicator"
+          className="absolute top-3 h-9 rounded-full shadow-md"
+          style={{
+            backgroundColor: settings.theme.primaryColor,
+            boxShadow: `0 2px 8px ${settings.theme.primaryColor}30`,
+          }}
+          animate={indicatorStyle}
+          transition={{
+            type: 'spring',
+            stiffness: 300,
+            damping: 30,
+          }}
+        />
 
-      {/* Categories Container - Tiendanube Style */}
-      <div
-        ref={navRef}
-        className="flex gap-2 overflow-x-auto no-scrollbar py-3 px-4"
-      >
-        {/* All Categories Button */}
+        {/* Categories Container - Tiendanube Style */}
+        <div
+          ref={navRef}
+          className="flex gap-2 overflow-x-auto no-scrollbar py-3 px-4"
+        >
+          {/* All Categories Button */}
         <button
           ref={(el) => {
             if (el) buttonRefs.current['all'] = el;
@@ -99,6 +101,7 @@ export default function CategoryNav({
             </button>
           );
         })}
+        </div>
       </div>
     </div>
   );

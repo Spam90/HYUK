@@ -40,6 +40,19 @@ export default function ThemeProvider({ children, initialSettings = DEFAULT_SETT
     setSettings(newSettings);
   }, []);
 
+  // Aplicar preset de diseño
+  const applyPreset = useCallback((presetId) => {
+    const preset = DESIGN_PRESETS[presetId];
+    if (preset) {
+      setSettings({
+        theme: preset.theme,
+        layout: preset.layout,
+        banner: preset.banner,
+        whatsapp_checkout: DEFAULT_SETTINGS.whatsapp_checkout,
+      });
+    }
+  }, []);
+
   // Reset a defaults
   const resetSettings = useCallback(() => {
     setSettings(DEFAULT_SETTINGS);
@@ -112,6 +125,7 @@ export default function ThemeProvider({ children, initialSettings = DEFAULT_SETT
         updateSettings,
         updateFullSettings,
         resetSettings,
+        applyPreset,
       }}
     >
       {children}

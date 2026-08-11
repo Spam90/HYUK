@@ -11,6 +11,22 @@ export default function ProductCardVariant({
   settings 
 }) {
   const { theme } = settings;
+  
+  // Aplicar clases según el estilo de tarjeta seleccionado
+  const getCardClasses = () => {
+    switch (style) {
+      case 'minimalist':
+        return 'bg-transparent shadow-none border-0';
+      case 'modern-shadow':
+        return 'bg-white dark:bg-zinc-800 rounded-2xl shadow-lg shadow-black/5';
+      case 'compact-row':
+        return 'bg-white dark:bg-zinc-800 rounded-xl shadow-sm flex-row items-center gap-3';
+      case 'glassmorphic':
+        return 'backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl';
+      default:
+        return 'bg-white dark:bg-zinc-800 rounded-2xl shadow-lg shadow-black/5';
+    }
+  };
 
   const getBadgeConfig = (badge) => {
     switch (badge?.toLowerCase()) {
@@ -52,7 +68,7 @@ export default function ProductCardVariant({
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -4 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
-      className="group relative bg-white dark:bg-zinc-800 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden"
+      className={`group relative transition-all duration-300 overflow-hidden ${getCardClasses()}`}
     >
       {/* Image Container - Tiendanube Style */}
       <div className="relative aspect-square overflow-hidden bg-gray-50 dark:bg-zinc-700">
@@ -120,7 +136,7 @@ export default function ProductCardVariant({
       </div>
 
       {/* Content - Tiendanube Style */}
-      <div className="p-4">
+      <div className={`p-4 ${style === 'compact-row' ? 'flex-1' : ''}`}>
         {/* Product Name */}
         <h3 
           className="font-semibold text-sm mb-1 line-clamp-2 leading-tight text-gray-900 dark:text-white"
@@ -136,7 +152,7 @@ export default function ProductCardVariant({
         )}
 
         {/* Price Block */}
-        <div className="flex items-center gap-2 mb-3">
+        <div className={`flex items-center gap-2 mb-3 ${style === 'compact-row' ? 'mb-0' : ''}`}>
           {/* Original Price with strikethrough */}
           {originalPrice && (
             <span className="text-xs text-zinc-400 line-through">
