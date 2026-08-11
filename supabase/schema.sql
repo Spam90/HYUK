@@ -382,6 +382,10 @@ CREATE POLICY "Owner update orders" ON orders
 CREATE POLICY "Public insert orders" ON orders
   FOR INSERT WITH CHECK (true);
 
+-- Cualquier persona puede leer pedidos (para conteos)
+CREATE POLICY "Public read orders" ON orders
+  FOR SELECT USING (true);
+
 -- =============================================
 -- 9. STORAGE PARA IMÁGENES (Supabase Storage)
 -- =============================================
