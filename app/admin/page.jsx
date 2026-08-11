@@ -15,6 +15,7 @@ export default function AdminDashboard() {
     whatsappClicks: 0,
     activeProducts: 0,
     categories: 0,
+    pendingOrders: 0,
   });
   const [storeUrl, setStoreUrl] = useState('');
   const [copied, setCopied] = useState(false);
@@ -54,11 +55,19 @@ export default function AdminDashboard() {
         .select('count', { count: 'exact', head: true })
         .eq('store_id', user.id);
 
+      // Get pending orders count for notification badge
+      const { count: pendingOrdersCount } = await supabase
+        .from('orders')
+        .select('count', { count: 'exact', head: true })
+        .eq('store_id', user.id)
+        .eq('status', 'pending');
+
       setStats({
         visits: ordersCount || 0,
         whatsappClicks: ordersCount || 0,
         activeProducts: productsRes.count || 0,
         categories: categoriesRes.count || 0,
+        pendingOrders: pendingOrdersCount || 0,
       });
     } catch (error) {
       console.error('Error loading dashboard:', error);
@@ -166,8 +175,25 @@ export default function AdminDashboard() {
             href="/admin/orders"
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-white transition-colors"
           >
-            <Package className="w-4 h-4" />
+            <div className="relative">
+              <Package className="w-4 h-4" />
+              {stats.pendingOrders > 0 && (
+                <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+              )}
+            </div>
             Pedidos
+            {stats.pendingOrders > 0 && (
+              <span className="ml-auto px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-bold rounded-full">
+                {stats.pendingOrders}
+              </span>
+            )}
+          </a>
+          <a
+            href="/admin/analytics"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-white transition-colors"
+          >
+            <TrendingUp className="w-4 h-4" />
+            Analíticas
           </a>
           <a
             href="/admin/settings"
