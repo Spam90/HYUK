@@ -12,7 +12,23 @@ Cada dueño de negocio puede modificar absolutamente todo el aspecto visual y la
 - **Colores**: Selectores de color hex, 5 presets profesionales (Elegante, Comida Rápida, Botánica, Neón, Minimalista)
 - **Tipografías**: 6 fuentes de Google Fonts (Inter, Poppins, Montserrat, Playfair Display, Outfit, Space Grotesk)
 - **Bordes**: 4 niveles de redondeo (Recto, Suave, Redondeado, Píldora)
-- **Modos**: Claro, Oscuro y Neón
+- **Modos**: Claro, Oscuro y Neón. Además de los **modos del tema de la tienda**, el panel dispone de un **toggle global de claro/oscuro** (☀️/🌙) que persiste la preferencia del visitante/administrador en `localStorage` y respeta la clase `.dark` a nivel global.
+
+#### 🌙 Sistema de Temas Global (Light/Dark)
+El modo claro/oscuro global está construido con **`next-themes`** y es independiente del `DesignThemeProvider` (tema visual de la tienda). La división de responsabilidades evita conflictos de hidratación (FOUC):
+
+| Capa | Responsabilidad | Archivo |
+|------|------------------|---------|
+| **Próximo tema global** | Única autoridad de la clase `.dark` en `<html>`; persistencia en `localStorage` (`hyuk-theme`); `suppressHydrationWarning` para evitar FOUC. | `components/theme/AppThemeProvider.jsx` |
+| **Toggle** | Botón con animación Framer Motion (Sun/Moon de `lucide-react`) que alterna `light`/`dark`. | `components/theme/ThemeToggle.jsx` |
+| **Presentación** - Admin | Toggle flotante persistente (z-50) en todo `/admin/*`. | `app/admin/layout.jsx` |
+| **Presentación** - Catálogo | `ThemeToggle` integrado en la esquina superior derecha del header. | `components/catalog/HeaderVariant.jsx` |
+| **DesignThemeProvider** (tienda) | Aplica variables CSS del store (`--primary`, `--background`, etc.). **NO** administra la clase `.dark` (se la delega a next-themes) → no compite. | `components/theme/ThemeProvider.jsx` |
+
+- `tailwind.config.js` usa `darkMode: 'class'` y `globals.css` define variables `--background`, `--card-bg`, `--text-color` bajo `:root` y `.dark`.
+- Los componentes catálogo/admin responden a `dark:` de Tailwind (`bg-white dark:bg-zinc-950`, `text-zinc-900 dark:text-zinc-100`, etc.).
+- El toggle persiste en `localStorage`; al recargar, se restaura el último modo elegido.
+
 
 ### 📐 Layouts Flexibles
 - **Productos**: Lista, Rejilla 2/3 columnas, Tarjetas Grandes, Scroll Horizontal
@@ -530,9 +546,12 @@ Si tienes un dominio propio (ej: `mitienda.com`):
   - SEO dinámico con Open Graph y Twitter Cards
   - Redirección 404 si la tienda no existe
   - Integración con ThemeProvider y CartProvider
-- **`components/catalog/HeaderVariant.jsx`**: 4 variantes de header
+- **`components/catalog/HeaderVariant.jsx`**: 4 variantes de header (con `ThemeToggle` global integrado en la esquina superior derecha)
 - **`components/catalog/CategoryNav.jsx`**: Navegación de categorías con scroll
-- **`components/catalog/ProductCardVariant.jsx`**: Tarjetas con 4 estilos
+- **`components/catalog/ProductCardVariant.jsx`**: Tarjetas con 4 estilos (adaptadas dark/light)
+- **`components/theme/AppThemeProvider.jsx`**: Proveedor global de tema con `next-themes` (persistencia en `localStorage` bajo la key `hyuk-theme`; elimina FOUC mediante `suppressHydrationWarning`)
+- **`components/theme/ThemeToggle.jsx`**: Botón ☀️/🌙 con animación `framer-motion` que alterna `light`/`dark`
+- **`app/admin/layout.jsx`**: Layout base del admin que muestra el toggle flotante persistente en toda la sección `/admin/*`
 - **`components/catalog/ProductGrid.jsx`**: Layouts adaptativos (1, 2, 3 columnas)
 - **`components/catalog/CartDrawer.jsx`**: Drawer deslizable con:
   - Animaciones framer-motion
