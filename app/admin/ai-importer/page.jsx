@@ -30,8 +30,7 @@ export default function AiImporterPage() {
     loadSupabase();
   }, []);
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files?.[0];
+  const handleFileSelect = (file) => {
     if (!file) return;
     if (!file.type.startsWith('image/')) {
       setScanError('El archivo debe ser una imagen (PNG, JPG, WEBP)');
@@ -50,6 +49,30 @@ export default function AiImporterPage() {
       setImagePreview(event.target.result);
     };
     reader.readAsDataURL(file);
+  };
+
+  // Drag & drop
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer?.files?.[0];
+    handleFileSelect(file);
+  };
+
+  const handleImageUpload = (e) => {
+    handleFileSelect(e.target.files?.[0]);
   };
 
   const handleScanMenu = async () => {
@@ -195,12 +218,30 @@ export default function AiImporterPage() {
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-card rounded-theme-xl shadow-lg border border-secondary/10 p-6 mb-6">
           {!imagePreview ? (
-            <label className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed border-secondary/30 rounded-theme-lg cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all">
+            <div
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              className={`flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-theme-lg cursor-pointer transition-all ${
+                isDragging
+                  ? 'border-primary bg-primary/10 scale-[1.02]'
+                  : 'border-secondary/30 hover:border-primary/50 hover:bg-primary/5'
+              }`}
+              onClick={() => document.getElementById('ai-image-input')?.click()}
+            >
               <ImageIcon className="w-12 h-12 text-text/40 mb-4" />
-              <span className="text-lg font-medium text-text/70 mb-2">Haz clic para subir una imagen</span>
+              <span className="text-lg font-medium text-text/70 mb-2">
+                {isDragging ? '¡Suelta tu menú aquí!' : 'Arrastra o haz clic para subir la foto'}
+              </span>
               <span className="text-sm text-text/40">PNG, JPG o WEBP - Máximo 10MB</span>
-              <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" />
-            </label>
+              <input
+                id="ai-image-input"
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                className="hidden"
+              />
+            </div>
           ) : (
             <div className="flex items-center gap-4">
               <img src={imagePreview} alt="Preview" className="w-24 h-24 rounded-lg object-cover border border-secondary/10" />
@@ -225,8 +266,8 @@ export default function AiImporterPage() {
         {isScanning && (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-card rounded-theme-xl shadow-lg border border-secondary/10 p-8 mb-6 text-center">
             <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-primary" />
-            <h3 className="text-xl font-semibold text-text mb-2">Escaneando menú con IA...</h3>
-            <p className="text-text/60">Procesando la imagen y extrayendo categorías y productos.</p>
+            <h3 className="text-xl font-semibold text-text mb-2">La IA está leyendo tu menú...</h3>
+            <p className="text-text/60">Analizando la imagen y extrayendo categorías, productos y precios.</p>
           </motion.div>
         )}
 

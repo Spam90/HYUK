@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { motion, Reorder } from 'framer-motion';
-import { Plus, Edit2, Trash2, Search, Package, ArrowLeft, Image as ImageIcon, X, Upload, GripVertical, ChevronUp, ChevronDown, Sparkles, Loader2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, Package, ArrowLeft, Image as ImageIcon, X, Upload, GripVertical, ChevronUp, ChevronDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import ProductModal from '@/components/admin/ProductModal';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,7 +37,6 @@ export default function ProductsPage() {
     badge: '',
     image_url: '',
   });
-  const [generatingDescription, setGeneratingDescription] = useState(false);
 
   useEffect(() => {
     if (supabase) {
@@ -63,37 +63,12 @@ export default function ProductsPage() {
     }
   };
 
-  const handleGenerateDescription = async () => {
-    if (!formData.name.trim()) {
-      alert('Primero escribe el nombre del producto');
-      return;
-    }
-    setGeneratingDescription(true);
-    try {
-      const response = await fetch('/api/ai/generate-description', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productName: formData.name }),
-      });
-      const result = await response.json();
-      if (!result.success) {
-        throw new Error(result.error || 'Error al generar la descripción');
-      }
-      setFormData((prev) => ({ ...prev, description: result.description }));
-    } catch (error) {
-      console.error('Error generando descripción con IA:', error);
-      alert(error.message || 'No se pudo generar la descripción');
-    } finally {
-      setGeneratingDescription(false);
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        alert('Debes iniciar sesión para guardar productos');
+        alert('Debes iniciar sesiÃ³n para guardar productos');
         return;
       }
 
@@ -117,7 +92,7 @@ export default function ProductsPage() {
 
       if (error) {
         console.error('Error saving product:', error);
-        alert(`Error al guardar: ${error.message || 'Verifica que el schema SQL esté ejecutado correctamente'}`);
+        alert(`Error al guardar: ${error.message || 'Verifica que el schema SQL estÃ© ejecutado correctamente'}`);
         return;
       }
 
@@ -133,7 +108,7 @@ export default function ProductsPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('¿Estás seguro de eliminar este producto?')) return;
+    if (!confirm('Â¿EstÃ¡s seguro de eliminar este producto?')) return;
     await supabase.from('products').delete().eq('id', id);
     loadData();
   };
@@ -207,7 +182,7 @@ export default function ProductsPage() {
             </button>
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Productos</h1>
-              <p className="text-sm text-gray-500">Gestiona tu catálogo</p>
+              <p className="text-sm text-gray-500">Gestiona tu catÃ¡logo</p>
             </div>
           </div>
           <button
@@ -267,7 +242,7 @@ export default function ProductsPage() {
         {filteredProducts.length === 0 ? (
           <div className="text-center py-12 bg-white dark:bg-zinc-900 rounded-2xl border border-gray-200 dark:border-zinc-800">
             <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-400">No hay productos aún</p>
+            <p className="text-gray-600 dark:text-gray-400">No hay productos aÃºn</p>
             <button
               onClick={() => setShowModal(true)}
               className="mt-4 text-primary font-medium hover:underline"
@@ -290,7 +265,7 @@ export default function ProductsPage() {
                     {product.image_url ? (
                       <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-2xl">🍽️</div>
+                      <div className="w-full h-full flex items-center justify-center text-2xl">ðŸ½ï¸</div>
                     )}
                   </div>
 
@@ -354,150 +329,15 @@ export default function ProductsPage() {
       </div>
 
       {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white dark:bg-zinc-900 rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-          >
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-              {editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nombre</label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-800 text-sm focus:outline-none focus:border-primary/50"
-                />
-              </div>
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Descripción</label>
-                  <button
-                    type="button"
-                    onClick={handleGenerateDescription}
-                    disabled={generatingDescription || !formData.name.trim()}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    style={{ backgroundColor: '#8B5CF6' }}
-                  >
-                    {generatingDescription ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <Sparkles className="w-3.5 h-3.5" />
-                    )}
-                    {generatingDescription ? 'Generando...' : 'Generar con IA'}
-                  </button>
-                </div>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  rows={3}
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-800 text-sm focus:outline-none focus:border-primary/50"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Precio de Oferta *</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                    required
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-800 text-sm focus:outline-none focus:border-primary/50"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Precio Original (opcional)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={formData.original_price}
-                    onChange={(e) => setFormData({ ...formData, original_price: e.target.value })}
-                    placeholder="Para mostrar descuento"
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-800 text-sm focus:outline-none focus:border-primary/50"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Categoría</label>
-                  <select
-                    value={formData.category_id}
-                    onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-800 text-sm focus:outline-none focus:border-primary/50"
-                  >
-                    <option value="">Sin categoría</option>
-                    {categories.map(cat => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Badge</label>
-                  <input
-                    type="text"
-                    value={formData.badge}
-                    onChange={(e) => setFormData({ ...formData, badge: e.target.value })}
-                    placeholder="Ej: Popular, Nuevo"
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-800 text-sm focus:outline-none focus:border-primary/50"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">URL de Imagen</label>
-                <input
-                  type="text"
-                  value={formData.image_url}
-                  onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                  placeholder="https://..."
-                  className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-800 text-sm focus:outline-none focus:border-primary/50"
-                />
-              </div>
-              <div className="flex items-center gap-6">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.is_available}
-                    onChange={(e) => setFormData({ ...formData, is_available: e.target.checked })}
-                    className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
-                  />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Disponible</span>
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.is_featured}
-                    onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
-                    className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
-                  />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Destacado</span>
-                </label>
-              </div>
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => { setShowModal(false); setEditingProduct(null); resetForm(); }}
-                  className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-800 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2.5 rounded-xl bg-primary text-white font-medium shadow-lg hover:shadow-xl transition-all"
-                >
-                  {editingProduct ? 'Guardar Cambios' : 'Crear Producto'}
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
-      )}
+      <ProductModal
+        open={showModal}
+        formData={formData}
+        setFormData={setFormData}
+        onSubmit={handleSubmit}
+        onClose={() => { setShowModal(false); setEditingProduct(null); resetForm(); }}
+        categories={categories}
+        editingProduct={editingProduct}
+      />
     </div>
   );
 }

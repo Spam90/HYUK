@@ -83,17 +83,15 @@ export default function ThemeProvider({ children, initialSettings = DEFAULT_SETT
     const fontFamily = FONT_FAMILY_MAP[theme.fontFamily] || "'Inter', sans-serif";
     root.style.setProperty('--font-family', fontFamily);
 
-    // Modo oscuro / claro
-    if (theme.mode === 'dark') {
-      root.classList.add('dark');
-      // Ajustar variables para dark mode si el usuario no las ha personalizado
-      if (!settings.theme.backgroundColor) {
-        root.style.setProperty('--background', '#0F172A');
-        root.style.setProperty('--text-color', '#F8FAFC');
-        root.style.setProperty('--card-bg', '#1E293B');
-      }
-    } else {
-      root.classList.remove('dark');
+        // Modo oscuro / claro
+    // Importante: la clase `.dark` en <html> la administra next-themes (global),
+    // por lo que aquí NO la forzamos add/remove para evitar conflictos con el
+    // toggle global. Solo aplicamos las variables del store cuando su modo es dark
+    // y el usuario no personalizó los colores de fondo (respetamos globals.css dark).
+    if (theme.mode === 'dark' && !settings.theme.backgroundColor) {
+      root.style.setProperty('--background', '#0F172A');
+      root.style.setProperty('--text-color', '#F8FAFC');
+      root.style.setProperty('--card-bg', '#1E293B');
     }
 
     // Cargar Google Font según la fuente seleccionada

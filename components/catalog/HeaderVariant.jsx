@@ -3,8 +3,9 @@
 import { motion } from 'framer-motion';
 import { Store, MapPin, Phone, Clock, ChevronDown, X } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import ThemeToggle from '@/components/theme/ThemeToggle';
 
-export default function HeaderVariant({ 
+export default function HeaderVariant({  
   store, 
   settings, 
   style = 'banner-large' 
@@ -246,6 +247,11 @@ export default function HeaderVariant({
             </motion.div>
           </div>
         )}
+            </div>
+
+      {/* Theme toggle (light/dark) - fixed corner, covers every header style */}
+      <div className="absolute top-4 right-4 z-20">
+        <ThemeToggle size="sm" variant="ghost" />
       </div>
     </header>
   );
