@@ -8,7 +8,7 @@ Cada dueño de negocio puede modificar absolutamente todo el aspecto visual y la
 
 ## ✨ Características Principales
 
-### 🎨 Personalización Extrema
+###🎨Personalización Extrema
 - **Colores**: Selectores de color hex, 5 presets profesionales (Elegante, Comida Rápida, Botánica, Neón, Minimalista)
 - **Tipografías**: 6 fuentes de Google Fonts (Inter, Poppins, Montserrat, Playfair Display, Outfit, Space Grotesk)
 - **Bordes**: 4 niveles de redondeo (Recto, Suave, Redondeado, Píldora)
