@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
-import { X, Plus, Minus, Trash2, MessageCircle, MapPin, User, CreditCard, Bike, Store, ShoppingBag } from 'lucide-react';
+import { X, Plus, Minus, Trash2, MessageCircle, MapPin, User, CreditCard, Bike, Store, ShoppingBag, Percent, CheckCircle } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useTheme } from '@/components/theme/ThemeProvider';
 import { formatPrice, generateWhatsAppUrl } from '@/lib/whatsapp/checkout';
+import { fetchCouponByCode, calculateDiscount } from '@/lib/coupons';
 
 export default function CartDrawer({ store, settings }) {
   const { 
@@ -27,6 +28,12 @@ export default function CartDrawer({ store, settings }) {
   const [paymentMethod, setPaymentMethod] = useState('');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Estado de cupones
+  const [couponCode, setCouponCode] = useState('');
+  const [activeCoupon, setActiveCoupon] = useState(null);
+  const [couponError, setCouponError] = useState('');
+  const [couponLoading, setCouponLoading] = useState(false);
 
   // Bloquear scroll cuando el drawer está abierto
   useEffect(() => {
@@ -53,6 +60,40 @@ export default function CartDrawer({ store, settings }) {
 
   const storeName = store?.store_name || store?.full_name || 'Mi Tienda';
   const storePhone = store?.whatsapp_number || store?.phone || '';
+
+  // Descuento aplicado por cupón activo
+  const couponDiscount = useMemo(() => {
+    return activeCoupon ? calculateDiscount(activeCoupon, cartTotal) : 0;
+  }, [activeCoupon, cartTotal]);
+
+  // Total final con descuento
+  const finalTotal = Math.max(cartTotal - couponDiscount, 0);
+
+  // Aplicar cupón
+  const applyCoupon = async () => {
+    const code = couponCode.trim();
+    if (!code) return;
+
+    setCouponLoading(true);
+    setCouponError('');
+    const result = await fetchCouponByCode(store?.id, code);
+
+    if (result.success) {
+      setActiveCoupon(result.coupon);
+      setCouponCode('');
+    } else {
+      setActiveCoupon(null);
+      setCouponError(result.error || 'Cupón no válido');
+      setTimeout(() => setCouponError(''), 3000);
+    }
+    setCouponLoading(false);
+  };
+
+  // Quitar cupón
+  const removeCoupon = () => {
+    setActiveCoupon(null);
+    setCouponError('');
+  };
 
   // Generar URL de WhatsApp y guardar pedido
   const handleWhatsAppCheckout = async () => {
@@ -84,14 +125,17 @@ export default function CartDrawer({ store, settings }) {
       // Guardar pedido en la base de datos
       const { createOrder } = await import('@/lib/orders');
       const orderResult = await createOrder({
+        storeId: store?.id,
         customerName: customerName,
         customerPhone: '',
         deliveryAddress: customerAddress,
         deliveryMethod: deliveryMethod,
         paymentMethod: paymentMethod,
         items: cartItems,
-        total: cartTotal,
+        total: finalTotal,
         notes: '',
+        couponCode: activeCoupon?.code || null,
+        discountAmount: couponDiscount,
       });
 
       if (!orderResult.success) {
@@ -114,7 +158,9 @@ export default function CartDrawer({ store, settings }) {
           paymentMethod,
           notes: notes.trim(),
         },
-        total: cartTotal,
+        total: finalTotal,
+        coupon: activeCoupon,
+        couponDiscount,
       });
       
       // Abrir WhatsApp
@@ -296,11 +342,88 @@ export default function CartDrawer({ store, settings }) {
 
                 {/* Checkout Section - Tiendanube Style */}
                 <div className="border-t border-gray-200 dark:border-zinc-800 p-6 space-y-4 bg-white dark:bg-zinc-900">
+                  {/* Coupon Input */}
+                  <div>
+                    {activeCoupon ? (
+                      <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800">
+                        <div className="flex items-center gap-2">
+                          <Percent className="w-4 h-4 text-green-600 dark:text-green-400" />
+                          <div>
+                            <p className="text-xs font-bold text-green-700 dark:text-green-300">
+                              Cupón aplicado: {activeCoupon.code}
+                            </p>
+                            <p className="text-xs text-green-600 dark:text-green-400">
+                              {activeCoupon.discount_type === 'percent'
+                                ? `-${parseFloat(activeCoupon.discount_value).toFixed(0)}% de descuento`
+                                : `-$${parseFloat(activeCoupon.discount_value).toFixed(2)} de descuento`}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={removeCoupon}
+                          className="text-xs text-green-700 dark:text-green-300 font-semibold hover:underline"
+                        >
+                          Quitar
+                        </button>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="flex gap-2">
+                          <div className="flex-1 relative">
+                            <Percent className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <input
+                              type="text"
+                              value={couponCode}
+                              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                              onKeyDown={(e) => e.key === 'Enter' && applyCoupon()}
+                              placeholder="Cupón de descuento"
+                              className="w-full pl-10 pr-3 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-primary/50 uppercase font-medium"
+                            />
+                          </div>
+                          <button
+                            onClick={applyCoupon}
+                            disabled={couponLoading || !couponCode.trim()}
+                            className="px-4 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-40 transition-all"
+                            style={{ backgroundColor: theme.primaryColor }}
+                          >
+                            {couponLoading ? '...' : 'Aplicar'}
+                          </button>
+                        </div>
+                        {couponError && (
+                          <p className="mt-1 text-xs text-red-500">{couponError}</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
                   {/* Subtotal */}
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm text-gray-600 dark:text-gray-400">Subtotal</span>
                     <span className="text-lg font-bold text-gray-900 dark:text-white">
                       {formatPrice(cartTotal)}
+                    </span>
+                  </div>
+
+                  {/* Descuento por cupón */}
+                  {activeCoupon && couponDiscount > 0 && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-green-600 dark:text-green-400 flex items-center gap-1.5">
+                        <CheckCircle className="w-4 h-4" />
+                        Cupón {activeCoupon.code}
+                      </span>
+                      <span className="text-sm font-semibold text-green-600 dark:text-green-400">
+                        -{formatPrice(couponDiscount)}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Total final */}
+                  <div
+                    className="flex items-center justify-between pt-3 border-t border-dashed border-gray-200 dark:border-zinc-700"
+                  >
+                    <span className="text-base font-bold text-gray-900 dark:text-white">Total a pagar</span>
+                    <span className="text-xl font-extrabold" style={{ color: theme.primaryColor }}>
+                      {formatPrice(finalTotal)}
                     </span>
                   </div>
 

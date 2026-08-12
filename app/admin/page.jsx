@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { 
   Palette, Package, ShoppingBag, Settings, ExternalLink, LogOut, Store, 
   ClipboardList, Eye, TrendingUp, MousePointer, Copy, CheckCircle,
-  Link as LinkIcon
+  Link as LinkIcon, Megaphone, Users
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
@@ -194,6 +194,20 @@ export default function AdminDashboard() {
           >
             <TrendingUp className="w-4 h-4" />
             Analíticas
+          </a>
+          <a
+            href="/admin/customers"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100 transition-colors"
+          >
+            <Users className="w-4 h-4" />
+            Clientes
+          </a>
+          <a
+            href="/admin/marketing"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100 transition-colors"
+          >
+            <Megaphone className="w-4 h-4" />
+            Marketing
           </a>
           <a
             href="/admin/settings"

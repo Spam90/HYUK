@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Package, Clock, CheckCircle, XCircle, ChefHat, Eye, 
   Truck, MessageCircle, User, MapPin, CreditCard,
-  ArrowRight, RefreshCw
+  ArrowRight, RefreshCw, Printer, Volume2, VolumeX, BellRing
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { openPrintTicket } from '@/lib/print/thermal-ticket';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,7 +17,15 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [viewMode, setViewMode] = useState('kanban'); // 'kanban' | 'list'
+  const [storeProfile, setStoreProfile] = useState(null);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [newOrderToast, setNewOrderToast] = useState(null);
   const router = useRouter();
+
+  // Referencias para detección de pedidos nuevos
+  const knownOrderIdsRef = useRef(new Set());
+  const isInitialLoadRef = useRef(true);
+  const titleTimeoutRef = useRef(null);
 
   // Lazy load Supabase client
   const [supabase, setSupabase] = useState(null);
@@ -30,8 +39,55 @@ export default function OrdersPage() {
   useEffect(() => {
     if (supabase) {
       loadOrders();
+      // Polling cada 12s para detectar nuevos pedidos
+      const interval = setInterval(loadOrders, 12000);
+      return () => clearInterval(interval);
     }
   }, [supabase]);
+
+  // Reproducir sonido de nuevo pedido (Web Audio API - sin assets)
+  const playNewOrderSound = () => {
+    if (!soundEnabled) return;
+    try {
+      const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+      const ctx = new AudioContextCtor();
+      const playNote = (freq, start, duration) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.001, ctx.currentTime + start);
+        gain.gain.exponentialRampToValueAtTime(0.6, ctx.currentTime + start + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime + start);
+        osc.stop(ctx.currentTime + start + duration + 0.05);
+      };
+      // Melodía distintiva: ding-ding-ding!
+      playNote(988, 0, 0.25);    // B5
+      playNote(1319, 0.2, 0.25); // E6
+      playNote(1568, 0.4, 0.4);  // G6
+      setTimeout(() => ctx.close(), 1500);
+    } catch (error) {
+      console.warn('No se pudo reproducir el sonido:', error);
+    }
+  };
+
+  // Parpadeo del título de la pestaña
+  const flashTitle = () => {
+    const original = document.title;
+    let flashCount = 0;
+    if (titleTimeoutRef.current) clearInterval(titleTimeoutRef.current);
+    titleTimeoutRef.current = setInterval(() => {
+      document.title = flashCount % 2 === 0 ? '🔔 ¡Nuevo pedido!' : original;
+      flashCount++;
+      if (flashCount > 6) {
+        clearInterval(titleTimeoutRef.current);
+        document.title = original;
+      }
+    }, 800);
+  };
 
   const loadOrders = async () => {
     if (!supabase) return;
@@ -43,6 +99,16 @@ export default function OrdersPage() {
         return;
       }
 
+      // Cargar perfil de tienda para tickets
+      if (!storeProfile) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('business_name, store_name, full_name, phone_whatsapp, phone')
+          .eq('id', user.id)
+          .maybeSingle();
+        if (profile) setStoreProfile(profile);
+      }
+
       const { data: ordersData, error } = await supabase
         .from('orders')
         .select('*')
@@ -51,7 +117,26 @@ export default function OrdersPage() {
 
       if (error) throw error;
 
-      setOrders(ordersData || []);
+      const incoming = ordersData || [];
+
+      // Detectar pedidos nuevos en estado pendiente
+      if (!isInitialLoadRef.current && knownOrderIdsRef.current.size > 0) {
+        const newPending = incoming.filter(o =>
+          o.status === 'pending' && !knownOrderIdsRef.current.has(o.id)
+        );
+        if (newPending.length > 0) {
+          setNewOrderToast(newPending[0]);
+          if (soundEnabled) playNewOrderSound();
+          flashTitle();
+          setTimeout(() => setNewOrderToast(null), 10000);
+        }
+      }
+
+      // Actualizar set de IDs conocidos
+      incoming.forEach(o => knownOrderIdsRef.current.add(o.id));
+      isInitialLoadRef.current = false;
+
+      setOrders(incoming);
     } catch (error) {
       console.error('Error loading orders:', error);
     } finally {
@@ -179,6 +264,37 @@ export default function OrdersPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Toast de nuevo pedido */}
+      <AnimatePresence>
+        {newOrderToast && (
+          <motion.div
+            initial={{ opacity: 0, y: -60 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -60 }}
+            className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-sm px-4"
+          >
+            <div className="bg-emerald-500 text-white rounded-2xl shadow-2xl p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0 animate-pulse">
+                <BellRing className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-sm">🔔 ¡Nuevo pedido!</p>
+                <p className="text-xs text-emerald-50 truncate">
+                  #{newOrderToast.id.slice(0, 8)} · {newOrderToast.customer_name} · $
+                  {parseFloat(newOrderToast.total_amount).toFixed(2)}
+                </p>
+              </div>
+              <button
+                onClick={() => setNewOrderToast(null)}
+                className="text-white/70 hover:text-white text-xs font-semibold shrink-0"
+              >
+                Cerrar
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -187,30 +303,46 @@ export default function OrdersPage() {
             <p className="text-text/60">Administra y da seguimiento a los pedidos de tu tienda</p>
           </div>
           
-          {/* View Toggle */}
-          <div className="flex items-center gap-2 bg-card rounded-theme-lg p-1 border border-secondary/10">
+          {/* Acciones: sonido + vista */}
+          <div className="flex items-center gap-2">
+            {/* Toggle de sonido */}
             <button
-              onClick={() => setViewMode('kanban')}
-              className={`px-4 py-2 rounded-theme-md font-medium transition-all ${
-                viewMode === 'kanban'
-                  ? 'bg-primary text-white shadow-lg'
-                  : 'text-text/60 hover:text-text'
+              onClick={() => setSoundEnabled(!soundEnabled)}
+              title={soundEnabled ? 'Desactivar sonido de nuevos pedidos' : 'Activar sonido de nuevos pedidos'}
+              className={`w-11 h-11 rounded-theme-lg border flex items-center justify-center transition-colors ${
+                soundEnabled
+                  ? 'bg-emerald-500 text-white border-emerald-500'
+                  : 'bg-card text-text/40 border-secondary/10 hover:text-text'
               }`}
             >
-              <Package className="w-4 h-4 inline mr-2" />
-              Kanban
+              {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
             </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`px-4 py-2 rounded-theme-md font-medium transition-all ${
-                viewMode === 'list'
-                  ? 'bg-primary text-white shadow-lg'
-                  : 'text-text/60 hover:text-text'
-              }`}
-            >
-              <Eye className="w-4 h-4 inline mr-2" />
-              Lista
-            </button>
+
+            {/* View Toggle */}
+            <div className="flex items-center gap-2 bg-card rounded-theme-lg p-1 border border-secondary/10">
+              <button
+                onClick={() => setViewMode('kanban')}
+                className={`px-4 py-2 rounded-theme-md font-medium transition-all ${
+                  viewMode === 'kanban'
+                    ? 'bg-primary text-white shadow-lg'
+                    : 'text-text/60 hover:text-text'
+                }`}
+              >
+                <Package className="w-4 h-4 inline mr-2" />
+                Kanban
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`px-4 py-2 rounded-theme-md font-medium transition-all ${
+                  viewMode === 'list'
+                    ? 'bg-primary text-white shadow-lg'
+                    : 'text-text/60 hover:text-text'
+                }`}
+              >
+                <Eye className="w-4 h-4 inline mr-2" />
+                Lista
+              </button>
+            </div>
           </div>
         </div>
 
@@ -293,6 +425,18 @@ export default function OrdersPage() {
                               ${parseFloat(order.total_amount).toFixed(2)}
                             </span>
                           </div>
+
+                          {/* Imprimir Ticket Térmico */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openPrintTicket(order, storeProfile);
+                            }}
+                            className="w-full mt-3 px-3 py-2 rounded-lg bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 text-xs font-semibold flex items-center justify-center gap-1.5 hover:bg-zinc-200 dark:hover:bg-zinc-600 transition-colors"
+                          >
+                            <Printer className="w-3.5 h-3.5" />
+                            Imprimir Ticket
+                          </button>
 
                           {/* Quick Actions */}
                           {getNextStatus(order.status) && (
@@ -477,6 +621,14 @@ export default function OrdersPage() {
 
                     {/* Acciones */}
                     <div className="flex flex-col gap-2 lg:min-w-[200px]">
+                      {/* Imprimir Ticket Térmico */}
+                      <button
+                        onClick={() => openPrintTicket(order, storeProfile)}
+                        className="w-full px-4 py-2 bg-zinc-100 dark:bg-zinc-700 text-zinc-700 dark:text-zinc-200 rounded-theme-lg hover:bg-zinc-200 dark:hover:bg-zinc-600 transition-colors font-medium flex items-center justify-center gap-2"
+                      >
+                        <Printer className="w-4 h-4" />
+                        Imprimir Ticket
+                      </button>
                       {getNextStatus(order.status) && (
                         <button
                           onClick={() => updateOrderStatus(order.id, getNextStatus(order.status))}

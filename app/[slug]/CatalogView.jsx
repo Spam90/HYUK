@@ -9,6 +9,7 @@ import HeaderVariant from '@/components/catalog/HeaderVariant';
 import CategoryNav from '@/components/catalog/CategoryNav';
 import ProductGrid from '@/components/catalog/ProductGrid';
 import CartDrawer from '@/components/catalog/CartDrawer';
+import PromoBanner from '@/components/catalog/PromoBanner';
 
 // Componente interno para acceder al carrito
 function CatalogContent({ store, categories, products, settings }) {
@@ -100,6 +101,14 @@ function CatalogContent({ store, categories, products, settings }) {
       paymentOptions: ['Efectivo', 'Transferencia / Zelle', 'Tarjeta al recibir'],
       requireClientName: true,
       deliveryMethods: ['A domicilio', 'Retiro en local']
+    },
+    marketing: {
+      showAnnouncementBar: true,
+      announcementText: '🎉 ¡Usa el cupón HYUK10 para obtener 10% de descuento en tu primer pedido!',
+      showPopup: false,
+      popupTitle: '🎁 ¡Bienvenido a nuestra tienda!',
+      popupText: 'Obtén un 10% de descuento en tu primer pedido usando el cupón HYUK10.',
+      popupButtonLabel: '¡Comenzar!',
     }
   };
 
@@ -133,17 +142,8 @@ function CatalogContent({ store, categories, products, settings }) {
     <ThemeProvider initialSettings={demoSettings}>
       <CartProvider>
         <div className="min-h-screen bg-background text-text">
-          {/* Announcement Bar */}
-          {demoSettings.banner?.showAnnouncementBar && demoSettings.banner?.announcementText && (
-            <div
-              className="text-center text-white text-sm py-2 px-4 font-medium"
-              style={{ backgroundColor: demoSettings.theme.primaryColor }}
-            >
-              <span className="animate-pulse-slow inline-block">
-                {demoSettings.banner.announcementText}
-              </span>
-            </div>
-          )}
+          {/* Announcement Bar + Popup Promocional */}
+          <PromoBanner settings={demoSettings} storeId={demoStore.id} />
 
           {/* Header */}
           <HeaderVariant

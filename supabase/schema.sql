@@ -425,3 +425,153 @@ CREATE POLICY "Owner delete store assets" ON storage.objects
     bucket_id = 'store-assets' 
     AND auth.uid()::text = (storage.foldername(name))[1]
   );
+
+-- =============================================
+-- 10. MÓDULO DE MARKETING - TABLA DE CUPONES
+-- =============================================
+
+-- Corregir constraint de orders para soportar el estado 'ready'
+ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_status_check;
+ALTER TABLE orders ADD CONSTRAINT orders_status_check
+  CHECK (status IN ('pending', 'preparing', 'ready', 'completed', 'cancelled'));
+
+-- Agregar columnas de descuento/cupón a orders
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS coupon_code TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS discount_amount DECIMAL(10,2) DEFAULT 0;
+
+CREATE TABLE IF NOT EXISTS coupons (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  store_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  code TEXT NOT NULL,
+  discount_type TEXT NOT NULL DEFAULT 'percent' CHECK (discount_type IN ('percent', 'fixed')),
+  discount_value DECIMAL(10,2) NOT NULL DEFAULT 0,
+  max_uses INTEGER,
+  used_count INTEGER DEFAULT 0,
+  expires_at TIMESTAMPTZ,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(store_id, code)
+);
+
+CREATE INDEX IF NOT EXISTS idx_coupons_store_id ON coupons(store_id);
+CREATE INDEX IF NOT EXISTS idx_coupons_code ON coupons(code);
+
+ALTER TABLE coupons ENABLE ROW LEVEL SECURITY;
+
+-- El dueño puede ver sus cupones
+CREATE POLICY "Owner read coupons" ON coupons
+  FOR SELECT USING (auth.uid() = store_id);
+
+-- Lectura pública de cupones activos (para validar códigos en el catálogo)
+CREATE POLICY "Public read active coupons" ON coupons
+  FOR SELECT USING (is_active = true);
+
+-- El dueño crea cupones
+CREATE POLICY "Owner insert coupons" ON coupons
+  FOR INSERT WITH CHECK (auth.uid() = store_id);
+
+-- El dueño actualiza cupones
+CREATE POLICY "Owner update coupons" ON coupons
+  FOR UPDATE USING (auth.uid() = store_id);
+
+-- El dueño elimina cupones
+CREATE POLICY "Owner delete coupons" ON coupons
+  FOR DELETE USING (auth.uid() = store_id);
+
+-- Trigger para actualizar used_count automáticamente al crear un pedido con cupón
+CREATE OR REPLACE FUNCTION increment_coupon_usage()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.coupon_code IS NOT NULL AND NEW.coupon_code != '' THEN
+    UPDATE coupons
+    SET used_count = used_count + 1
+    WHERE store_id = NEW.store_id AND code = NEW.coupon_code;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS inc_coupon_usage_on_order ON orders;
+CREATE TRIGGER inc_coupon_usage_on_order
+  AFTER INSERT ON orders
+  FOR EACH ROW EXECUTE FUNCTION increment_coupon_usage();
+
+-- =============================================
+-- 11. MÓDULO DE CLIENTES - DIRECTORIO AUTOMÁTICO
+-- =============================================
+
+CREATE TABLE IF NOT EXISTS customers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  store_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  phone TEXT,
+  address TEXT,
+  last_order_date TIMESTAMPTZ,
+  total_spent DECIMAL(12,2) DEFAULT 0,
+  total_orders INTEGER DEFAULT 0,
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Un cliente por (tienda, teléfono) cuando hay teléfono
+CREATE UNIQUE INDEX IF NOT EXISTS uq_customers_store_phone
+  ON customers(store_id, phone) WHERE phone IS NOT NULL;
+
+-- Un cliente por (tienda, nombre) cuando no hay teléfono
+CREATE UNIQUE INDEX IF NOT EXISTS uq_customers_store_name_nophone
+  ON customers(store_id, name) WHERE phone IS NULL;
+
+CREATE INDEX IF NOT EXISTS idx_customers_store_id ON customers(store_id);
+CREATE INDEX IF NOT EXISTS idx_customers_phone ON customers(phone);
+
+ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
+
+-- El dueño puede ver, actualizar y eliminar sus clientes
+CREATE POLICY "Owner read customers" ON customers
+  FOR SELECT USING (auth.uid() = store_id);
+
+CREATE POLICY "Owner update customers" ON customers
+  FOR UPDATE USING (auth.uid() = store_id);
+
+CREATE POLICY "Owner delete customers" ON customers
+  FOR DELETE USING (auth.uid() = store_id);
+
+-- El público puede crear o actualizar registros (upsert automático al hacer pedidos)
+CREATE POLICY "Public insert customers" ON customers
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "Public update customers" ON customers
+  FOR UPDATE USING (true);
+
+-- Trigger updated_at para customers
+CREATE TRIGGER update_customers_updated_at
+  BEFORE UPDATE ON customers
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Trigger updated_at para coupons
+CREATE TRIGGER update_coupons_updated_at
+  BEFORE UPDATE ON coupons
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- =============================================
+-- 12. CONFIGURACIÓN DE MARKETING EN PROFILES
+-- =============================================
+
+-- Agregar nodo marketing a settings de perfiles existentes
+UPDATE profiles
+SET settings = jsonb_set(
+  COALESCE(settings, '{}'::jsonb),
+  '{marketing}',
+  '{
+    "showAnnouncementBar": true,
+    "announcementText": "🎉 ¡Usa el cupón HYUK10 para obtener 10% de descuento en tu primer pedido!",
+    "showPopup": false,
+    "popupTitle": "🎁 ¡Bienvenido a nuestra tienda!",
+    "popupText": "Obtén un 10% de descuento en tu primer pedido usando el cupón HYUK10.",
+    "popupButtonLabel": "¡Comenzar!"
+  }'::jsonb,
+  true
+)
+WHERE settings IS NULL OR NOT settings ? 'marketing';

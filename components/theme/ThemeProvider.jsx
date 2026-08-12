@@ -22,6 +22,7 @@ export default function ThemeProvider({ children, initialSettings = DEFAULT_SETT
     layout: { ...DEFAULT_SETTINGS.layout, ...settings.layout },
     banner: { ...DEFAULT_SETTINGS.banner, ...settings.banner },
     whatsapp_checkout: { ...DEFAULT_SETTINGS.whatsapp_checkout, ...settings.whatsapp_checkout },
+    marketing: { ...DEFAULT_SETTINGS.marketing, ...settings.marketing },
   };
 
   // Función para actualizar secciones específicas de settings
