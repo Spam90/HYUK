@@ -4,8 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ProductCardVariant from './ProductCardVariant';
 
 export default function ProductGrid({ products, settings, categories }) {
-  const { productGrid } = settings.layout;
-  const { productCardStyle } = settings.layout;
+  const { layout } = settings;
+  const { productGrid, productCardStyle, layoutType } = layout;
 
   if (!products || products.length === 0) {
     return (
@@ -26,26 +26,35 @@ export default function ProductGrid({ products, settings, categories }) {
     return cat?.name || '';
   };
 
-  // Determinar clases del grid según la configuración
+  // Determinar clases del grid según layoutType (con fallback a productGrid)
   const getGridClasses = () => {
-    switch (productGrid) {
-      case 'list':
+    switch (layoutType) {
+      case 'grid_modern':
+        return 'grid grid-cols-2 gap-3';
+      case 'list_compact':
         return 'flex flex-col gap-3';
-      case 'grid-2-col':
-        return 'grid grid-cols-2 gap-3';
-      case 'grid-3-col':
-        return 'grid grid-cols-2 md:grid-cols-3 gap-3';
-      case 'cards-large':
+      case 'menu_card':
         return 'grid grid-cols-1 gap-4';
-      case 'horizontal-scroll':
-        return 'flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory no-scrollbar';
       default:
-        return 'grid grid-cols-2 gap-3';
+        switch (productGrid) {
+          case 'list':
+            return 'flex flex-col gap-3';
+          case 'grid-2-col':
+            return 'grid grid-cols-2 gap-3';
+          case 'grid-3-col':
+            return 'grid grid-cols-2 md:grid-cols-3 gap-3';
+          case 'cards-large':
+            return 'grid grid-cols-1 gap-4';
+          case 'horizontal-scroll':
+            return 'flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory no-scrollbar';
+          default:
+            return 'grid grid-cols-2 gap-3';
+        }
     }
   };
 
   // Container classes for horizontal scroll
-  const isHorizontal = productGrid === 'horizontal-scroll';
+  const isHorizontal = productGrid === 'horizontal-scroll' && layoutType !== 'list_compact';
 
   return (
     <div className={getGridClasses()}>

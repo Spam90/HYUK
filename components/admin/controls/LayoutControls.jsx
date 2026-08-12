@@ -1,117 +1,135 @@
 'use client';
 
-import { LayoutGrid, List, Columns2, Columns3, Square, ScrollText, PanelTop, AlignCenter, CreditCard, LayoutList, Rows3, Grid3x3, CircleDot, Underline, Navigation, LayoutDashboard } from 'lucide-react';
-import { PRODUCT_GRID_OPTIONS, HEADER_STYLE_OPTIONS, CATEGORY_STYLE_OPTIONS, PRODUCT_CARD_STYLE_OPTIONS } from '@/lib/theme/defaults';
+import { LayoutGrid, List, Columns2, Grid3x3, Rows3, Menu, ShoppingBag, Smartphone } from 'lucide-react';
+import { LAYOUT_TYPE_OPTIONS } from '@/lib/theme/defaults';
 
-// Mapa de iconos para opciones de grid
-const GRID_ICONS = {
-  'list': List,
-  'grid-2-col': Columns2,
-  'grid-3-col': Columns3,
-  'cards-large': Square,
-  'horizontal-scroll': ScrollText,
-};
-
-// Mapa de iconos para estilos de header
-const HEADER_ICONS = {
-  'minimal': LayoutList,
-  'banner-large': PanelTop,
-  'centered-logo': AlignCenter,
-  'floating-card': CreditCard,
-};
-
-// Mapa de iconos para estilos de categoría
-const CATEGORY_ICONS = {
-  'pills-scroll': CircleDot,
-  'tabs-underlined': Underline,
-  'floating-bar': Navigation,
-  'grid-icons': Grid3x3,
-};
-
-// Mapa de iconos para estilos de tarjeta
-const CARD_ICONS = {
-  'minimal-border': LayoutList,
-  'modern-shadow': LayoutGrid,
-  'glassmorphic': LayoutDashboard,
-  'compact-row': Rows3,
+// Mapa de iconos para layout types
+const LAYOUT_TYPE_ICONS = {
+  grid_modern: LayoutGrid,
+  list_compact: List,
+  menu_card: Menu,
 };
 
 export default function LayoutControls({ settings, updateSettings }) {
   const { layout } = settings;
 
-  // Componente para selector visual de opciones
-  const VisualSelector = ({ title, icon: TitleIcon, options, value, onChange, iconMap }) => (
-    <div>
-      <h4 className="text-sm font-semibold text-text mb-3 flex items-center gap-2">
-        <TitleIcon className="w-4 h-4" />
-        {title}
-      </h4>
-      <div className="grid grid-cols-2 gap-2">
-        {options.map((option) => {
-          const Icon = iconMap[option.value] || LayoutGrid;
-          const isActive = value === option.value;
-          return (
-            <button
-              key={option.value}
-              onClick={() => onChange(option.value)}
-              className={`p-3 rounded-theme-lg border flex flex-col items-center gap-2 transition-all ${
-                isActive
-                  ? 'border-primary bg-primary/5'
-                  : 'border-secondary/10 hover:border-primary/30'
-              }`}
-            >
-              <Icon className={`w-5 h-5 ${isActive ? 'text-primary' : 'text-text/50'}`} />
-              <span className={`text-xs font-medium ${isActive ? 'text-primary' : 'text-text/70'}`}>
-                {option.label}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-
   return (
     <div className="space-y-6">
-      {/* Distribución de productos */}
-      <VisualSelector
-        title="Distribución de Productos"
-        icon={LayoutGrid}
-        options={PRODUCT_GRID_OPTIONS}
-        value={layout.productGrid}
-        onChange={(value) => updateSettings('layout', { productGrid: value })}
-        iconMap={GRID_ICONS}
-      />
+      {/* Selector de tipo de layout de tienda */}
+      <div>
+        <h4 className="text-sm font-semibold text-text mb-3 flex items-center gap-2">
+          <LayoutGrid className="w-4 h-4" />
+          Tipo de Layout de Tienda
+        </h4>
+        <p className="text-xs text-text/40 mb-3">
+          Define la arquitectura visual principal de tu catálogo
+        </p>
+        <div className="grid grid-cols-1 gap-3">
+          {LAYOUT_TYPE_OPTIONS.map((option) => {
+            const Icon = LAYOUT_TYPE_ICONS[option.value] || Grid3x3;
+            const isActive = layout.layoutType === option.value;
+            return (
+              <button
+                key={option.value}
+                onClick={() => updateSettings('layout', { layoutType: option.value })}
+                className={`p-4 rounded-theme-lg border flex items-center gap-3 transition-all text-left ${
+                  isActive
+                    ? 'border-primary bg-primary/5'
+                    : 'border-secondary/10 hover:border-primary/30'
+                }`}
+              >
+                <div
+                  className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: isActive ? 'var(--primary)' : 'var(--secondary)' }}
+                >
+                  <Icon className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1">
+                  <p className={`font-medium ${isActive ? 'text-primary' : 'text-text'}`}>
+                    {option.label}
+                  </p>
+                  <p className="text-xs text-text/50 mt-0.5">
+                    {option.description}
+                  </p>
+                </div>
+                {isActive && (
+                  <div className="w-2 h-2 rounded-full bg-primary"></div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
-      {/* Estilo de header */}
-      <VisualSelector
-        title="Estilo de Cabecera"
-        icon={PanelTop}
-        options={HEADER_STYLE_OPTIONS}
-        value={layout.headerStyle}
-        onChange={(value) => updateSettings('layout', { headerStyle: value })}
-        iconMap={HEADER_ICONS}
-      />
+      {/* Distribución de productos (existente) */}
+      <div>
+        <h4 className="text-sm font-semibold text-text mb-3 flex items-center gap-2">
+          <Grid3x3 className="w-4 h-4" />
+          Distribución de Productos
+        </h4>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { value: 'grid-2-col', icon: Columns2, label: 'Grid 2 Col' },
+            { value: 'grid-3-col', icon: Grid3x3, label: 'Grid 3 Col' },
+            { value: 'list', icon: List, label: 'Lista' },
+            { value: 'cards-large', icon: Rows3, label: 'Tarjetas Grandes' },
+          ].map((option) => {
+            const Icon = option.icon;
+            const isActive = layout.productGrid === option.value;
+            return (
+              <button
+                key={option.value}
+                onClick={() => updateSettings('layout', { productGrid: option.value })}
+                className={`p-3 rounded-theme-lg border flex flex-col items-center gap-2 transition-all ${
+                  isActive
+                    ? 'border-primary bg-primary/5'
+                    : 'border-secondary/10 hover:border-primary/30'
+                }`}
+              >
+                <Icon className={`w-5 h-5 ${isActive ? 'text-primary' : 'text-text/50'}`} />
+                <span className={`text-xs font-medium ${isActive ? 'text-primary' : 'text-text/70'}`}>
+                  {option.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
-      {/* Estilo de categorías */}
-      <VisualSelector
-        title="Estilo de Categorías"
-        icon={CircleDot}
-        options={CATEGORY_STYLE_OPTIONS}
-        value={layout.categoryStyle}
-        onChange={(value) => updateSettings('layout', { categoryStyle: value })}
-        iconMap={CATEGORY_ICONS}
-      />
-
-      {/* Estilo de tarjetas de producto */}
-      <VisualSelector
-        title="Estilo de Tarjetas"
-        icon={LayoutGrid}
-        options={PRODUCT_CARD_STYLE_OPTIONS}
-        value={layout.productCardStyle}
-        onChange={(value) => updateSettings('layout', { productCardStyle: value })}
-        iconMap={CARD_ICONS}
-      />
-    </div>
+      {/* Estilos de tarjetas de producto (existente) */}
+      <div>
+        <h4 className="text-sm font-semibold text-text mb-3 flex items-center gap-2">
+          <ShoppingBag className="w-4 h-4" />
+          Estilo de Tarjetas
+        </h4>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { value: 'modern-shadow', icon: LayoutGrid, label: 'Sombra Moderna' },
+            { value: 'compact-row', icon: List, label: 'Fila Compacta' },
+            { value: 'minimalist', icon: ShoppingBag, label: 'Minimalista' },
+            { value: 'glassmorphic', icon: Smartphone, label: 'Glassmórfico' },
+          ].map((option) => {
+            const Icon = option.icon;
+            const isActive = layout.productCardStyle === option.value;
+            return (
+              <button
+                key={option.value}
+                onClick={() => updateSettings('layout', { productCardStyle: option.value })}
+                className={`p-3 rounded-theme-lg border flex flex-col items-center gap-2 transition-all ${
+                  isActive
+                    ? 'border-primary bg-primary/5'
+                    : 'border-secondary/10 hover:border-primary/30'
+                }`}
+              >
+                <Icon className={`w-5 h-5 ${isActive ? 'text-primary' : 'text-text/50'}`} />
+                <span className={`text-xs font-medium ${isActive ? 'text-primary' : 'text-text/70'}`}>
+                  {option.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+        </div>
   );
 }

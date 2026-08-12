@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, Reorder } from 'framer-motion';
-import { Plus, Edit2, Trash2, Search, Package, ArrowLeft, Image as ImageIcon, X, Upload, GripVertical, ChevronUp, ChevronDown } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, Package, ArrowLeft, Image as ImageIcon, X, Upload, GripVertical, ChevronUp, ChevronDown, Sparkles, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';
@@ -36,6 +36,7 @@ export default function ProductsPage() {
     badge: '',
     image_url: '',
   });
+  const [generatingDescription, setGeneratingDescription] = useState(false);
 
   useEffect(() => {
     if (supabase) {
@@ -59,6 +60,31 @@ export default function ProductsPage() {
       console.error('Error loading data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGenerateDescription = async () => {
+    if (!formData.name.trim()) {
+      alert('Primero escribe el nombre del producto');
+      return;
+    }
+    setGeneratingDescription(true);
+    try {
+      const response = await fetch('/api/ai/generate-description', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productName: formData.name }),
+      });
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error || 'Error al generar la descripción');
+      }
+      setFormData((prev) => ({ ...prev, description: result.description }));
+    } catch (error) {
+      console.error('Error generando descripción con IA:', error);
+      alert(error.message || 'No se pudo generar la descripción');
+    } finally {
+      setGeneratingDescription(false);
     }
   };
 
@@ -350,7 +376,23 @@ export default function ProductsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Descripción</label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Descripción</label>
+                  <button
+                    type="button"
+                    onClick={handleGenerateDescription}
+                    disabled={generatingDescription || !formData.name.trim()}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{ backgroundColor: '#8B5CF6' }}
+                  >
+                    {generatingDescription ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-3.5 h-3.5" />
+                    )}
+                    {generatingDescription ? 'Generando...' : 'Generar con IA'}
+                  </button>
+                </div>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}

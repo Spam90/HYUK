@@ -36,6 +36,16 @@ export default function PhonePreview({ settings }) {
 
   // Helper to get product grid classes
   const getProductGridClasses = () => {
+    // Priorizar el layoutType de tienda seleccionado
+    if (layout.layoutType === 'list_compact') {
+      return 'flex flex-col gap-2';
+    }
+    if (layout.layoutType === 'menu_card') {
+      return 'grid grid-cols-1 gap-3';
+    }
+    if (layout.layoutType === 'grid_modern') {
+      return 'grid grid-cols-2 gap-2';
+    }
     const gridMap = {
       'list': 'flex flex-col gap-2',
       'grid-2-col': 'grid grid-cols-2 gap-2',

@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Plus, Star, Flame, Tag, Check, ShoppingBag } from 'lucide-react';
+import { Star, Flame, Tag, ShoppingBag } from 'lucide-react';
 import Image from 'next/image';
 
 export default function ProductCardVariant({ 
@@ -11,9 +11,20 @@ export default function ProductCardVariant({
   settings 
 }) {
   const { theme } = settings;
-  
+  const layoutType = settings.layout?.layoutType || 'grid_modern';
+
+  // Modos de layout
+  const isListCompact = layoutType === 'list_compact';
+  const isMenuCard = layoutType === 'menu_card';
+
   // Aplicar clases según el estilo de tarjeta seleccionado
   const getCardClasses = () => {
+    if (isMenuCard) {
+      return 'bg-white dark:bg-zinc-800 rounded-2xl shadow-lg shadow-black/5 flex flex-row items-stretch overflow-hidden';
+    }
+    if (isListCompact) {
+      return 'bg-white dark:bg-zinc-800 rounded-xl shadow-sm flex-row items-center gap-3';
+    }
     switch (style) {
       case 'minimalist':
         return 'bg-transparent shadow-none border-0';
@@ -70,8 +81,8 @@ export default function ProductCardVariant({
       transition={{ duration: 0.3, ease: 'easeOut' }}
       className={`group relative transition-all duration-300 overflow-hidden ${getCardClasses()}`}
     >
-      {/* Image Container - Tiendanube Style */}
-      <div className="relative aspect-square overflow-hidden bg-gray-50 dark:bg-zinc-700">
+      {/* Image Container */}
+      <div className={`relative overflow-hidden bg-gray-50 dark:bg-zinc-700 ${isListCompact ? 'w-20 h-20 rounded-xl shrink-0' : isMenuCard ? 'w-28 sm:w-32 shrink-0 self-stretch' : 'aspect-square'}`}>
         {product.image_url ? (
           <Image
             src={product.image_url}
@@ -81,23 +92,8 @@ export default function ProductCardVariant({
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-6xl">
+          <div className="w-full h-full flex items-center justify-center text-4xl">
             🍽️
-          </div>
-        )}
-
-        {/* Badge - Top Left Corner */}
-        {badgeConfig && (
-          <div className="absolute top-3 left-3 z-10">
-            <div className={`
-              flex items-center gap-1 px-2.5 py-1 rounded-md
-              bg-gradient-to-r ${badgeConfig.gradient}
-              text-white text-xs font-bold uppercase tracking-wide
-              shadow-lg backdrop-blur-sm
-            `}>
-              <badgeConfig.icon className="w-3 h-3" />
-              {badgeConfig.text}
-            </div>
           </div>
         )}
 
@@ -109,77 +105,56 @@ export default function ProductCardVariant({
             </div>
           </div>
         )}
-
-        {/* Quick Add Button - Bottom Right */}
-        {product.is_available && onAddToCart && (
-          <motion.button
-            initial={{ scale: 0, opacity: 0 }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={() => onAddToCart(product)}
-            className="
-              absolute bottom-3 right-3 z-10
-              w-11 h-11 rounded-full
-              flex items-center justify-center
-              text-white shadow-xl
-              transition-all duration-300
-              opacity-0 group-hover:opacity-100
-            "
-            style={{ 
-              backgroundColor: theme.primaryColor,
-              boxShadow: `0 4px 12px ${theme.primaryColor}40`
-            }}
-          >
-            <Plus className="w-5 h-5" />
-          </motion.button>
-        )}
       </div>
 
-      {/* Content - Tiendanube Style */}
-      <div className={`p-4 ${style === 'compact-row' ? 'flex-1' : ''}`}>
-        {/* Product Name */}
-        <h3 
-          className="font-semibold text-sm mb-1 line-clamp-2 leading-tight text-gray-900 dark:text-white"
-        >
-          {product.name}
-        </h3>
+      {/* Content */}
+      <div className={`flex-1 min-w-0 ${isListCompact ? 'p-3' : 'p-4'}`}>
+        <div className={`${isMenuCard || isListCompact ? 'flex items-start justify-between gap-3' : ''}`}>
+          <div className="min-w-0">
+            {/* Badge + Name */}
+            <div className="flex items-center gap-2 mb-1">
+              {badgeConfig && (
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gradient-to-r ${badgeConfig.gradient} text-white text-[10px] font-bold uppercase tracking-wide shadow`}>
+                  <badgeConfig.icon className="w-3 h-3" />
+                  {badgeConfig.text}
+                </span>
+              )}
+              <h3 className="font-semibold text-sm leading-tight text-gray-900 dark:text-white line-clamp-2">
+                {product.name}
+              </h3>
+            </div>
 
-        {/* Description */}
-        {product.description && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-3 leading-relaxed">
-            {product.description}
-          </p>
-        )}
+            {/* Description - mostramos solo en menu_card y grid_modern */}
+            {(isMenuCard) && product.description && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-3 leading-relaxed mt-1">
+                {product.description}
+              </p>
+            )}
+          </div>
 
-        {/* Price Block */}
-        <div className={`flex items-center gap-2 mb-3 ${style === 'compact-row' ? 'mb-0' : ''}`}>
-          {/* Original Price with strikethrough */}
-          {originalPrice && (
-            <span className="text-xs text-zinc-400 line-through">
-              ${originalPrice.toFixed(2)}
+          {/* Price Block */}
+          <div className={`flex shrink-0 ${isListCompact ? 'flex-col items-end' : isMenuCard ? 'flex-col items-end gap-0.5' : 'items-baseline gap-2'}`}>
+            {originalPrice && (
+              <span className="text-xs text-zinc-400 line-through">
+                ${originalPrice.toFixed(2)}
+              </span>
+            )}
+            <span 
+              className={`font-bold ${isListCompact ? 'text-sm' : 'text-base'}`}
+              style={{ color: theme.primaryColor }}
+            >
+              ${finalPrice.toFixed(2)}
             </span>
-          )}
-          {/* Final Price */}
-          <span 
-            className="text-base font-bold"
-            style={{ color: theme.primaryColor }}
-          >
-            ${finalPrice.toFixed(2)}
-          </span>
+          </div>
         </div>
 
         {/* Options Preview */}
-        {product.options && product.options.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mb-3">
+        {product.options && product.options.length > 0 && !isListCompact && (
+          <div className="flex flex-wrap gap-1.5 mt-2 mb-3">
             {product.options.slice(0, 3).map((option, idx) => (
               <span
                 key={idx}
-                className="
-                  px-2 py-1 rounded-lg
-                  text-[10px] font-medium
-                  bg-gray-100 dark:bg-zinc-700
-                  text-gray-600 dark:text-gray-300
-                "
+                className="px-2 py-1 rounded-lg text-[10px] font-medium bg-gray-100 dark:bg-zinc-700 text-gray-600 dark:text-gray-300"
               >
                 {option.label}
               </span>
@@ -198,16 +173,19 @@ export default function ProductCardVariant({
             whileTap={{ scale: 0.95 }}
             onClick={() => onAddToCart(product)}
             className="
-              w-full py-2.5 rounded-xl
               flex items-center justify-center gap-2
               text-white text-sm font-semibold
               shadow-md hover:shadow-lg
               transition-all duration-200
-              md:hidden
+              rounded-xl
             "
             style={{ 
               backgroundColor: theme.primaryColor,
-              boxShadow: `0 2px 8px ${theme.primaryColor}40`
+              boxShadow: `0 2px 8px ${theme.primaryColor}40`,
+              padding: isListCompact ? '0.375rem 0.75rem' : '0.625rem 1rem',
+              width: isListCompact ? 'auto' : '100%',
+              marginTop: isListCompact ? '0.5rem' : '0.75rem',
+              fontSize: isListCompact ? '0.75rem' : '0.875rem'
             }}
           >
             <ShoppingBag className="w-4 h-4" />

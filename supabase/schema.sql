@@ -12,6 +12,7 @@ ALTER TABLE profiles ADD COLUMN IF NOT EXISTS business_name TEXT;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS tagline TEXT;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS phone_whatsapp TEXT;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS plan_type TEXT DEFAULT 'free';
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS layout_type TEXT DEFAULT 'grid_modern';
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS settings JSONB DEFAULT '{
   "theme": {
     "primaryColor": "#10B981",
@@ -25,6 +26,7 @@ ALTER TABLE profiles ADD COLUMN IF NOT EXISTS settings JSONB DEFAULT '{
     "mode": "light"
   },
   "layout": {
+    "layoutType": "grid_modern",
     "productGrid": "grid-2-col",
     "headerStyle": "banner-large",
     "categoryStyle": "pills-scroll",

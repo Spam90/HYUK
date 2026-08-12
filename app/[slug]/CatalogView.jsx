@@ -86,7 +86,8 @@ function CatalogContent({ store, categories, products, settings }) {
       productGrid: 'grid-2-col',
       headerStyle: 'banner-large',
       categoryStyle: 'pills-scroll',
-      productCardStyle: 'modern-shadow'
+      productCardStyle: 'modern-shadow',
+      layoutType: 'grid_modern'
     },
     banner: {
       imageUrl: '',
