@@ -589,3 +589,22 @@ Si tienes un dominio propio (ej: `mitienda.com`):
 - **Framer Motion warning**: `NotFoundError: Failed to execute 'removeChild'` - Warning menor al desmontar componentes, no crítico
 - **Imágenes**: Actualmente se usan URLs externas, falta implementar almacenamiento propio
 - **Configuración de Supabase Auth**: Requiere configuración manual en el dashboard de Supabase (ver sección de despliegue)
+
+### 🧲 Paquete "Gancho" — IA, Marketing y Gatillos de Venta
+
+#### 🤖 Módulo de IA (Google Gemini 1.5 Flash)
+- **`.env.local`**: `GEMINI_API_KEY` configurada (el archivo está en `.gitignore`).
+- **`app/api/ai/scan-menu/route.js`**: Escáner de menús por foto → devuelve `{ categories: [{ name, products: [{ name, price, description }] }] }`.
+- **`app/api/ai/generate-description/route.js`**: Genera descripciones vendedoras a partir del nombre del producto.
+- **`app/admin/ai-importer/page.jsx`**: Drag & drop de la foto del menú, loader y botón "Importar a Supabase".
+- **`components/admin/ProductModal.jsx`**: Botón **✨** junto a la Descripción que autocompleta con IA.
+
+#### 🧾 Herramientas de Marketing
+- **`components/admin/PrintTicketModal.jsx`** + **`lib/print/thermal-ticket.js`**: Tickets térmicos 58/80mm (blanco y negro, monospace, divisores con guiones y `window.print()`).
+- **`app/admin/qr-generator/page.jsx`**: Generador de QR (`qrcode.react`) apuntando a `/[slug]`, color personalizable y descarga en PNG.
+- **`app/admin/flyer-maker/page.jsx`**: Flyers 1080x1920 en canvas con foto del producto, precio destacado y QR de la tienda.
+
+#### ⚡ Gatillos de Venta en el Catálogo Público
+- **Ofertas relámpago** (`flash_sale_end` + `flash_sale_price`): countdown rojo `HH:MM:SS` junto al precio en `ProductCardVariant.jsx`. Configuración desde `ProductModal.jsx` (fecha límite + precio flash). Nueva columna en `supabase/schema.sql`.
+- **Zonas de delivery dinámicas** en `components/catalog/CartDrawer.jsx`: al elegir "A domicilio" aparece un `select` de sectores ("Zona Centro - $100", "Periferia - $250", etc.) cuyo costo se suma automáticamente al **total** y al ticket de WhatsApp. Las zonas se configuran en `settings.theme.deliveryZones` (con valores por defecto). Se persiste en `orders.delivery_zone` y `orders.delivery_fee`.
+

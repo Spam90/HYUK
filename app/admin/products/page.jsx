@@ -36,6 +36,8 @@ export default function ProductsPage() {
     is_featured: false,
     badge: '',
     image_url: '',
+    flash_sale_end: '',
+    flash_sale_price: '',
   });
 
   useEffect(() => {
@@ -135,6 +137,8 @@ export default function ProductsPage() {
       is_featured: false,
       badge: '',
       image_url: '',
+      flash_sale_end: '',
+      flash_sale_price: '',
     });
   };
 
@@ -150,6 +154,8 @@ export default function ProductsPage() {
       is_featured: product.is_featured,
       badge: product.badge || '',
       image_url: product.image_url || '',
+      flash_sale_end: product.flash_sale_end || '',
+      flash_sale_price: product.flash_sale_price || '',
     });
     setShowModal(true);
   };

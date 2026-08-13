@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { Star, Flame, Tag, ShoppingBag } from 'lucide-react';
 import Image from 'next/image';
+import { useState, useEffect } from 'react';
 
 export default function ProductCardVariant({ 
   product, 
@@ -73,6 +74,36 @@ export default function ProductCardVariant({
   const originalPrice = hasDiscount ? parseFloat(product.price) * 1.2 : null;
   const finalPrice = parseFloat(product.price);
 
+  // Oferta relámpago con cuenta regresiva en tiempo real
+  const [flashRemaining, setFlashRemaining] = useState(null);
+  useEffect(() => {
+    if (!product.flash_sale_end) {
+      setFlashRemaining(null);
+      return;
+    }
+    const endTime = new Date(product.flash_sale_end).getTime();
+    const tick = () => {
+      const diff = endTime - Date.now();
+      if (diff <= 0) {
+        setFlashRemaining(null);
+        return;
+      }
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      const s = Math.floor((diff % 60000) / 1000);
+      setFlashRemaining(
+        `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+      );
+    };
+    tick();
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [product.flash_sale_end]);
+
+  // Precio de la oferta relámpago (si existe precio especial vigente)
+  const isFlashActive = !!flashRemaining && parseFloat(product.flash_sale_price) > 0;
+  const displayPrice = isFlashActive ? parseFloat(product.flash_sale_price) : finalPrice;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -134,18 +165,31 @@ export default function ProductCardVariant({
 
           {/* Price Block */}
           <div className={`flex shrink-0 ${isListCompact ? 'flex-col items-end' : isMenuCard ? 'flex-col items-end gap-0.5' : 'items-baseline gap-2'}`}>
-            {originalPrice && (
+            {isFlashActive && (
+              <span className="text-xs text-zinc-400 line-through">
+                ${finalPrice.toFixed(2)}
+              </span>
+            )}
+            {!isFlashActive && originalPrice && (
               <span className="text-xs text-zinc-400 line-through">
                 ${originalPrice.toFixed(2)}
               </span>
             )}
             <span 
               className={`font-bold ${isListCompact ? 'text-sm' : 'text-base'}`}
-              style={{ color: theme.primaryColor }}
+              style={{ color: isFlashActive ? '#dc2626' : theme.primaryColor }}
             >
-              ${finalPrice.toFixed(2)}
+              ${displayPrice.toFixed(2)}
             </span>
           </div>
+
+          {/* Cuenta regresiva de oferta relámpago */}
+          {flashRemaining && (
+            <span className="inline-flex items-center gap-1.5 mt-1.5 px-2 py-1 rounded-md bg-red-600 text-white text-[11px] font-bold w-fit shadow">
+              <Flame className="w-3.5 h-3.5" />
+              🔥 {flashRemaining} restantes
+            </span>
+          )}
         </div>
 
         {/* Options Preview */}

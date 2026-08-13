@@ -577,3 +577,16 @@ SET settings = jsonb_set(
   true
 )
 WHERE settings IS NULL OR NOT settings ? 'marketing';
+-- =============================================
+-- 13. GATILLOS DE VENTA - OFERTAS RELÁMPAGO + ZONAS DE DELIVERY
+-- =============================================
+
+-- Oferta relámpago: fecha límite de la oferta y precio especial opcional
+ALTER TABLE products ADD COLUMN IF NOT EXISTS flash_sale_end TIMESTAMPTZ;
+ALTER TABLE products ADD COLUMN IF NOT EXISTS flash_sale_price DECIMAL(10,2);
+
+-- Zonas de delivery: se guardan en settings.theme.deliveryZones (JSONB en profiles).
+-- Las siguientes columnas en orders guardan el histórico de envío al confirmar.
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_zone TEXT;
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_fee DECIMAL(10,2) DEFAULT 0;
+

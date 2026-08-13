@@ -34,6 +34,9 @@ export default function CartDrawer({ store, settings }) {
   const [activeCoupon, setActiveCoupon] = useState(null);
   const [couponError, setCouponError] = useState('');
   const [couponLoading, setCouponLoading] = useState(false);
+  // Zonas de delivery dinámicas (sector + tarifa)
+  const [deliveryZone, setDeliveryZone] = useState(null);
+  const [deliveryFee, setDeliveryFee] = useState(0);
 
   // Bloquear scroll cuando el drawer está abierto
   useEffect(() => {
@@ -55,6 +58,8 @@ export default function CartDrawer({ store, settings }) {
       setDeliveryMethod('');
       setPaymentMethod('');
       setNotes('');
+      setDeliveryZone(null);
+      setDeliveryFee(0);
     }
   }, [isCartOpen]);
 
@@ -68,6 +73,17 @@ export default function CartDrawer({ store, settings }) {
 
   // Total final con descuento
   const finalTotal = Math.max(cartTotal - couponDiscount, 0);
+
+  // Zonas de delivery dinámicas (configurables vía settings.theme.deliveryZones)
+  const deliveryZones = settings?.theme?.deliveryZones || [
+    { label: 'Zona Centro', fee: 100 },
+    { label: 'Periferia', fee: 250 },
+    { label: 'Zona Norte', fee: 200 },
+    { label: 'Zona Este', fee: 180 },
+  ];
+
+  const isHomeDelivery = deliveryMethod === 'A domicilio' || deliveryMethod === 'Envío a domicilio';
+  const totalWithDelivery = isHomeDelivery ? finalTotal + deliveryFee : finalTotal;
 
   // Aplicar cupón
   const applyCoupon = async () => {
@@ -132,10 +148,12 @@ export default function CartDrawer({ store, settings }) {
         deliveryMethod: deliveryMethod,
         paymentMethod: paymentMethod,
         items: cartItems,
-        total: finalTotal,
+        total: totalWithDelivery,
         notes: '',
         couponCode: activeCoupon?.code || null,
         discountAmount: couponDiscount,
+        deliveryZone: isHomeDelivery ? (deliveryZone?.label || '') : '',
+        deliveryFee: isHomeDelivery ? deliveryFee : 0,
       });
 
       if (!orderResult.success) {
@@ -155,10 +173,12 @@ export default function CartDrawer({ store, settings }) {
           name: customerName,
           address: customerAddress,
           deliveryMethod,
+          deliveryZone: isHomeDelivery ? (deliveryZone?.label || '') : '',
+          deliveryFee: isHomeDelivery ? deliveryFee : 0,
           paymentMethod,
           notes: notes.trim(),
         },
-        total: finalTotal,
+        total: totalWithDelivery,
         coupon: activeCoupon,
         couponDiscount,
       });
@@ -423,9 +443,40 @@ export default function CartDrawer({ store, settings }) {
                   >
                     <span className="text-base font-bold text-gray-900 dark:text-white">Total a pagar</span>
                     <span className="text-xl font-extrabold" style={{ color: theme.primaryColor }}>
-                      {formatPrice(finalTotal)}
+                      {formatPrice(totalWithDelivery)}
                     </span>
                   </div>
+
+                  {/* Línea de costo de envío por zona */}
+                  {isHomeDelivery && deliveryZone && deliveryFee > 0 && (
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600 dark:text-gray-400">Envío a {deliveryZone.label}</span>
+                      <span className="font-semibold text-gray-900 dark:text-white">+{formatPrice(deliveryFee)}</span>
+                    </div>
+                  )}
+
+                  {/* Zonas de delivery dinámicas */}
+                  {isHomeDelivery && (
+                    <div className="bg-gray-50 dark:bg-zinc-800/50 rounded-xl p-3 border border-gray-200 dark:border-zinc-800">
+                      <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1.5">
+                        <Bike className="w-3.5 h-3.5" /> Zona de envío
+                      </p>
+                      <select
+                        value={deliveryZone?.label || ''}
+                        onChange={(e) => {
+                          const zone = deliveryZones.find((z) => z.label === e.target.value);
+                          setDeliveryZone(zone || null);
+                          setDeliveryFee(zone ? zone.fee : 0);
+                        }}
+                        className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary/50"
+                      >
+                        <option value="">Selecciona tu zona</option>
+                        {deliveryZones.map((z, i) => (
+                          <option key={i} value={z.label}>{z.label} - {formatPrice(z.fee)}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
 
                   {/* Shipping Notice */}
                   <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
