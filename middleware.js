@@ -106,9 +106,16 @@ export async function middleware(request) {
   // =============================================
   // PROTECCIÓN DE RUTAS DE ADMIN
   // =============================================
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+
+  if (authError) {
+    console.error('[Middleware] Error de autenticación:', authError.message);
+  } else {
+    console.log(`[Middleware] ruta=${pathname} autenticado=${user?.id ? 'sí' : 'NO'}`);
+  }
 
   if (!user) {
+    console.log(`[Middleware] Sin sesión, redirigiendo a /login desde ${pathname}`);
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
