@@ -4,10 +4,9 @@
    fallback a red y actualización en background.
    ============================================= */
 
-const CACHE_NAME = 'hyuk-catalog-v1';
+const CACHE_NAME = 'hyuk-catalog-v2';
 const APP_SHELL = [
   '/',
-  '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
   '/favicon.svg',
@@ -17,7 +16,17 @@ const APP_SHELL = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(APP_SHELL))
+      .then((cache) =>
+        Promise.all(
+          APP_SHELL.map((url) =>
+            cache.add(url).catch(() => {
+              // No bloquear la instalación si un recurso falla
+              // (p. ej. un asset redirigido por el SSO de Vercel en preview)
+              console.warn('[SW] No se pudo precachear:', url);
+            })
+          )
+        )
+      )
       .then(() => self.skipWaiting())
   );
 });
@@ -43,6 +52,10 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
 
   const url = new URL(request.url);
+
+  // No interceptar el manifest: el navegador lo gestiona directamente.
+  // Evita el fallo CORS cuando Vercel lo redirige al SSO en previews protegidos.
+  if (url.pathname === '/manifest.json') return;
 
   // No cachear API, Supabase o rutas de autenticación
   if (url.pathname.startsWith('/api/') ||
