@@ -1,424 +1,242 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Users, Search, MessageCircle, Phone, MapPin, X,
-  ShoppingBag, CalendarDays, DollarSign, RefreshCw, Clock
-} from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { motion } from 'framer-motion';
+import { Search, Phone, ShoppingBag, DollarSign, Trophy, RefreshCw, X, Calendar } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { getOrders } from '@/lib/orders';
 
 export const dynamic = 'force-dynamic';
 
+const MEDALLAS = ['🥇', '🥈', '🥉'];
+const TIER_BG = ['bg-yellow-400/15 border-l-4 border-yellow-400', 'bg-amber-400/10 border-l-4 border-amber-400', 'bg-orange-400/10 border-l-4 border-orange-400'];
+
 export default function CustomersPage() {
-  const [customers, setCustomers] = useState([]);
+  const router = useRouter();
+  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [customerOrders, setCustomerOrders] = useState([]);
-  const [ordersLoading, setOrdersLoading] = useState(false);
-  const router = useRouter();
-
+  const [selectedPhone, setSelectedPhone] = useState(null);
   const [supabase, setSupabase] = useState(null);
 
   useEffect(() => {
-    import('@/lib/supabase/client').then(({ createClient }) => {
-      setSupabase(createClient());
-    });
+    import('@/lib/supabase/client').then(({ createClient }) => setSupabase(createClient()));
   }, []);
 
-  useEffect(() => {
-    if (supabase) {
-      loadCustomers();
-    }
-  }, [supabase]);
-
-  const loadCustomers = async () => {
+  const loadOrders = async () => {
     if (!supabase) return;
+    setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        router.push('/login');
-        return;
-      }
-      const { data, error } = await supabase
-        .from('customers')
-        .select('*')
-        .eq('store_id', user.id)
-        .order('last_order_date', { ascending: false });
-
-      if (error) throw error;
-      setCustomers(data || []);
-    } catch (error) {
-      console.error('Error loading customers:', error);
-      alert('Error al cargar clientes. Verifica que el schema SQL (tabla customers) esté ejecutado.');
-    } finally {
-      setLoading(false);
-    }
+      if (!user) { router.push('/login'); return; }
+      const result = await getOrders(user.id);
+      setOrders(result.success ? result.orders : []);
+    } catch (e) {
+      console.error('Error cargando clientes:', e);
+      setOrders([]);
+    } finally { setLoading(false); }
   };
+  useEffect(() => { if (supabase) loadOrders(); }, [supabase]);
 
-  const filteredCustomers = customers.filter((c) => {
-    const q = searchTerm.toLowerCase();
-    return (
-      c.name?.toLowerCase().includes(q) ||
-      c.phone?.toLowerCase().includes(q)
-    );
+  const customers = useMemo(() => {
+    const map = new Map();
+    (orders || []).forEach((o) => {
+      const phone = (o.customer_phone || '').trim();
+      if (!phone) return;
+      const pc = phone.replace(/\D/g, '');
+            const cur = map.get(pc) || { phone, pc, name: o.customer_name || '—', orders: 0, spent: 0, lastDate: null };
+      cur.orders += 1;
+      cur.spent += parseFloat(o.total_amount || 0);
+      if (o.created_at && (!cur.lastDate || new Date(o.created_at) > new Date(cur.lastDate))) cur.lastDate = o.created_at;
+      if ((o.customer_name || '').trim() && (cur.name === '—' || !cur.name)) cur.name = o.customer_name;
+      map.set(pc, cur);
+    });
+    return Array.from(map.values()).sort((a, b) => b.spent - a.spent);
+  }, [orders]);
+
+  const filtered = customers.filter((c) => {
+    const q = (searchTerm || '').toLowerCase();
+    if (!q) return true;
+    return c.name?.toLowerCase().includes(q) || c.phone?.includes(q);
   });
 
-  const openCustomer = async (customer) => {
-    setSelectedCustomer(customer);
-    setOrdersLoading(true);
-    setCustomerOrders([]);
-    try {
-      const { getCustomerOrders } = await import('@/lib/customers');
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const result = await getCustomerOrders(user.id, customer.id);
-      if (result.success) {
-        setCustomerOrders(result.orders);
-      }
-    } catch (error) {
-      console.error('Error loading customer orders:', error);
-    } finally {
-      setOrdersLoading(false);
-    }
-  };
-
+  const formatMoney = (v) => new Intl.NumberFormat('es-DO', { style: 'currency', currency: 'DOP', minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(v || 0);
   const openWhatsApp = (phone) => {
-    const cleanPhone = String(phone || '').replace(/\D/g, '');
-    if (!cleanPhone) return;
-    const message = '¡Hola! 🎉 Queremos ofrecerte una promoción especial en nuestra tienda. ¿Te interesa?';
-    window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank');
+    const clean = String(phone || '').replace(/\D/g, '');
+    if (!clean) return;
+    const msg = '¡Hola! 🎉 Tenemos una promoción especial para vosotros. ¿Te interesa?';
+    window.open(`https://wa.me/${clean}?text=${encodeURIComponent(msg)}`, '_blank');
   };
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) return '—';
-    return new Date(dateStr).toLocaleDateString('es-DO', {
-      day: '2-digit', month: 'short', year: 'numeric',
-    });
-  };
-
-  const formatMoney = (value) => {
-    return new Intl.NumberFormat('es-DO', {
-      style: 'currency', currency: 'DOP', minimumFractionDigits: 0, maximumFractionDigits: 2,
-    }).format(value || 0);
-  };
-
-  const formatOrderDate = (dateStr) => {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString('es-DO', {
-      day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
-    });
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  const customerOrders = (pc) => orders.filter((o) => String(o.customer_phone || '').replace(/\D/g, '') === pc);
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-zinc-950">
+      <header className="bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800">
+        <div className="max-w-6xl mx-auto px-4 py-5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-theme-xl bg-primary/10 flex items-center justify-center">
-              <Users className="w-6 h-6 text-primary" />
-            </div>
+            <button onClick={() => router.back()} className="w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700"><X className="w-4 h-4" /></button>
+            <Calendar className="w-6 h-6 text-primary" />
             <div>
-              <h1 className="text-3xl font-bold text-text">Directorio de Clientes</h1>
-              <p className="text-text/60">
-                {customers.length} {customers.length === 1 ? 'cliente registrado' : 'clientes registrados'} automáticamente
-              </p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Librito de Clientes</h1>
+              <p className="text-sm text-gray-500">Clientes agrupados por WhatsApp · ordenados por mayor gasto</p>
             </div>
           </div>
-          <button
-            onClick={loadCustomers}
-            className="flex items-center gap-2 px-4 py-2 bg-card text-text rounded-theme-lg border border-secondary/10 font-medium hover:bg-secondary/10 transition-colors"
-          >
-            <RefreshCw className="w-4 h-4" />
-            Refrescar
-          </button>
+          <div className="flex items-center gap-2 text-sm text-gray-500"><Trophy className="w-5 h-5 text-yellow-400" /><span>{filtered.slice(0, 3).length} destacados</span></div>
+        </div>
+      </header>
+
+      <main className="max-w-6xl mx-auto px-4 py-6">
+        <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-gray-200 dark:border-zinc-800 p-4 mb-4 flex items-center justify-between gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Buscar por nombre o WhatsApp..." className="w-full pl-10 pr-3 py-2 rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary/50" />
+          </div>
+          <button onClick={loadOrders} disabled={loading} className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50" title="Recargar"><RefreshCw className={`w-4 h-4 text-gray-500 ${loading ? 'animate-spin' : ''}`} /></button>
         </div>
 
-        {/* Search */}
-        <div className="relative mb-6">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-text/30" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Buscar por nombre o teléfono..."
-            className="w-full pl-12 pr-4 py-3 rounded-theme-xl bg-card border border-secondary/10 text-text placeholder:text-text/30 focus:outline-none focus:border-primary transition-colors"
-          />
-        </div>
-{/* Tabla de clientes */}
-        {filteredCustomers.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-card rounded-theme-xl p-12 border-2 border-dashed border-secondary/20 text-center"
-          >
-            <Users className="w-16 h-16 text-secondary/30 mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-text mb-2">
-              {searchTerm ? 'Sin resultados' : 'Aún no tienes clientes'}
-            </h3>
-            <p className="text-text/60 max-w-md mx-auto">
-              Los clientes se registran automáticamente cuando realizan pedidos en tu catálogo.
-            </p>
-          </motion.div>
+                {loading ? (
+          <div className="flex items-center justify-center py-12 text-gray-500">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-16 text-gray-400">
+            <ShoppingBag className="w-12 h-12 mx-auto mb-3 opacity-30" />
+            <p className="font-medium">Sin clientes registrados todavía</p>
+            <p className="text-sm mt-1">Los pedidos aparecerán agrupados aquí por WhatsApp.</p>
+          </div>
         ) : (
-          <div className="bg-card rounded-theme-xl border border-secondary/10 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="border-b border-secondary/10 text-xs text-text/50 uppercase tracking-wider">
-                    <th className="px-6 py-4 font-semibold">Cliente</th>
-                    <th className="px-6 py-4 font-semibold hidden md:table-cell">Contacto</th>
-                    <th className="px-6 py-4 font-semibold text-center">Pedidos</th>
-                    <th className="px-6 py-4 font-semibold text-right">Total Gastado</th>
-                    <th className="px-6 py-4 font-semibold hidden sm:table-cell">Último Pedido</th>
-                    <th className="px-6 py-4 font-semibold text-right">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredCustomers.map((customer, index) => (
-                    <motion.tr
-                      key={customer.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: index * 0.03 }}
-                      className="border-b border-secondary/5 hover:bg-secondary/5 transition-colors cursor-pointer"
-                      onClick={() => openCustomer(customer)}
+          <div className="overflow-x-auto rounded-2xl border border-gray-200 dark:border-zinc-800">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-100 dark:bg-zinc-800/60 text-left">
+                  <th className="px-4 py-2.5 text-gray-500">#</th>
+                  <th className="px-4 py-2.5 text-gray-500">Cliente</th>
+                  <th className="px-4 py-2.5 text-gray-500">WhatsApp</th>
+                  <th className="px-4 py-2.5 text-gray-500 text-center">Total Pedidos</th>
+                  <th className="px-4 py-2.5 text-gray-500 text-right">Dinero Total Gastado</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
+                {filtered.map((c, idx) => {
+                  const isTop3 = idx < 3;
+                  return (
+                    <tr
+                      key={c.pc}
+                      onClick={() => setSelectedPhone(c)}
+                      className={`cursor-pointer transition-colors ${isTop3 ? TIER_BG[idx] : 'hover:bg-gray-50 dark:hover:bg-zinc-800/40'}`}
                     >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                            <span className="text-primary font-bold text-sm">
-                              {customer.name?.charAt(0).toUpperCase() || '?'}
-                            </span>
-                          </div>
-                          <div className="min-w-0">
-                            <p className="font-semibold text-text truncate">{customer.name}</p>
-                            <p className="text-xs text-text/50 md:hidden">
-                              {customer.phone || customer.address || '—'}
-                            </p>
-                          </div>
+                      <td className="px-4 py-2.5">
+                        {isTop3 && (
+                          <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-yellow-100 dark:bg-zinc-700 text-sm">{MEDALLAS[idx]}</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <div className="flex items-center gap-2">
+                          <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-white shrink-0 ${isTop3 ? 'bg-gradient-to-r from-yellow-400 to-yellow-300 text-black' : 'bg-gray-300'}`}>
+                            {c.name?.charAt(0)?.toUpperCase() || '—'}
+                          </span>
+                          <span className="font-medium text-gray-900 dark:text-white truncate">{c.name}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 hidden md:table-cell">
-                        <div className="space-y-1">
-                          {customer.phone && (
-                            <p className="text-sm text-text flex items-center gap-1.5">
-                              <Phone className="w-3.5 h-3.5 text-text/40" />
-                              {customer.phone}
-                            </p>
-                          )}
-                          {customer.address && (
-                            <p className="text-xs text-text/50 flex items-center gap-1.5 max-w-[180px] truncate">
-                              <MapPin className="w-3.5 h-3.5 text-text/40 shrink-0" />
-                              {customer.address}
-                            </p>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary/5 text-text font-semibold text-sm">
-                          <ShoppingBag className="w-3.5 h-3.5 text-primary" />
-                          {customer.total_orders || 0}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right font-bold text-primary">
-                        {formatMoney(customer.total_spent)}
-                      </td>
-                      <td className="px-6 py-4 hidden sm:table-cell text-sm text-text/60">
-                        {formatDate(customer.last_order_date)}
-                      </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-4 py-2.5">
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openWhatsApp(customer.phone);
-                          }}
-                          disabled={!customer.phone}
-                          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-theme-lg bg-green-500 text-white text-xs font-semibold hover:bg-green-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                          title="Escribir por WhatsApp"
+                          onClick={(e) => { e.stopPropagation(); openWhatsApp(c.phone); }}
+                          className="flex items-center gap-1.5 text-sm text-primary hover:underline font-mono"
                         >
-                          <MessageCircle className="w-3.5 h-3.5" />
-                          WhatsApp
+                          <Phone className="w-3.5 h-3.5" /> {c.phone}
                         </button>
                       </td>
-                    </motion.tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      <td className="px-4 py-2.5 text-center">
+                        <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary/10 text-primary font-bold">{c.orders}</span>
+                      </td>
+                      <td className="px-4 py-2.5 text-right">
+                        <span className={`font-bold ${isTop3 ? 'text-yellow-600 dark:text-yellow-400' : 'text-gray-900 dark:text-gray-300'}`}>
+                          {formatMoney(c.spent)}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         )}
-{/* Estadísticas rápidas */}
-        {customers.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
-            <div className="bg-card rounded-theme-xl p-5 border border-secondary/10">
-              <p className="text-sm text-text/50 mb-1">Ingresos acumulados</p>
-              <p className="text-2xl font-bold text-text">
-                {formatMoney(customers.reduce((s, c) => s + (parseFloat(c.total_spent) || 0), 0))}
-              </p>
-            </div>
-            <div className="bg-card rounded-theme-xl p-5 border border-secondary/10">
-              <p className="text-sm text-text/50 mb-1">Total pedidos</p>
-              <p className="text-2xl font-bold text-text">
-                {customers.reduce((s, c) => s + (c.total_orders || 0), 0)}
-              </p>
-            </div>
-            <div className="bg-card rounded-theme-xl p-5 border border-secondary/10">
-              <p className="text-sm text-text/50 mb-1">Gasto promedio / cliente</p>
-              <p className="text-2xl font-bold text-text">
-                {formatMoney(customers.reduce((s, c) => s + (parseFloat(c.total_spent) || 0), 0) / customers.length)}
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
+      </main>
 
-      {/* ===== MODAL DETALLE CLIENTE ===== */}
-      <AnimatePresence>
-        {selectedCustomer && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
-              onClick={() => setSelectedCustomer(null)}
-            />
-            <motion.div
-              initial={{ opacity: 0, x: '100%' }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: '100%' }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-md bg-card shadow-2xl flex flex-col"
-            >
-              {/* Header */}
-              <div className="px-6 py-5 border-b border-secondary/10 flex items-center justify-between bg-card">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-primary font-bold text-lg">
-                      {selectedCustomer.name?.charAt(0).toUpperCase() || '?'}
-                    </span>
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-text text-lg">{selectedCustomer.name}</h3>
-                    <p className="text-xs text-text/50">Cliente desde {formatDate(selectedCustomer.created_at)}</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setSelectedCustomer(null)}
-                  className="p-2 rounded-full hover:bg-secondary/10 transition-colors"
-                >
-                  <X className="w-5 h-5 text-text/60" />
-                </button>
+            {selectedPhone && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50"
+          onClick={() => setSelectedPhone(null)}
+        >
+          <motion.div
+            initial={{ scale: 0.96, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.96, opacity: 0 }}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[85vh] flex flex-col overflow-hidden"
+          >
+            <div className="px-5 py-4 border-b border-gray-200 dark:border-zinc-800 flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-gray-900 dark:text-white">{selectedPhone.name}</h3>
+                <p className="text-sm text-gray-500">{selectedPhone.phone}</p>
               </div>
+              <button
+                onClick={() => setSelectedPhone(null)}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
 
-              {/* Datos de contacto */}
-              <div className="px-6 py-4 space-y-2 border-b border-secondary/10">
-                {selectedCustomer.phone && (
-                  <p className="text-sm text-text flex items-center gap-2">
-                    <Phone className="w-4 h-4 text-text/40" /> {selectedCustomer.phone}
-                  </p>
-                )}
-                {selectedCustomer.address && (
-                  <p className="text-sm text-text flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-text/40" /> {selectedCustomer.address}
-                  </p>
-                )}
-                {selectedCustomer.phone && (
-                  <button
-                    onClick={() => openWhatsApp(selectedCustomer.phone)}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-green-500 text-white rounded-theme-lg font-semibold hover:bg-green-600 transition-colors"
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    Escribir por WhatsApp
-                  </button>
-                )}
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="font-bold text-gray-900 dark:text-white">Historial de pedidos</h4>
+                <span className="text-xs text-gray-500">{selectedPhone.orders} pedido(s)</span>
               </div>
-
-              {/* Stats */}
-              <div className="grid grid-cols-2 gap-3 px-6 py-4 border-b border-secondary/10">
-                <div className="bg-secondary/5 rounded-theme-lg p-4">
-                  <p className="text-xs text-text/50 flex items-center gap-1 mb-1">
-                    <ShoppingBag className="w-3 h-3" /> Pedidos
-                  </p>
-                  <p className="text-xl font-bold text-text">{selectedCustomer.total_orders || 0}</p>
-                </div>
-                <div className="bg-secondary/5 rounded-theme-lg p-4">
-                  <p className="text-xs text-text/50 flex items-center gap-1 mb-1">
-                    <DollarSign className="w-3 h-3" /> Total gastado
-                  </p>
-                  <p className="text-xl font-bold text-primary">{formatMoney(selectedCustomer.total_spent)}</p>
-                </div>
-              </div>
-
-              {/* Historial de pedidos */}
-              <div className="flex-1 overflow-y-auto px-6 py-4">
-                <h4 className="font-bold text-text mb-4 flex items-center gap-2">
-                  <CalendarDays className="w-4 h-4 text-text/40" />
-                  Historial de Compras
-                </h4>
-                {ordersLoading ? (
-                  <div className="flex justify-center py-10">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                  </div>
-                ) : customerOrders.length === 0 ? (
-                  <div className="text-center py-10 text-text/40">
-                    <ShoppingBag className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">Sin pedidos registrados</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {customerOrders.map((order) => (
-                      <div key={order.id} className="bg-secondary/5 rounded-theme-lg p-4 border border-secondary/10">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-mono text-text/50">
-                            #{String(order.id).slice(0, 8)}
-                          </span>
-                          <span className="text-xs text-text/40 flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {formatOrderDate(order.created_at)}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-1.5 text-sm text-text">
-                            <ShoppingBag className="w-3.5 h-3.5 text-text/40" />
-                            {Array.isArray(order.items) ? order.items.length : 0} productos
-                            {order.coupon_code && (
-                              <span className="ml-1 px-1.5 py-0.5 rounded bg-primary/10 text-primary text-[10px] font-bold">
-                                {order.coupon_code}
-                              </span>
-                            )}
-                          </div>
-                          <span className="font-bold text-primary">
-                            {formatMoney(order.total_amount)}
-                          </span>
-                        </div>
-                        <p className="text-xs text-text/50 mt-1 truncate">
-                          {order.status === 'pending' ? 'Pendiente' :
-                           order.status === 'preparing' ? 'En preparación' :
-                           order.status === 'ready' ? 'Listo' :
-                           order.status === 'completed' ? 'Completado' : 'Cancelado'}
-                          {order.delivery_method ? ` · ${order.delivery_method}` : ''}
-                        </p>
+              {customerOrders(selectedPhone.pc).length === 0 ? (
+                <p className="text-sm text-gray-500">No hay pedidos registrados.</p>
+              ) : (
+                <div className="space-y-3">
+                  {customerOrders(selectedPhone.pc).map((o) => (
+                    <div
+                      key={o.id}
+                      className="p-3 rounded-xl bg-gray-50 dark:bg-zinc-800/60 border border-gray-200 dark:border-zinc-800"
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-mono text-xs text-gray-500">#{String(o.id).slice(0, 8)}</span>
+                        <span className="text-xs text-gray-500">
+                          {new Date(o.created_at).toLocaleDateString('es-DO', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                          })}
+                        </span>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                          <ShoppingBag className="w-3.5 h-3.5" />
+                          {Array.isArray(o.items) ? o.items.length : 0} productos ·{' '}
+                          {o.status === 'completed'
+                            ? 'Completado'
+                            : o.status === 'pending'
+                            ? 'Pendiente'
+                            : o.status === 'preparing'
+                            ? 'En preparación'
+                            : 'Cancelado'}
+                        </div>
+                        <span className="font-bold text-primary">{formatMoney(o.total_amount)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   );
 }

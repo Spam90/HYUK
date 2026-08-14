@@ -128,7 +128,7 @@ export default function ProductCardVariant({
           </div>
         )}
 
-        {/* Out of Stock Overlay */}
+                {/* Out of Stock Overlay */}
         {!product.is_available && (
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm z-10 flex items-center justify-center">
             <div className="bg-white/90 dark:bg-zinc-800/90 px-4 py-2 rounded-full">
@@ -136,6 +136,16 @@ export default function ProductCardVariant({
             </div>
           </div>
         )}
+
+        {/* Low Stock Alert - "¡Solo quedan N!" (≤5) */}
+        {product.is_available &&
+          product.stock != null &&
+          product.stock <= 5 && (
+            <div className="absolute top-2 right-2 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-600/95 text-white text-[10px] font-black shadow-lg shadow-red-900/40 animate-pulse">
+              <Flame className="w-3 h-3" />
+              <span>¡Solo quedan {product.stock}!</span>
+            </div>
+          )}
       </div>
 
       {/* Content */}

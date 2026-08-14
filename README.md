@@ -608,3 +608,8 @@ Si tienes un dominio propio (ej: `mitienda.com`):
 - **Ofertas relámpago** (`flash_sale_end` + `flash_sale_price`): countdown rojo `HH:MM:SS` junto al precio en `ProductCardVariant.jsx`. Configuración desde `ProductModal.jsx` (fecha límite + precio flash). Nueva columna en `supabase/schema.sql`.
 - **Zonas de delivery dinámicas** en `components/catalog/CartDrawer.jsx`: al elegir "A domicilio" aparece un `select` de sectores ("Zona Centro - $100", "Periferia - $250", etc.) cuyo costo se suma automáticamente al **total** y al ticket de WhatsApp. Las zonas se configuran en `settings.theme.deliveryZones` (con valores por defecto). Se persiste en `orders.delivery_zone` y `orders.delivery_fee`.
 
+### 🚨 Fase 4 — Gatillos Premium: Alertas de Escasez y CRM de Clientes
+
+- **Alertas de escasez**: `supabase/schema.sql` añade `products.stock INTEGER DEFAULT 0`. `components/catalog/ProductCardVariant.jsx` muestra una etiqueta roja pulsante **🔥 ¡Solo quedan N!** cuando el producto está disponible y `stock ≤ 5` (absoluta sobre la imagen, sin conflicto con el badge ni el overlay de "Agotado"). Configurable desde `ProductModal.jsx`.
+- **CRM de clientes** (`/admin/customers`): nueva página que **lee la tabla `orders`** y agrupa a los clientes por número de WhatsApp. Tabla con columnas **Cliente, WhatsApp, Total Pedidos, Dinero Total Gastado**, ordenada de mayor a menor gasto. Los **3 primeros** se resaltan con medallas 🥇🥈🥉 y fondo de tierra. Clic en una fila abre un modal con el historial de pedidos del cliente. Reutiliza `lib/orders.js` (`getOrders`).
+

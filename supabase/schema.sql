@@ -590,3 +590,6 @@ ALTER TABLE products ADD COLUMN IF NOT EXISTS flash_sale_price DECIMAL(10,2);
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_zone TEXT;
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_fee DECIMAL(10,2) DEFAULT 0;
 
+-- Stock físico: base para alertas de escasez ("¡Solo quedan N!")
+ALTER TABLE products ADD COLUMN IF NOT EXISTS stock INTEGER DEFAULT 0;
+
