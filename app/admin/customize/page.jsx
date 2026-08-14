@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Palette, LayoutGrid, Image as ImageIcon, MessageCircle, Save, RotateCcw, Check, ArrowLeft, Smartphone, Loader2 } from 'lucide-react';
+import { Palette, LayoutGrid, Image as ImageIcon, MessageCircle, Save, RotateCcw, Check, ArrowLeft, Smartphone, Loader2, Sparkles } from 'lucide-react';
 import ThemeProvider, { useTheme } from '@/components/theme/ThemeProvider';
 import { CartProvider } from '@/context/CartContext';
 import { DEFAULT_SETTINGS } from '@/lib/theme/defaults';
@@ -11,10 +11,12 @@ import ColorControls from '@/components/admin/controls/ColorControls';
 import LayoutControls from '@/components/admin/controls/LayoutControls';
 import BannerControls from '@/components/admin/controls/BannerControls';
 import WhatsAppControls from '@/components/admin/controls/WhatsAppControls';
+import AiCustomizePanel from '@/components/admin/controls/AiCustomizePanel';
 import PhonePreview from '@/components/admin/PhonePreview';
 
 // Tabs de configuración
 const TABS = [
+  { id: 'ai', label: 'Personalizar con IA', icon: Sparkles },
   { id: 'colors', label: 'Colores y Estilo', icon: Palette },
   { id: 'layout', label: 'Layout y Retícula', icon: LayoutGrid },
   { id: 'banner', label: 'Banners y Header', icon: ImageIcon },
@@ -128,7 +130,15 @@ function CustomizePanel() {
 
   // Renderizar controles según tab activo
   const renderControls = () => {
-    switch (activeTab) {
+        switch (activeTab) {
+      case 'ai':
+        return (
+          <AiCustomizePanel
+            settings={settings}
+            updateSettings={updateSettings}
+            updateFullSettings={updateFullSettings}
+          />
+        );
       case 'colors':
         return <ColorControls settings={settings} updateSettings={updateSettings} />;
       case 'layout':

@@ -597,6 +597,7 @@ Si tienes un dominio propio (ej: `mitienda.com`):
 - **`app/api/ai/scan-menu/route.js`**: Escáner de menús por foto → devuelve `{ categories: [{ name, products: [{ name, price, description }] }] }`.
 - **`app/api/ai/generate-description/route.js`**: Genera descripciones vendedoras a partir del nombre del producto.
 - **`app/admin/ai-importer/page.jsx`**: Drag & drop de la foto del menú, loader y botón "Importar a Supabase".
+- **`app/api/ai/generate-theme/route.js`** + **`components/admin/controls/AiCustomizePanel.jsx`**: "Personalizar con IA" en `/admin/customize` — sube una imagen de referencia y Gemini genera automáticamente la paleta de colores/estilo del catálogo, aplicándola en tiempo real a la previsualización.
 - **`components/admin/ProductModal.jsx`**: Botón **✨** junto a la Descripción que autocompleta con IA.
 
 #### 🧾 Herramientas de Marketing

@@ -1,10 +1,12 @@
 'use client';
 
 import { Palette, Type, Square, Sun, Moon, Zap } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { COLOR_PRESETS, FONT_OPTIONS, BORDER_RADIUS_OPTIONS } from '@/lib/theme/defaults';
 
 export default function ColorControls({ settings, updateSettings }) {
   const { theme } = settings;
+  const { setTheme } = useTheme();
 
   // Campos de color configurables
   const colorFields = [
@@ -157,8 +159,10 @@ export default function ColorControls({ settings, updateSettings }) {
             return (
               <button
                 key={mode.value}
-                onClick={() => {
+                                onClick={() => {
                   updateSettings('theme', { mode: mode.value });
+                  // Sincronizar con el tema global (next-themes) -> app + preview en tiempo real
+                  setTheme(mode.value === 'dark' || mode.value === 'neon' ? 'dark' : 'light');
                   // Ajustar colores para modo neón
                   if (mode.value === 'neon') {
                     updateSettings('theme', {
