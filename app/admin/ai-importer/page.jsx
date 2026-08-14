@@ -295,7 +295,7 @@ export default function AiImporterPage() {
                     <button onClick={() => addProductToCategory(catIndex)} className="p-1.5 rounded-lg bg-secondary/10" title="Agregar producto">
                       <Plus className="w-4 h-4 text-text/60" />
                     </button>
-                    <button onClick={() => removeCategory(catIndex)} className="p-1.5 rounded-lg bg-red-100" title="Eliminar categoría">
+                    <button onClick={() => removeCategory(catIndex)} className="p-1.5 rounded-lg bg-red-100 dark:bg-red-900/30" title="Eliminar categoría">
                       <Trash2 className="w-4 h-4 text-red-500" />
                     </button>
                   </div>
@@ -319,16 +319,16 @@ export default function AiImporterPage() {
             ))}
 
             {importError && (
-              <div className="bg-red-50 border border-red-200 rounded-theme-lg p-4 flex items-center gap-3">
+                            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-theme-lg p-4 flex items-center gap-3">
                 <AlertCircle className="w-5 h-5 text-red-500" />
-                <p className="text-sm text-red-700">{importError}</p>
+                                <p className="text-sm text-red-700 dark:text-red-400">{importError}</p>
               </div>
             )}
 
             {importSuccess && (
-              <div className="bg-green-50 border border-green-200 rounded-theme-lg p-4 flex items-center gap-3">
-                <Check className="w-5 h-5 text-green-500" />
-                <p className="text-sm text-green-700">¡Importación completada! Redirigiendo a la gestión de productos...</p>
+                            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-theme-lg p-4 flex items-center gap-3">
+                <Check className="w-5 h-5 text-green-500 dark:text-green-400" />
+                <p className="text-sm text-green-700 dark:text-green-400">¡Importación completada! Redirigiendo a la gestión de productos...</p>
               </div>
             )}
 

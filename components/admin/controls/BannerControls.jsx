@@ -5,17 +5,49 @@ import { Image as ImageIcon, Megaphone, Type, Upload, X } from 'lucide-react';
 export default function BannerControls({ settings, updateSettings }) {
   const { banner } = settings;
 
-  // Manejar subida de imagen (simulada - en producción usar Supabase Storage)
-  const handleImageUpload = (e) => {
+    // Subida de imagen: persiste en Supabase Storage (bucket 'banners').
+  // Mantiene preview local inmediato vía dataURL como fallback visible.
+  const handleImageUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      alert('El archivo debe ser una imagen (PNG, JPG, WEBP)');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('La imagen es demasiado grande. Máximo 5MB.');
+      return;
+    }
 
-    // Crear URL local para preview
+    // Preview local inmediato
     const reader = new FileReader();
     reader.onload = (event) => {
       updateSettings('banner', { imageUrl: event.target.result });
     };
     reader.readAsDataURL(file);
+
+    // Persistir la imagen en Supabase Storage
+    try {
+      const { createClient } = await import('@/lib/supabase/client');
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const fileName = `banners/${user.id}_${Date.now()}_${file.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from('banners')
+        .upload(fileName, file, { cacheControl: '3600', upsert: true });
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from('banners').getPublicUrl(fileName);
+      const url = data?.publicUrl;
+      if (url) {
+        updateSettings('banner', { imageUrl: url });
+      }
+    } catch (err) {
+      // El preview dataURL local ya está aplicado; no interrumpimos la UX.
+      console.warn('Upload a Supabase Storage falló, se mantiene preview local:', err?.message);
+    }
   };
 
   return (

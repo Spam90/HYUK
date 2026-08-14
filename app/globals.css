@@ -23,6 +23,13 @@
   --background: #0F172A;
   --card-bg: #1E293B;
   --text-color: #F8FAFC;
+  --primary: #10B981;
+  --secondary: #94A3B8;
+  --accent: #FBBF24;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
 }
 
 /* =============================================

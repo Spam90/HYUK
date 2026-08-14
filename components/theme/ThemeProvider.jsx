@@ -83,15 +83,25 @@ export default function ThemeProvider({ children, initialSettings = DEFAULT_SETT
     const fontFamily = FONT_FAMILY_MAP[theme.fontFamily] || "'Inter', sans-serif";
     root.style.setProperty('--font-family', fontFamily);
 
-        // Modo oscuro / claro
-    // Importante: la clase `.dark` en <html> la administra next-themes (global),
-    // por lo que aquí NO la forzamos add/remove para evitar conflictos con el
-    // toggle global. Solo aplicamos las variables del store cuando su modo es dark
-    // y el usuario no personalizó los colores de fondo (respetamos globals.css dark).
-    if (theme.mode === 'dark' && !settings.theme.backgroundColor) {
-      root.style.setProperty('--background', '#0F172A');
-      root.style.setProperty('--text-color', '#F8FAFC');
-      root.style.setProperty('--card-bg', '#1E293B');
+              // Modo claro/oscuro: respetar el toggle global de next-themes.
+    // La clase `.dark` en <html> la administra next-themes (global).
+    // Los presets con mode === 'dark' conservan sus colores; los presets claros
+    // reciben valores dark-friendly bajo .dark para evitar secciones "pegajosas".
+    const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+    if (isDark) {
+      const isDarkPreset = theme.mode === 'dark';
+      root.style.setProperty('--background', theme.backgroundColor || (isDarkPreset ? '#09090B' : '#0F172A'));
+      root.style.setProperty('--card-bg', theme.cardBackgroundColor || (isDarkPreset ? '#18181B' : '#1E293B'));
+      root.style.setProperty('--text-color', theme.textColor || (isDarkPreset ? '#FAFAFA' : '#F8FAFC'));
+      root.style.setProperty('--secondary', theme.secondaryColor || (isDarkPreset ? '#A855F7' : '#94A3B8'));
+      root.style.setProperty('--accent', theme.accentColor || '#FBBF24');
+    } else {
+      root.style.setProperty('--primary', theme.primaryColor);
+      root.style.setProperty('--secondary', theme.secondaryColor);
+      root.style.setProperty('--background', theme.backgroundColor);
+      root.style.setProperty('--card-bg', theme.cardBackgroundColor);
+      root.style.setProperty('--text-color', theme.textColor);
+      root.style.setProperty('--accent', theme.accentColor);
     }
 
     // Cargar Google Font según la fuente seleccionada

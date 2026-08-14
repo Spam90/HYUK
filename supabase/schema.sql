@@ -593,3 +593,15 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS delivery_fee DECIMAL(10,2) DEFAULT 0
 -- Stock físico: base para alertas de escasez ("¡Solo quedan N!")
 ALTER TABLE products ADD COLUMN IF NOT EXISTS stock INTEGER DEFAULT 0;
 
+-- Bucket de almacenamiento para banners/imágenes del admin
+INSERT INTO storage.buckets (id, name, public) VALUES ('banners', 'banners', true)
+  ON CONFLICT (id) DO NOTHING;
+INSERT INTO storage.buckets (id, name, public) VALUES ('products', 'products', true)
+  ON CONFLICT (id) DO NOTHING;
+
+-- Políticas de storage para banners/imágenes admin
+CREATE POLICY IF NOT EXISTS "Public storage read banners" ON storage.objects
+  FOR SELECT USING (bucket_id = 'banners');
+CREATE POLICY IF NOT EXISTS "Authenticated storage insert banners" ON storage.objects
+  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL AND bucket_id = 'banners');
+
