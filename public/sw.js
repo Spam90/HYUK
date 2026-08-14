@@ -4,7 +4,7 @@
    fallback a red y actualización en background.
    ============================================= */
 
-const CACHE_NAME = 'hyuk-catalog-v2';
+const CACHE_NAME = 'hyuk-catalog-v3';
 const APP_SHELL = [
   '/',
   '/icon-192.png',
@@ -65,32 +65,49 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Navegación: network-first con fallback a caché (offline)
+  // Navegación: network-first con fallback a caché (offline).
+  // NUNCA pasar undefined a respondWith (rompe la navegación con un
+  // "Failed to convert value to 'Response'").
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put('/offline', copy));
+          if (response && response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put('/offline', copy)).catch(() => {});
+          }
           return response;
         })
-        .catch(() => caches.match('/offline').then((cached) => cached || caches.match('/')))
+        .catch(() =>
+          caches.match('/offline').then((cached) => {
+            if (cached) return cached;
+            return caches.match('/').then((home) => {
+              if (home) return home;
+              // Respuesta real de respaldo: nunca undefined
+              return new Response(
+                '<!doctype html><meta charset="utf-8"><title>HYUK</title><div style="font-family:sans-serif;text-align:center;padding:40px">Sin conexión</div>',
+                { status: 200, headers: { 'Content-Type': 'text/html' } }
+              );
+            });
+          })
+        )
     );
     return;
   }
 
-  // Estáticos: cache-first con actualización en background
+  // Estáticos: cache-first con actualización en background.
+  // El fallback siempre es una Response válida (nunca undefined).
   event.respondWith(
     caches.match(request).then((cached) => {
       const network = fetch(request)
         .then((response) => {
-          if (response.ok) {
+          if (response && response.ok) {
             const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy)).catch(() => {});
           }
           return response;
         })
-        .catch(() => cached);
+        .catch(() => cached || new Response(null, { status: 408, statusText: 'No cache' }));
 
       return cached || network;
     })
