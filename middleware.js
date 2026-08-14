@@ -28,10 +28,10 @@ export async function middleware(request) {
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           supabaseResponse = NextResponse.next({ request });
-          // Sesión persistente: cookies de larga duración (30 días)
-          const MAX_AGE_30D = 60 * 60 * 24 * 30;
+          // Sesión persistente: cookies de larga duración (1 año)
+          const MAX_AGE = 60 * 60 * 24 * 365;
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, { ...options, maxAge: MAX_AGE_30D })
+            supabaseResponse.cookies.set(name, value, { ...options, maxAge: MAX_AGE })
           );
         },
       },

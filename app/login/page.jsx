@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Store, Mail, Lock, ArrowRight, Loader2 } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client';
+import { login } from './actions';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -17,40 +17,23 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const supabase = createClient();
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      // Login vía Server Action: las cookies se escriben con maxAge de 1 año
+      // usando cookies() de next/headers en el momento exacto del login.
+      const result = await login(email, password);
 
-      if (signInError) throw signInError;
-
-      // Re-escribir las cookies de sesión de Supabase con larga duración (30 días),
-      // para que el usuario no tenga que volver a iniciar sesión al reabrir el navegador.
-      persistAuthCookies();
-
-      // Redirigir al dashboard (o a la URL de redirect si existe)
-      const urlParams = new URLSearchParams(window.location.search);
-      const redirect = urlParams.get('redirect');
-      window.location.href = redirect || '/admin/customize';
+      if (result?.error) {
+        setError(result.error);
+      } else {
+        // Redirigir al dashboard (o a la URL de redirect si existe)
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirect = urlParams.get('redirect');
+        window.location.href = redirect || '/admin/customize';
+      }
     } catch (err) {
       setError(err.message || 'Error al iniciar sesión');
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Re-escribe las cookies de sesión de Supabase con expiración de 30 días
-  const persistAuthCookies = () => {
-    const MAX_AGE_30D = 60 * 60 * 24 * 30;
-    const cookies = document.cookie.split(';');
-    cookies.forEach((cookie) => {
-      const [name, ...rest] = cookie.split('=');
-      const key = (name || '').trim();
-      if (!key.startsWith('sb-')) return;
-      const value = rest.join('=');
-      document.cookie = `${key}=${value}; Max-Age=${MAX_AGE_30D}; Path=/; SameSite=Lax`;
-    });
   };
 
   return (
