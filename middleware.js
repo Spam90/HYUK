@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createServerClient } from '@supabase/ssr';
 import { extractSubdomain, isSystemSubdomain } from '@/lib/domains';
 
 // Rutas públicas que no requieren autenticación
@@ -12,25 +12,41 @@ export async function middleware(request) {
   const { pathname } = request.nextUrl;
   const host = request.headers.get('host') || '';
 
+  // Cliente Supabase con cookies request/response (patrón oficial @supabase/ssr).
+  // Esto permite refrescar la cookie de sesión en CADA request, evitando que el
+  // usuario tenga que iniciar sesión de nuevo al expirar el token de acceso.
+  let supabaseResponse = NextResponse.next({ request });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          supabaseResponse = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
+
   // =============================================
   // 1. DETECCIÓN DE SUBDOMINIOS Y CUSTOM DOMAINS
   // =============================================
-  // Soporte:
-  //  - Subdominio genérico:  mitienda.hyuk-nine.vercel.app  → /mitienda
-  //  - Slug directo:         hyuk-nine.vercel.app/mitienda  → /mitienda
-  //  - Desarrollo local:     mitienda.localhost:3000        → /mitienda
-  //  - Dominio personalizado (futuro): mitienda.com         → tabla custom_domains
+  //  - Subdominio genérico:  mitienda.hyuk-nine.vercel.app  -> /mitienda
+  //  - Slug directo:         hyuk-nine.vercel.app/mitienda  -> /mitienda
+  //  - Desarrollo local:     mitienda.localhost:3000        -> /mitienda
 
   const subdomain = extractSubdomain(host);
 
-  // Si hay un subdominio de tienda válido, reescribir a /[slug]
-  if (
-    subdomain &&
-    !isSystemSubdomain(subdomain) &&
-    !pathname.startsWith('/admin')
-  ) {
+  if (subdomain && !isSystemSubdomain(subdomain) && !pathname.startsWith('/admin')) {
     try {
-      const supabase = await createClient();
       const { data: store } = await supabase
         .from('profiles')
         .select('id')
@@ -38,7 +54,6 @@ export async function middleware(request) {
         .maybeSingle();
 
       if (store) {
-        // Reescribir la URL a /[slug] manteniendo la URL original del navegador
         const url = request.nextUrl.clone();
         url.pathname = `/${subdomain}`;
         return NextResponse.rewrite(url);
@@ -48,64 +63,56 @@ export async function middleware(request) {
     }
   }
 
-  // =============================================
-  // 2. PROTECCIÓN DE RUTAS DE ADMIN
-  // =============================================
-
-  // Solo procesar rutas de admin y onboarding
-  if (!pathname.startsWith('/admin') && !ONBOARDING_PATHS.some(path => pathname === path || pathname.startsWith(path + '/'))) {
-    return NextResponse.next();
+  // Rutas que no son admin ni onboarding: devolver con cookies refrescadas
+  if (
+    !pathname.startsWith('/admin') &&
+    !ONBOARDING_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'))
+  ) {
+    return supabaseResponse;
   }
 
   // Permitir acceso a rutas públicas
-  if (PUBLIC_PATHS.some(path => pathname === path || pathname.startsWith(path + '/'))) {
-    return NextResponse.next();
+  if (PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'))) {
+    return supabaseResponse;
   }
 
-  // Verificar si el usuario necesita completar onboarding
+  // =============================================
+  // ONBOARDING
+  // =============================================
   if (pathname === '/onboarding' || pathname.startsWith('/onboarding/')) {
     const { data: { user } } = await supabase.auth.getUser();
-    
+
     if (!user) {
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('redirect', pathname);
       return NextResponse.redirect(loginUrl);
     }
 
-    // Verificar si el usuario ya completó el onboarding
     const { data: profile } = await supabase
       .from('profiles')
       .select('slug, business_name')
       .eq('id', user.id)
       .maybeSingle();
 
-    // Si ya tiene slug y nombre de negocio, redirigir al admin
     if (profile?.slug && profile?.business_name) {
       return NextResponse.redirect(new URL('/admin', request.url));
     }
 
-    // Si no ha completado onboarding, permitir acceso
-    return NextResponse.next();
+    return supabaseResponse;
   }
 
-  // Verificar sesión en Supabase
-  try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+  // =============================================
+  // PROTECCIÓN DE RUTAS DE ADMIN
+  // =============================================
+  const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) {
-      // Redirigir a login si no hay sesión
-      const loginUrl = new URL('/login', request.url);
-      loginUrl.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(loginUrl);
-    }
-
-    // Usuario autenticado, permitir acceso
-    return NextResponse.next();
-  } catch (error) {
-    console.error('Error en middleware:', error);
-    return NextResponse.next();
+  if (!user) {
+    const loginUrl = new URL('/login', request.url);
+    loginUrl.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(loginUrl);
   }
+
+  return supabaseResponse;
 }
 
 export const config = {

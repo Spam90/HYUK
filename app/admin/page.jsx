@@ -216,7 +216,20 @@ export default function AdminDashboard() {
             <Settings className="w-4 h-4" />
             Configuración
           </a>
-        </nav>
+                </nav>
+
+        {/* Botón Ver mi tienda (catálogo público) */}
+        {storeUrl && (
+          <a
+            href={`https://${storeUrl}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mb-3 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/30"
+          >
+            <ExternalLink className="w-4 h-4" />
+            Ver mi tienda
+          </a>
+        )}
 
         <button
           onClick={handleLogout}
