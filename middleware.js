@@ -65,6 +65,19 @@ export async function middleware(request) {
     }
   }
 
+  // =============================================
+  // 1b. SESIÓN ACTIVA EN RUTAS PÚBLICAS -> /admin
+  // =============================================
+  // Si el usuario ya está autenticado y visita la raíz (/), /login o /signup,
+  // lo redirigimos al panel de control de inmediato (sin mostrar landing/form).
+  if (pathname === '/' || pathname === '/login' || pathname === '/signup') {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      console.log(`[Middleware] Sesión activa en ${pathname || '/'}, redirigiendo a /admin`);
+      return NextResponse.redirect(new URL('/admin', request.url));
+    }
+  }
+
   // Rutas que no son admin ni onboarding: devolver con cookies refrescadas
   if (
     !pathname.startsWith('/admin') &&
