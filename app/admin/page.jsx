@@ -43,31 +43,37 @@ export default function AdminDashboard() {
         setStoreUrl(`${profile.slug}.hyuk.app`);
       }
 
-      // Get stats
-      const [productsRes, categoriesRes] = await Promise.all([
-        supabase.from('products').select('count', { count: 'exact', head: true }).eq('store_id', user.id),
-        supabase.from('categories').select('count', { count: 'exact', head: true }).eq('store_id', user.id),
+      // Get stats (cada consulta con fallback defensivo: si una tabla no existe
+      // o falla en Supabase, devolvemos 0 en lugar de romper el dashboard)
+      const safeCount = async (table, filters = []) => {
+        try {
+          let query = supabase.from(table).select('count', { count: 'exact', head: true });
+          filters.forEach((f) => { query = query.eq(f.column, f.value); });
+          const { count, error } = await query;
+          if (error) throw error;
+          return count || 0;
+        } catch (err) {
+          console.warn(`[Dashboard] No se pudo contar "${table}", se muestra 0:`, err.message);
+          return 0;
+        }
+      };
+
+      const [ordersCount, activeProducts, categories, pendingOrders] = await Promise.all([
+        safeCount('orders', [{ column: 'store_id', value: user.id }]),
+        safeCount('products', [{ column: 'store_id', value: user.id }]),
+        safeCount('categories', [{ column: 'store_id', value: user.id }]),
+        safeCount('orders', [
+          { column: 'store_id', value: user.id },
+          { column: 'status', value: 'pending' },
+        ]),
       ]);
 
-      // Get real stats from orders table
-      const { count: ordersCount } = await supabase
-        .from('orders')
-        .select('count', { count: 'exact', head: true })
-        .eq('store_id', user.id);
-
-      // Get pending orders count for notification badge
-      const { count: pendingOrdersCount } = await supabase
-        .from('orders')
-        .select('count', { count: 'exact', head: true })
-        .eq('store_id', user.id)
-        .eq('status', 'pending');
-
       setStats({
-        visits: ordersCount || 0,
-        whatsappClicks: ordersCount || 0,
-        activeProducts: productsRes.count || 0,
-        categories: categoriesRes.count || 0,
-        pendingOrders: pendingOrdersCount || 0,
+        visits: ordersCount,
+        whatsappClicks: ordersCount,
+        activeProducts,
+        categories,
+        pendingOrders,
       });
     } catch (error) {
       console.error('Error loading dashboard:', error);
