@@ -2,6 +2,14 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export async function POST(request) {
   try {
+    // Endpoint protegido: solo usuarios autenticados (admin)
+    const { createClient } = await import('@/lib/supabase/server');
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return Response.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { productName } = body;
 

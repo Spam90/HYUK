@@ -613,4 +613,30 @@ Si tienes un dominio propio (ej: `mitienda.com`):
 
 - **Alertas de escasez**: `supabase/schema.sql` añade `products.stock INTEGER DEFAULT 0`. `components/catalog/ProductCardVariant.jsx` muestra una etiqueta roja pulsante **🔥 ¡Solo quedan N!** cuando el producto está disponible y `stock ≤ 5` (absoluta sobre la imagen, sin conflicto con el badge ni el overlay de "Agotado"). Configurable desde `ProductModal.jsx`.
 - **CRM de clientes** (`/admin/customers`): nueva página que **lee la tabla `orders`** y agrupa a los clientes por número de WhatsApp. Tabla con columnas **Cliente, WhatsApp, Total Pedidos, Dinero Total Gastado**, ordenada de mayor a menor gasto. Los **3 primeros** se resaltan con medallas 🥇🥈🥉 y fondo de tierra. Clic en una fila abre un modal con el historial de pedidos del cliente. Reutiliza `lib/orders.js` (`getOrders`).
+---
+
+## 🚀 PUESTA EN PRODUCCIÓN (RUNBOOK)
+
+**1. Supabase** — ejecutar en el SQL Editor del proyecto (en orden):
+- `supabase/schema.sql`
+- `supabase/migrations/20240101000001_create_orders.sql`
+- `supabase/migrations/20240101000002_security_hardening.sql`
+- Verificar que `GET /rest/v1/orders` responda (sin 404) con un cliente autenticado.
+
+**2. Vercel** — importar el repo y configurar variables (valida con `npm run check:env`):
+- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `GEMINI_API_KEY`,
+  `NEXT_PUBLIC_ROOT_DOMAIN`, `NEXT_PUBLIC_APP_URL`, `SENTRY_DSN` (opcional).
+- **Desactivar la Deployment Protection** de previews (evita el bloqueo SSO en `/manifest.json`).
+- Publicar la rama `main` al **dominio de producción**.
+
+**3. DNS** — `hyuk.app` → Vercel y wildcard `*.hyuk.app` para subdominios de tiendas.
+
+**4. Post-deploy** — probar: login persistente (cookie 1 año), `/login` con sesión activa redirige a `/admin`, y un pedido de prueba en el catálogo `/[slug]`.
+
+### 🔐 Pendientes que requieren configuración externa
+- **Pasarela de pago online** (Stripe/MercadoPago): todavía no implementada; el checkout hoy es por WhatsApp.
+- **Sentry**: dependencia instalada; activarla con `SENTRY_DSN` en Vercel (el SDK se desactiva si está vacío).
+- **Notificaciones email/SMS** al comerciante cuando llega un pedido.
+- **Límites por plan** (Gratis/Pro) y cobro recurrente al comerciante.
+- **Tests automatizados** (unit/e2e) — por añadir en CI.
 

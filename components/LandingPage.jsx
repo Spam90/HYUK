@@ -496,8 +496,13 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="bg-zinc-950 border-t border-zinc-800 py-8">
-        <div className="max-w-7xl mx-auto px-4 text-center text-sm text-zinc-500">
-          <p>© 2024 HYUK. Todos los derechos reservados.</p>
+        <div className="max-w-7xl mx-auto px-4 text-center text-sm text-zinc-500 space-y-2">
+          <p>© {new Date().getFullYear()} HYUK. Todos los derechos reservados.</p>
+          <div className="flex items-center justify-center gap-4">
+            <a href="/terms" className="hover:text-zinc-300 transition-colors">Términos de servicio</a>
+            <span>·</span>
+            <a href="/privacy" className="hover:text-zinc-300 transition-colors">Política de privacidad</a>
+          </div>
         </div>
       </footer>
     </div>

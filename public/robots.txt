@@ -1,2 +1,10 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /login
+Disallow: /signup
+Disallow: /onboarding
+Disallow: /demo
+Disallow: /api/
+
+Sitemap: https://hyuk.app/sitemap.xml
