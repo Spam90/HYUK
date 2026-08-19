@@ -63,12 +63,6 @@ export default function QrGeneratorPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-zinc-950">
       <div className="bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800 sticky top-0 z-10">
         <div className="max-w-3xl mx-auto px-4 py-4 flex items-center gap-4">
-          <button
-            onClick={() => router.back()}
-            className="w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </button>
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Generador de QR</h1>
             <p className="text-sm text-gray-500">Código QR de tu catálogo</p>

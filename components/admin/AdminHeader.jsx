@@ -29,6 +29,8 @@ export default function AdminHeader() {
   const router = useRouter();
   const [slug, setSlug] = useState(null);
   const [plan, setPlan] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [userInitials, setUserInitials] = useState('U');
 
   useEffect(() => {
     let cancelled = false;
@@ -37,6 +39,7 @@ export default function AdminHeader() {
       supabase.auth.getUser().then(({ data }) => {
         const user = data?.user;
         if (!user || cancelled) return;
+        if (user.email) setUserInitials(user.email.slice(0, 2).toUpperCase());
         supabase
           .from('profiles')
           .select('slug, plan')
@@ -127,22 +130,33 @@ export default function AdminHeader() {
               <span className="hidden md:inline">Ver mi tienda</span>
             </a>
           )}
-          <a
-            href="/admin/settings"
-            title="Ajustes"
-            className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
-          >
-            <Settings className="w-4 h-4" />
-            <span className="hidden sm:inline">Ajustes</span>
-          </a>
-          <button
-            onClick={handleLogout}
-            title="Cerrar sesión"
-            className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors"
-          >
-            <LogOut className="w-4 h-4" />
-            <span className="hidden sm:inline">Salir</span>
-          </button>
+          {/* Menú de usuario: Ajustes + Cerrar sesión (único lugar) */}
+          <div className="relative">
+            <button
+              onClick={() => setMenuOpen((v) => !v)}
+              title="Menú de usuario"
+              className="w-9 h-9 rounded-full bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 text-xs font-bold flex items-center justify-center hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-colors"
+            >
+              {userInitials}
+            </button>
+            {menuOpen && (
+              <div className="absolute right-0 top-11 z-50 w-44 rounded-xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 shadow-xl p-1.5">
+                <a
+                  href="/admin/settings"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
+                >
+                  <Settings className="w-4 h-4" /> Ajustes
+                </a>
+                <button
+                  onClick={() => { setMenuOpen(false); handleLogout(); }}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-500/10 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" /> Cerrar sesión
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>

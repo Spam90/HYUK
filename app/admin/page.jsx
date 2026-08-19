@@ -224,26 +224,9 @@ export default function AdminDashboard() {
           </a>
                 </nav>
 
-        {/* Botón Ver mi tienda (catálogo público) */}
-        {storeUrl && (
-          <a
-            href={`https://${storeUrl}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mb-3 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/30"
-          >
-            <ExternalLink className="w-4 h-4" />
-            Ver mi tienda
-          </a>
-        )}
-
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors"
-        >
-          <LogOut className="w-4 h-4" />
-          Cerrar sesión
-        </button>
+        <div className="pt-2 text-xs text-zinc-500">
+          <p>© {new Date().getFullYear()} HYUK Admin</p>
+        </div>
       </div>
 
       {/* Main Content */}
@@ -252,13 +235,6 @@ export default function AdminDashboard() {
           {/* Mobile Header */}
           <div className="md:hidden mb-6 flex items-center justify-between">
             <h1 className="text-2xl font-bold text-zinc-100">Dashboard</h1>
-            <button
-              onClick={handleLogout}
-              className="p-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
-              title="Cerrar sesión"
-            >
-              <LogOut className="w-5 h-5" />
-            </button>
           </div>
 
           {/* Store Status Banner */}

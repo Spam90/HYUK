@@ -158,12 +158,6 @@ function CustomizePanel() {
       <header className="sticky top-0 z-50 bg-card border-b border-secondary/10 backdrop-blur-lg">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <a
-              href="/admin"
-              className="w-9 h-9 rounded-full flex items-center justify-center bg-secondary/5 hover:bg-secondary/10 transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </a>
             <div>
               <h1 className="font-bold text-text">Personalizar Catálogo</h1>
               <p className="text-xs text-text/40">Los cambios se reflejan en tiempo real</p>
@@ -234,22 +228,6 @@ function CustomizePanel() {
         <div className="flex h-[calc(100vh-64px)]">
           {/* Panel izquierdo - Controles */}
           <div className="w-full lg:w-[420px] xl:w-[480px] border-r border-secondary/10 flex flex-col bg-card/50">
-            {/* Botón destacado: Personalizar con IA */}
-            <button
-              type="button"
-              onClick={() => setActiveTab('ai')}
-              className={`mx-4 mt-4 flex items-center justify-center gap-2 px-4 py-3 rounded-theme-xl text-white text-sm font-bold shadow-lg transition-all ${
-                activeTab === 'ai' ? 'ring-2 ring-offset-2 ring-offset-card' : 'hover:scale-[1.02]'
-              }`}
-              style={{
-                backgroundColor: settings.theme.primaryColor,
-                boxShadow: `0 8px 24px ${settings.theme.primaryColor}40`,
-              }}
-            >
-              <Sparkles className="w-4 h-4" />
-              Personalizar con IA
-            </button>
-
             {/* Tabs */}
             <div className="flex border-b border-secondary/10 overflow-x-auto no-scrollbar">
               {TABS.map((tab) => {
