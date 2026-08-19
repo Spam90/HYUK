@@ -303,6 +303,53 @@ export default function AdminDashboard() {
             </motion.div>
           )}
 
+          {/* Estado vacío: bienvenida instructiva (sin productos ni pedidos) */}
+          {!loading && stats.visits === 0 && stats.activeProducts === 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8 rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/40 p-6 md:p-8 text-center"
+            >
+              <div className="text-5xl mb-4">👋</div>
+              <h2 className="text-xl font-bold text-zinc-100 mb-2">¡Bienvenido a tu panel!</h2>
+              <p className="text-sm text-zinc-400 mb-6 max-w-md mx-auto">
+                Todavía no hay productos ni pedidos. Seguí estos pasos para poner tu catálogo
+                en línea y empezar a recibir pedidos por WhatsApp.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-2xl mx-auto text-left mb-6">
+                <div className="rounded-xl bg-zinc-800/60 p-4">
+                  <span className="text-2xl">1️⃣</span>
+                  <h3 className="font-semibold text-white mt-2 text-sm">Crea productos</h3>
+                  <p className="text-xs text-zinc-400 mt-1">Agrega foto, precio y descripción.</p>
+                </div>
+                <div className="rounded-xl bg-zinc-800/60 p-4">
+                  <span className="text-2xl">2️⃣</span>
+                  <h3 className="font-semibold text-white mt-2 text-sm">Personaliza</h3>
+                  <p className="text-xs text-zinc-400 mt-1">Colores, logo y banner (con o sin IA).</p>
+                </div>
+                <div className="rounded-xl bg-zinc-800/60 p-4">
+                  <span className="text-2xl">3️⃣</span>
+                  <h3 className="font-semibold text-white mt-2 text-sm">Comparte</h3>
+                  <p className="text-xs text-zinc-400 mt-1">Envía tu enlace y recibe pedidos.</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center justify-center gap-3">
+                <a
+                  href="/admin/products"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/30"
+                >
+                  Agregar mi primer producto
+                </a>
+                <a
+                  href="/admin/ai-importer"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-800 text-zinc-100 text-sm font-semibold hover:bg-zinc-700 transition-colors"
+                >
+                  Importar menú con IA
+                </a>
+              </div>
+            </motion.div>
+          )}
+
           {/* KPI Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-8">
             {kpiCards.map((kpi, index) => {
