@@ -34,24 +34,41 @@ export default function AdminHeader() {
 
   useEffect(() => {
     let cancelled = false;
-    import('@/lib/supabase/client').then(({ createClient }) => {
-      const supabase = createClient();
-      supabase.auth.getUser().then(({ data }) => {
-        const user = data?.user;
-        if (!user || cancelled) return;
-        if (user.email) setUserInitials(user.email.slice(0, 2).toUpperCase());
-        supabase
-          .from('profiles')
-          .select('slug, plan')
-          .eq('id', user.id)
-          .maybeSingle()
-          .then(({ data: p }) => {
-            if (cancelled) return;
-            if (p?.slug) setSlug(p.slug);
-            if (p?.plan) setPlan(p.plan);
+        import('@/lib/supabase/client')
+      .then(({ createClient }) => {
+        const supabase = createClient();
+        supabase.auth.getUser()
+          .then(({ data }) => {
+            const user = data?.user;
+            if (!user || cancelled) return;
+            try {
+              if (user.email) setUserInitials(user.email.slice(0, 2).toUpperCase());
+            } catch {
+              /* ignorible: estado del header no disponible */
+            }
+            // slug/plan del perfil → fallback silencioso: si la tabla no existe o
+            // hay error de red, NO romper la UI del header (evita excepción roja).
+            supabase
+              .from('profiles')
+              .select('slug, plan')
+              .eq('id', user.id)
+              .maybeSingle()
+              .then(({ data: p }) => {
+                if (cancelled) return;
+                if (p?.slug) setSlug(p.slug);
+                if (p?.plan) setPlan(p.plan);
+              })
+              .catch((err) => {
+                console.warn('[AdminHeader] No se pudieron cargar slug/plan del perfil:', err?.message);
+              });
+          })
+          .catch((err) => {
+            console.warn('[AdminHeader] getUser falló:', err?.message);
           });
+      })
+      .catch((err) => {
+        console.warn('[AdminHeader] Cliente Supabase no disponible:', err?.message);
       });
-    });
     return () => {
       cancelled = true;
     };

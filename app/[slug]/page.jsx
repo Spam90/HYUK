@@ -5,14 +5,15 @@ import CatalogView from './CatalogView';
 
 // Generar metadatos dinámicos para SEO
 export async function generateMetadata({ params }) {
-  const supabase = createClient();
-  const { data: store } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('slug', params.slug)
-    .single();
+  try {
+    const supabase = createClient();
+    const { data: store } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('slug', params.slug)
+      .single();
 
-  if (!store) {
+    if (!store) {
     return {
       title: 'Tienda no encontrada - HYUK',
       description: 'Esta tienda no existe o ha sido eliminada.',
@@ -45,13 +46,20 @@ export async function generateMetadata({ params }) {
         }
       ] : [],
     },
-    twitter: {
+          twitter: {
       card: 'summary_large_image',
       title: `${storeName} — Catálogo Digital & Pedidos por WhatsApp`,
       description: storeDescription,
       images: bannerImage ? [bannerImage] : [],
     },
   };
+  } catch {
+    // BD no disponible / fila inexistente → no romper build ni SSR.
+    return {
+      title: 'Tienda no encontrada - HYUK',
+      description: 'Esta tienda no existe o ha sido eliminada.',
+    };
+  }
 }
 
 // Revalidar cada 60 segundos para balance entre rendimiento y actualización
@@ -60,42 +68,70 @@ export const revalidate = 60;
 export default async function StorePage({ params }) {
   const supabase = createClient();
 
-  // Obtener datos de la tienda
-  const { data: store, error: storeError } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('slug', params.slug)
-    .single();
-
-  if (storeError || !store) {
+    // Obtener datos de la tienda (con fallback seguro)
+  let store = null;
+  try {
+    const res = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('slug', params.slug)
+      .single();
+    store = res.data;
+    if (!store) notFound();
+  } catch {
+    // BD no disponible o tabla inexistente: 404 limpio en vez de excepción roja.
     notFound();
   }
 
   // Obtener categorías de la tienda con revalidación
-  const { data: categories } = await supabase
-    .from('categories')
-    .select('*')
-    .eq('store_id', store.id)
-    .eq('is_active', true)
-    .order('sort_order');
+  let categories = [];
+  try {
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .eq('store_id', store.id)
+      .eq('is_active', true)
+      .order('sort_order');
+    categories = data || [];
+    if (error) throw error;
+  } catch (e) {
+    console.warn('[Catalog] Error cargando categorías:', e?.message);
+    categories = [];
+  }
 
   // Obtener productos de la tienda con revalidación
-  const { data: products } = await supabase
-    .from('products')
-    .select('*')
-    .eq('store_id', store.id)
-    .eq('is_available', true)
-    .order('sort_order');
+  let products = [];
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('store_id', store.id)
+      .eq('is_available', true)
+      .order('sort_order');
+    products = data || [];
+    if (error) throw error;
+  } catch (e) {
+    console.warn('[Catalog] Error cargando productos:', e?.message);
+    products = [];
+  }
 
-  // Obtener opciones de productos
-  const productIds = products?.map(p => p.id) || [];
-  const { data: productOptions } = productIds.length > 0
-    ? await supabase
+  // Obtener opciones de productos (solo si hay productos)
+  const productIds = products.map((p) => p.id) || [];
+  let productOptions = [];
+  if (productIds.length > 0) {
+    try {
+      const { data, error } = await supabase
         .from('product_options')
         .select('*')
         .in('product_id', productIds)
-        .order('sort_order')
-    : { data: [] };
+        .order('sort_order');
+      productOptions = data || [];
+      if (error) throw error;
+    } catch (e) {
+      console.warn('[Catalog] Error cargando opciones de producto:', e?.message);
+      productOptions = [];
+    }
+  }
 
   // Agrupar opciones por producto
   const optionsByProduct = {};
