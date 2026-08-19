@@ -49,11 +49,28 @@ El modo claro/oscuro global está construido con **`next-themes`** y es independ
 
 ### 🔐 Autenticación
 - Registro de usuarios con Supabase Auth
-- Login con sesión persistente
-- Protección de rutas de administración
+- Login con sesión persistente (cookie de 1 año, renovada en cada request por el middleware vía `@supabase/ssr`)
+- Protección de rutas de administración (middleware → `/admin` exige sesión válida)
 - Perfil de tienda asociado al usuario
+- **Redirect instantáneo a `/admin`**: tanto `app/page.jsx` (raíz) como `app/login/page.jsx` ejecutan `supabase.auth.getUser()` en el servidor y redirigen a `/admin` antes de entregar cualquier HTML si la sesión está activa.
 
 ---
+
+## 🛡️ Gestión de Sesión, Cache y PWA (Anti-408)
+
+Para evitar el error clásico **"408 No cache"** o servir una **pantalla de login/admin obsoleta** desde la PWA tras un deploy o recarga, la arquitectura aplica **defensa en capas**:
+
+| Capa | Regla | Implementación |
+|------|-------|----------------|
+| **Service Worker** | Rutas de auth/admin/API son **NetworkOnly** (nunca cacheadas ni servidas desde caché) | `public/sw.js`: `/`, `/login`, `/signup`, `/admin`, `/api/*` → `fetch().catch(408)`. El fallback offline solo aplica a rutas públicas (`/demo`, `/[slug]`); NUNCA se sirve `caches.match('/')`. |
+| **Middleware (SSR)** | Intercepta **antes** del render y fuerza `getUser()` real | `middleware.js`: si hay sesión activa en `/`, `/login`, `/signup` → `redirect('/admin')`; `/admin` exige sesión o va a `/login`. |
+| **Cache-Control HTTP** | Las respuestas de auth/admin son **no-store** | `middleware.js` (`noStoreResponse`) + páginas (`force-dynamic`, `revalidate=0`). Ni Vercel ni el navegador ni el SW pueden cachear login/admin. |
+
+- La cookie de sesión se renueva en **cada request** en el middleware (patrón oficial `@supabase/ssr`), por lo que expirar el access token no cierra la sesión del usuario (se refresca la cookie de refresco).
+- `app/page.jsx` y `app/login/page.jsx` usan `export const dynamic = 'force-dynamic'` y `export const revalidate = 0` → **nunca ISR/static**, siempre se evalúan la sesión server-side.
+- Cada deploy genera una nueva versión de caché del SW (`hyuk-catalog-v4`) → `old_caches` se borran en `activate`, forzando refetch limpio.
+
+
 
 ## 🗄️ Estructura de Base de Datos
 
@@ -632,6 +649,9 @@ Si tienes un dominio propio (ej: `mitienda.com`):
 **3. DNS** — `hyuk.app` → Vercel y wildcard `*.hyuk.app` para subdominios de tiendas.
 
 **4. Post-deploy** — probar: login persistente (cookie 1 año), `/login` con sesión activa redirige a `/admin`, y un pedido de prueba en el catálogo `/[slug]`.
+- `npm run check:env` valida variables de entorno.
+- Verificar **cache-bypass de la PWA**: en DevTools → *Application > Cache Storage* confirmar que `/` NO está precacheado; recargar `/` con sesión activa y comprobar redirección instantánea a `/admin` (NetworkOnly → `fetch` real, no caché).
+- Inspeccionar `public/sw.js` confirmando estrategia `NetworkOnly` (`fetch`) para `/` `/login` `/signup` `/admin` `/api`.
 
 ### 🔐 Pendientes que requieren configuración externa
 - **Pasarela de pago online** (Stripe/MercadoPago): todavía no implementada; el checkout hoy es por WhatsApp.
