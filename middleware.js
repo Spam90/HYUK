@@ -8,6 +8,21 @@ const PUBLIC_PATHS = ['/login', '/signup', '/demo', '/'];
 // Rutas que requieren onboarding completado
 const ONBOARDING_PATHS = ['/onboarding'];
 
+// Cache-Control de exclusión total para rutas sensibles a sesión.
+const NO_STORE = 'no-store, must-revalidate, no-cache, max-age=0, private';
+
+/**
+ * Aplica Cache-Control: no-store a la respuesta para impedir que Vercel o el
+ * Service Worker sirvan versiones en caché de login/raíz/admin.
+ */
+function noStoreResponse(response) {
+  response.headers.set('Cache-Control', NO_STORE);
+  // Fuerza expiración inmediata también en caches HTTP intermedias.
+  response.headers.set('Pragma', 'no-cache');
+  response.headers.set('Expires', '0');
+  return response;
+}
+
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
   const host = request.headers.get('host') || '';
@@ -78,11 +93,22 @@ export async function middleware(request) {
     }
   }
 
-  // Rutas que no son admin ni onboarding: devolver con cookies refrescadas
+    // Rutas que no son admin ni onboarding: devolver con cookies refrescadas.
+  // Las rutas de autenticación (/, /login, /signup) NUNCA se cachean: se fuerza
+  // no-store para impedir que Vercel o el SW sirvan HTML de login obsoleto.
   if (
     !pathname.startsWith('/admin') &&
     !ONBOARDING_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'))
   ) {
+    if (
+      pathname === '/' ||
+      pathname === '/login' ||
+      pathname === '/signup' ||
+      pathname.startsWith('/login/') ||
+      pathname.startsWith('/signup/')
+    ) {
+      return noStoreResponse(supabaseResponse);
+    }
     return supabaseResponse;
   }
 
@@ -127,14 +153,16 @@ export async function middleware(request) {
     console.log(`[Middleware] ruta=${pathname} autenticado=${user?.id ? 'sí' : 'NO'}`);
   }
 
-  if (!user) {
+    if (!user) {
     console.log(`[Middleware] Sin sesión, redirigiendo a /login desde ${pathname}`);
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  return supabaseResponse;
+  // Admin autenticado: NUNCA cachear (debe reflejar la sesión real en cada
+  // despliegue/recarga). Redirect a /admin está garantizado arriba.
+  return noStoreResponse(supabaseResponse);
 }
 
 export const config = {

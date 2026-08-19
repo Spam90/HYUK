@@ -4,9 +4,11 @@
    fallback a red y actualización en background.
    ============================================= */
 
-const CACHE_NAME = 'hyuk-catalog-v3';
+const CACHE_NAME = 'hyuk-catalog-v4';
+// '/' NO se precachea. Las rutas de autenticación y admin (/, /login, /signup,
+// /admin) y las de API (/api/*) usan estrategia NetworkOnly: NUNCA se sirven
+// páginas de sesión/login/admin antiguas desde el caché del Service Worker.
 const APP_SHELL = [
-  '/',
   '/icon-192.png',
   '/icon-512.png',
   '/favicon.svg',
@@ -65,10 +67,32 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Navegación: network-first con fallback a caché (offline).
-  // NUNCA pasar undefined a respondWith (rompe la navegación con un
-  // "Failed to convert value to 'Response'").
+    // --- NAVEGACIÓN (modo navigate) ---
   if (request.mode === 'navigate') {
+    const path = url.pathname;
+
+    // Rutas de autenticación, admin y API: NetworkOnly.
+    // Se fuerza la red SIEMPRE para reflejar la sesión/carga real del servidor
+    // y evitar servir HTML de login obsoleto (problema 408/"No cache").
+    const isAuthOrApi =
+      path === '/' ||
+      path.startsWith('/login') ||
+      path.startsWith('/signup') ||
+      path.startsWith('/admin') ||
+      path.startsWith('/api/');
+
+    if (isAuthOrApi) {
+      event.respondWith(
+        fetch(request).catch(() =>
+          new Response('Offline', { status: 408, statusText: 'No cache' })
+        )
+      );
+      return;
+    }
+
+    // Resto de navegaciones (p. ej. /demo, /[slug]): network-first con fallback
+    // offline. Nunca devolver undefined.
+    // NOTA: NO se sirve caches.match('/') como fallback (evitaría HTML de / viejo).
     event.respondWith(
       fetch(request)
         .then((response) => {
@@ -81,14 +105,11 @@ self.addEventListener('fetch', (event) => {
         .catch(() =>
           caches.match('/offline').then((cached) => {
             if (cached) return cached;
-            return caches.match('/').then((home) => {
-              if (home) return home;
-              // Respuesta real de respaldo: nunca undefined
-              return new Response(
-                '<!doctype html><meta charset="utf-8"><title>HYUK</title><div style="font-family:sans-serif;text-align:center;padding:40px">Sin conexión</div>',
-                { status: 200, headers: { 'Content-Type': 'text/html' } }
-              );
-            });
+            // Respuesta real de respaldo: nunca undefined
+            return new Response(
+              '<!doctype html><meta charset="utf-8"><title>HYUK</title><div style="font-family:sans-serif;text-align:center;padding:40px">Sin conexión</div>',
+              { status: 200, headers: { 'Content-Type': 'text/html' } }
+            );
           })
         )
     );
