@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Palette, LayoutGrid, Image as ImageIcon, MessageCircle, Save, RotateCcw, Check, ArrowLeft, Smartphone, Loader2, Sparkles } from 'lucide-react';
+import { Palette, LayoutGrid, Image as ImageIcon, MessageCircle, Save, RotateCcw, Check, Smartphone, Loader2, Sparkles } from 'lucide-react';
 import ThemeProvider, { useTheme } from '@/components/theme/ThemeProvider';
 import { CartProvider } from '@/context/CartContext';
 import { DEFAULT_SETTINGS } from '@/lib/theme/defaults';

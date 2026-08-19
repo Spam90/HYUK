@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, Reorder } from 'framer-motion';
-import { Plus, Edit2, Trash2, Search, Package, ArrowLeft, Image as ImageIcon, X, Upload, GripVertical, ChevronUp, ChevronDown } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, Package, Image as ImageIcon, X, Upload, GripVertical, ChevronUp, ChevronDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import ProductModal from '@/components/admin/ProductModal';
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
-import { ArrowLeft, Download, QrCode, Palette, RefreshCcw } from 'lucide-react';
+import { Download, QrCode, Palette, RefreshCcw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export const dynamic = 'force-dynamic';

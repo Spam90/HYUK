@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { 
-  Palette, Package, ShoppingBag, Settings, ExternalLink, LogOut, Store, 
+          Palette, Package, ShoppingBag, Settings, ExternalLink, Store,
   ClipboardList, Eye, TrendingUp, MousePointer, Copy, CheckCircle,
   Link as LinkIcon, Megaphone, Users
 } from 'lucide-react';
