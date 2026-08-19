@@ -118,12 +118,28 @@ export default async function StorePage({ params }) {
     ...(store.settings || {}),
   };
 
+  const storePlan = store.plan || 'free';
+
   return (
-    <CatalogView
-      store={store}
-      categories={categories || []}
-      products={productsWithOptions}
-      settings={settings}
-    />
+    <div>
+      <CatalogView
+        store={store}
+        categories={categories || []}
+        products={productsWithOptions}
+        settings={settings}
+      />
+
+      {/* Marca de agua: solo en plan gratuito */}
+      {storePlan === 'free' && (
+        <a
+          href="https://hyuk.app"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block text-center py-3 px-4 text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors bg-gray-50 dark:bg-zinc-900"
+        >
+          ⚡ Creado gratis con HYUK
+        </a>
+      )}
+    </div>
   );
 }

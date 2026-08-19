@@ -28,6 +28,7 @@ export default function AdminHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const [slug, setSlug] = useState(null);
+  const [plan, setPlan] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -38,11 +39,13 @@ export default function AdminHeader() {
         if (!user || cancelled) return;
         supabase
           .from('profiles')
-          .select('slug')
+          .select('slug, plan')
           .eq('id', user.id)
           .maybeSingle()
           .then(({ data: p }) => {
-            if (p?.slug && !cancelled) setSlug(p.slug);
+            if (cancelled) return;
+            if (p?.slug) setSlug(p.slug);
+            if (p?.plan) setPlan(p.plan);
           });
       });
     });
@@ -93,6 +96,25 @@ export default function AdminHeader() {
 
         {/* Acciones */}
         <div className="ml-auto flex items-center gap-1.5 shrink-0">
+          {plan === 'free' && (
+            <span className="hidden lg:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-[11px] font-black uppercase tracking-wide">
+              ⚡ Plan Gratuito
+            </span>
+          )}
+          {plan === 'free' && (
+            <a
+              href="/admin/settings"
+              className="hidden md:inline-flex items-center px-2.5 py-2 rounded-lg text-amber-600 dark:text-amber-400 text-xs font-bold hover:bg-amber-500/10 transition-colors"
+              title="Mejorar a Pro"
+            >
+              Mejorar a Pro
+            </a>
+          )}
+          {plan === 'pro' && (
+            <span className="hidden lg:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-[11px] font-black uppercase tracking-wide">
+              ✦ Plan Pro
+            </span>
+          )}
           {slug && (
             <a
               href={`https://${slug}.hyuk.app`}

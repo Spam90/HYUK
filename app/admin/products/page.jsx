@@ -19,6 +19,9 @@ export default function ProductsPage() {
   const router = useRouter();
   
   const [supabase, setSupabase] = useState(null);
+  const [plan, setPlan] = useState('free');
+  const PLAN_LIMIT = 15;
+  const planReached = plan === 'free' && products.length >= PLAN_LIMIT;
   
   useEffect(() => {
     import('@/lib/supabase/client').then(({ createClient }) => {
@@ -51,13 +54,15 @@ export default function ProductsPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const [categoriesRes, productsRes] = await Promise.all([
+      const [categoriesRes, productsRes, profileRes] = await Promise.all([
         supabase.from('categories').select('*').eq('store_id', user.id).order('sort_order'),
         supabase.from('products').select('*').eq('store_id', user.id).order('sort_order'),
+        supabase.from('profiles').select('plan').eq('id', user.id).maybeSingle(),
       ]);
 
       setCategories(categoriesRes.data || []);
       setProducts(productsRes.data || []);
+      setPlan(profileRes.data?.plan || 'free');
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -191,15 +196,43 @@ export default function ProductsPage() {
               <p className="text-sm text-gray-500">Gestiona tu catÃ¡logo</p>
             </div>
           </div>
-          <button
-            onClick={() => { resetForm(); setEditingProduct(null); setShowModal(true); }}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white font-medium shadow-lg hover:shadow-xl transition-all"
-          >
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">Nuevo</span>
-          </button>
+          <div className="flex items-center gap-3">
+            <span className="hidden sm:inline text-xs font-semibold text-gray-500 dark:text-gray-400">
+              {plan === 'free' ? `Plan Gratuito · ${products.length}/${PLAN_LIMIT} productos` : '✦ Plan Pro'}
+            </span>
+            <button
+              onClick={() => { if (planReached) return; resetForm(); setEditingProduct(null); setShowModal(true); }}
+              disabled={planReached}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-white font-medium shadow-lg hover:shadow-xl transition-all ${planReached ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">Nuevo</span>
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Límite de plan: tarjeta promocional */}
+      {planReached && (
+        <div className="max-w-7xl mx-auto px-4 pt-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-2xl border border-amber-300/60 bg-amber-50 dark:bg-amber-950/20 p-4">
+            <div>
+              <p className="font-semibold text-amber-800 dark:text-amber-300">
+                ⚡ Has alcanzado el límite del Plan Gratuito ({products.length}/{PLAN_LIMIT})
+              </p>
+              <p className="text-sm text-amber-700 dark:text-amber-400 mt-0.5">
+                Actualiza a Pro para productos ilimitados.
+              </p>
+            </div>
+            <a
+              href="/admin/settings"
+              className="shrink-0 px-4 py-2 rounded-xl bg-amber-500 text-white text-sm font-semibold hover:bg-amber-600 transition-colors"
+            >
+              Mejorar a Pro
+            </a>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Search and Filter - Tiendanube Style */}

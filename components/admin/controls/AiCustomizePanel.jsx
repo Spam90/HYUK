@@ -50,7 +50,16 @@ export default function AiCustomizePanel({ settings, updateSettings }) {
       updateSettings('theme', result.data);
       setDone(true);
     } catch (err) {
-      setError(err.message || 'No se pudo generar el diseño. Intenta con otra imagen.');
+      // Fallback elegante: paleta neutral armoniosa en lugar de dejar pantalla en blanco
+      updateSettings('theme', {
+        primaryColor: '#10B981',
+        secondaryColor: '#0F172A',
+        backgroundColor: '#FAFAFA',
+        cardBackgroundColor: '#FFFFFF',
+        textColor: '#0F172A',
+        accentColor: '#F59E0B',
+      });
+      setError(err.message || 'No se pudo generar el diseño. Aplicamos una paleta neutral como respaldo.');
     } finally {
       setIsGenerating(false);
     }
