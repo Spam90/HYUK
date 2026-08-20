@@ -1,0 +1,119 @@
+LISTA DE MONETIZACIÓN — GAP DE FEATURES PARA PONER LA WEB A GANAR DINERO
+============================================================
+Proyecto: SaaS multi-tenant Next 14.2.35 + Supabase SSR + Tailwind + PWA (public/sw.js)
+Objetivo: pasar de MVP operativo (WhatsApp checkout) a funnel de monetización completo.
+Generado: checklist real basado en el estado actual del repo (working tree con
+feat(enterprise) + toggle tienda + social loopback + QR + skeletons).
+
+------------------------------------------------------------
+1. CHECKOUT DE PAGA REAL (pago online)
+------------------------------------------------------------
+[ ] 1.1 Integrar pasarela de pagos (Stripe / PayPal / MercadoPago) en checkout.
+    - El checkout actual es SOLO WhatsApp; falta cobrar online.
+[ ] 1.2 Crear tabla `orders` + `order_items` con status (pendiente/en_preparación/listo/pagado/rechazado).
+[ ] 1.3 Webhook de confirmación de pago -> actualizar status + notificar al admin (SMS/Email).
+[ ] 1.4 Checkout Guest (sin crear cuenta) → email de seguimiento del pedido.
+[ ] 1.5 Soporte multi método: efectivo, transferencia, tarjeta, Zelle, monedero.
+[ ] 1.6 Mostrar ahorro (price_delta: precio base - precio con descuento).
+[ ] 1.7 Checkout con envío: tarifa plana / gratis / recolección en local (deliveryMethods).
+
+------------------------------------------------------------
+2. PLANES, SUSCRIPCIÓN Y LÍMITES
+------------------------------------------------------------
+[ ] 2.1 Modelo de planes (Free / Starter / Pro / Enterprise) en profiles.plan_type.
+[ ] 2.2 Límites por plan: # productos, # categorías, #SKUs, transacciones/mes, QRs, dominios.
+[ ] 2.3 Checkout de suscripción mensual (Stripe Billing / MP suscripción).
+[ ] 2.4 Banner "Upgrade" cuando un free supera su límite de productos.
+[ ] 2.5 Trials automáticos (7/14/30 días) con trial_ends_at.
+
+------------------------------------------------------------
+3. DOMINIO PROPIO + WHITE-LABEL
+------------------------------------------------------------
+[ ] 3.1 Soporte custom domain (tienda.tudominio.com) con DNS + verificación.
+[ ] 3.2 SSL automático (Let's Encrypt / Vercel) para dominios custom.
+[ ] 3.3 Quitar branding "Hecho con HYUK" del catálogo (solo Pro).
+[ ] 3.4 Metadatos / favicon / manifest configurables por tienda.
+
+------------------------------------------------------------
+4. INVENTARIO, SKU y COSTOS
+------------------------------------------------------------
+[ ] 4.1 Tabla `products_skus` (variantes: stock + sku + costo + precio).
+[ ] 4.2 Stock bajo → alerta al admin (badge en tienda + notificación).
+[ ] 4.3 Ocultar/bloquear productos agotados del catálogo.
+[ ] 4.4 Margen de ganancia automático (precio = costo * (1+markup)).
+
+------------------------------------------------------------
+5. FACTURACIÓN / CONTABILIDAD
+------------------------------------------------------------
+[ ] 5.1 Generar factura PDF/BO (NIT/RFC según país) → descarga + email al cliente.
+[ ] 5.2 Impuuestos (IVA/ITBIS) configurables + incluidos/excluidos (tax_mode).
+[ ] 5.3 Reporte de ventas por rango de fechas (CSV / PDF).
+[ ] 5.4 Conciliación con pasarela (exportar movimientos).
+
+------------------------------------------------------------
+6. ANALYTICS y CONVERSION
+------------------------------------------------------------
+[ ] 6.1 Contador de visitas por slug (page_view) → tabla analytics_events.
+[ ] 6.2 Eventos: vista_producto, add_to_cart, checkout_start, purchase (funnel).
+[ ] 6.3 Dashboard analytics con gráfico (/admin/analytics) — Chart.js/recharts.
+[ ] 6.4 Heatmap de scroll / clics (o top categorías/productos).
+[ ] 6.5 UTM tracking en enlaces de redes + QR.
+
+------------------------------------------------------------
+7. SEO / MARKETING / RETENCIÓN
+------------------------------------------------------------
+[ ] 7.1 Sitemap.xml dinámico por slug (actual /sitemap.xml estático).
+[ ] 7.2 robots.txt configurable (permitir/bloquear crawlers).
+[ ] 7.3 OG dinámico por producto (actual /product//[id] no tiene metadata).
+[ ] 7.4 Email de recuperación de carritos abandonados (cron → WhatsApp/Email).
+[ ] 7.5 Cupones / códigos promocionales aplicables al checkout.
+[ ] 7.6 Programa de referidos (invita amigos → % descuento / crédito).
+[ ] 7.7 Push notifications (PWA) para back-in-stock, promo, pedido listo.
+
+------------------------------------------------------------
+8. PWA + EXPERIENCIA INSTALABLE
+------------------------------------------------------------
+[ ] 8.1 manifest.json (nombre, short_name, icons 192/512, theme/color, display=standalone).
+    - public/sw.js está (v9) pero falta manifest → "instalar" no disponible en móvil.
+[ ] 8.2 beforeinstallprompt / banner "Añadir a pantalla" en catálogo.
+[ ] 8.3 Offline fallback para assets + página offline amigable.
+[ ] 8.4 Precache de assets estáticos (CacheFirst) y borrar caches viejas en sw.js.
+
+------------------------------------------------------------
+9. ADMIN PREMIUM + REPORTES DE NEGOCIO
+------------------------------------------------------------
+[ ] 9.1 Métrica de conversión (visitas → pedidos/WhatsApp).
+[ ] 9.2 Ticket promedio y margen por categoría/producto.
+[ ] 9.3 "Mejores clientes" → tabla customers (empty state listo, falta el dato).
+[ ] 9.4 Exportar órdenes y clientes a CSV.
+[ ] 9.5 Notificaciones del sistema (pedido nuevo, stock bajo, pago fallido).
+
+------------------------------------------------------------
+10. MULTI-TENANT + ROBUSTES
+------------------------------------------------------------
+[ ] 10.1 Row-Level Security en Supabase para products/orders/categories.
+[ ] 10.2 Rate limit de API (analytics/checkout) para free tier.
+[ ] 10.3 Brandeo por subdominio (plan.mycompany.io) con lookup de slug.
+[ ] 10.4 Multi-moneda real (store_currency limitado a USD/AR; checkout no multi-moneda).
+
+------------------------------------------------------------
+11. TRUST & COMPLIANCE
+------------------------------------------------------------
+[ ] 11.1 Términos / Política de privacidad / Devoluciones configurables por tienda.
+[ ] 11.2 GDPR/LOPD: banner de cookies + opt-in (analytics EU).
+[ ] 11.3 Verificado de WhatsApp Business para confianza.
+
+------------------------------------------------------------
+12. EXPERIENCIA DE CLIENTE FINAL
+------------------------------------------------------------
+[ ] 12.1 Estado de pedido en tiempo real accesible → /pedido/[id].
+[ ] 12.2 Historial de pedidos del cliente (identificado por teléfono/email).
+[ ] 12.3 Testimonios / fotos de productos subidas por clientes.
+[ ] 12.4 Accesibilidad mínima: foco visible, alt en imágenes, roles ARIA.
+
+------------------------------------------------------------
+PRIORIDAD SUGERIDA (MVP de monetización)
+------------------------------------------------------------
+HIGH  → 1.1 (pago online), 2.1 (planes), 3.1 (dominio), 6.1 (visitas), 8.1 (manifest)
+MED   → 4.1 (SKUs), 5.1 (factura), 7.4 (carrito abandonado), 9.1 (funnel)
+LOW   → 5.4 (conciliación), 7.6 (referidos), 10.2 (rate limit), 11.2 (cookies)
