@@ -57,12 +57,12 @@ export default function ProductsPage() {
       const [categoriesRes, productsRes, profileRes] = await Promise.all([
         supabase.from('categories').select('*').eq('store_id', user.id).order('sort_order'),
         supabase.from('products').select('*').eq('store_id', user.id).order('sort_order'),
-        supabase.from('profiles').select('plan').eq('id', user.id).maybeSingle(),
+        supabase.from('profiles').select('plan_type').eq('id', user.id).maybeSingle(),
       ]);
 
       setCategories(categoriesRes.data || []);
       setProducts(productsRes.data || []);
-      setPlan(profileRes.data?.plan || 'free');
+      setPlan(profileRes.data?.plan_type || profileRes.data?.plan || 'free');
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {

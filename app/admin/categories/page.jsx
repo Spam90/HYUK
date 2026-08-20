@@ -1,7 +1,5 @@
 'use client';
 
-'use client';
-
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Edit2, Trash2, Search, FolderOpen, ArrowLeft, GripVertical } from 'lucide-react';
@@ -16,14 +14,22 @@ export default function CategoriesPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const router = useRouter();
-  
-  // Lazy load Supabase client to avoid build errors
+
+  // Lazy load Supabase client (para evitar errores en build) y garantizar que
+  // la carga de datos NO corra antes de que el cliente exista (evita null.auth).
   const [supabase, setSupabase] = useState(null);
-  
+
   useEffect(() => {
+    let cancelled = false;
     import('@/lib/supabase/client').then(({ createClient }) => {
-      setSupabase(createClient());
+      const sb = createClient();
+      if (cancelled) return;
+      setSupabase(sb);
+      loadCategories(sb);
+    }).catch((err) => {
+      console.warn('[Categories] No se pudo inicializar Supabase:', err?.message);
     });
+    return () => { cancelled = true; };
   }, []);
 
   const [formData, setFormData] = useState({
@@ -35,16 +41,14 @@ export default function CategoriesPage() {
     sort_order: 0,
   });
 
-  useEffect(() => {
-    loadCategories();
-  }, []);
-
-  const loadCategories = async () => {
+  const loadCategories = async (sb) => {
+    const client = sb || supabase;
+    if (!client) return;
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await client.auth.getUser();
       if (!user) return;
 
-      const { data } = await supabase
+      const { data } = await client
         .from('categories')
         .select('*')
         .eq('store_id', user.id)
@@ -52,7 +56,7 @@ export default function CategoriesPage() {
 
       setCategories(data || []);
     } catch (error) {
-      console.error('Error loading categories:', error);
+      console.warn('[Categories] No se pudieron cargar categorías:', error?.message);
     } finally {
       setLoading(false);
     }
@@ -69,6 +73,7 @@ export default function CategoriesPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!supabase) return;
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {

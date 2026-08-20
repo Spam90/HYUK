@@ -621,6 +621,19 @@ export default function OrdersPage() {
 
                     {/* Acciones */}
                     <div className="flex flex-col gap-2 lg:min-w-[200px]">
+                      {/* Abrir chat de WhatsApp con el cliente */}
+                      <button
+                        onClick={() => {
+                          const cleanPhone = String(order.customer_phone || storeProfile?.phone_whatsapp || '').replace(/\D/g, '');
+                          if (!cleanPhone) { alert('No hay número registrado para este pedido'); return; }
+                          const msg = `¡Hola ${order.customer_name || ''}! 🙌 Soy del local *${storeProfile?.business_name || ''}*. Tu pedido #${String(order.id).slice(-8)} está ${order.status === 'ready' ? 'listo para retirar ✅' : 'en preparación 👨‍🍳'}.`;
+                          window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+                        }}
+                        className="w-full px-4 py-2 bg-[#25D366] text-white rounded-theme-lg hover:bg-[#1fb959] transition-colors font-medium flex items-center justify-center gap-2"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        Chat WhatsApp
+                      </button>
                       {/* Imprimir Ticket Térmico */}
                       <button
                         onClick={() => openPrintTicket(order, storeProfile)}

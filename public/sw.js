@@ -84,7 +84,10 @@ self.addEventListener('fetch', (event) => {
     if (isAuthOrApi) {
       event.respondWith(
         fetch(request).catch(() =>
-          new Response('Offline', { status: 408, statusText: 'No cache' })
+          new Response(
+            '<!doctype html><html><meta charset="utf-8"><title>HYUK</title><div style="font-family:sans-serif;text-align:center;padding:40px;color:#666">Sin conexión</div></html>',
+            { status: 200, headers: { 'Content-Type': 'text/html' } }
+          )
         )
       );
       return;
@@ -128,7 +131,13 @@ self.addEventListener('fetch', (event) => {
           }
           return response;
         })
-        .catch(() => cached || new Response(null, { status: 408, statusText: 'No cache' }));
+        .catch(() =>
+          cached ||
+          new Response(
+            '<!doctype html><html><meta charset="utf-8"><title>HYUK</title><p style="font-family:sans-serif;padding:20px">Sin conexión</p></html>',
+            { status: 200, headers: { 'Content-Type': 'text/html' } }
+          )
+        );
 
       return cached || network;
     })

@@ -29,12 +29,18 @@ export default function QrGeneratorPage() {
             setSlug(s);
             setStoreUrl(`https://${s}.hyuk.app`);
             setLoading(false);
+          }).catch((err) => {
+            console.warn('[QR] No se pudo cargar el slug del perfil:', err?.message);
+            if (!cancelled) { setStoreUrl(`https://${slug}.hyuk.app`); setLoading(false); }
           });
         } else {
           if (cancelled) return;
           setStoreUrl(`https://${slug}.hyuk.app`);
           setLoading(false);
         }
+      }).catch((err) => {
+        console.warn('[QR] getUser falló:', err?.message);
+        if (!cancelled) { setStoreUrl(`https://${slug}.hyuk.app`); setLoading(false); }
       });
     });
     return () => {
@@ -43,7 +49,7 @@ export default function QrGeneratorPage() {
   }, [slug]);
 
   const handleDownload = () => {
-    const canvas = document.getElementById('qr-canvas');
+    const canvas = document.getElementById('qr-canvas-hi') || document.getElementById('qr-canvas');
     if (!canvas) return;
     const link = document.createElement('a');
     link.download = `qr-${slug}.png`;
@@ -83,6 +89,18 @@ export default function QrGeneratorPage() {
                 level="H"
                 includeMargin
               />
+              {/* Canvas oculto de alta resolución (1024px) para descarga PNG nítida */}
+              <div style={{ position: 'absolute', left: '-9999px', top: 0 }} aria-hidden="true">
+                <QRCodeCanvas
+                  id="qr-canvas-hi"
+                  value={storeUrl}
+                  size={1024}
+                  fgColor={fgColor}
+                  bgColor={bgColor}
+                  level="H"
+                  includeMargin
+                />
+              </div>
             </div>
 
             <div className="flex-1 w-full space-y-4">

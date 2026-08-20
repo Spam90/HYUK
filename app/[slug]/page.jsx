@@ -154,15 +154,16 @@ export default async function StorePage({ params }) {
     ...(store.settings || {}),
   };
 
-  const storePlan = store.plan || 'free';
+    const storePlan = store.plan_type || store.plan || 'free';
 
   return (
     <div>
-      <CatalogView
+            <CatalogView
         store={store}
         categories={categories || []}
         products={productsWithOptions}
         settings={settings}
+        plan={storePlan}
       />
 
       {/* Marca de agua: solo en plan gratuito */}

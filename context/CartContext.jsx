@@ -24,7 +24,7 @@ export function CartProvider({ children }) {
   const [isCartOpen, setIsCartOpen] = useState(false);
 
   // Agregar item al carrito
-  const addItem = useCallback((product, quantity = 1, selectedOptions = []) => {
+  const addItem = useCallback((product, quantity = 1, selectedOptions = [], notes = '') => {
     setCartItems(prev => {
       // Calcular precio con opciones
       let unitPrice = product.price;
@@ -47,24 +47,26 @@ export function CartProvider({ children }) {
         updated[existingIndex] = {
           ...updated[existingIndex],
           quantity: updated[existingIndex].quantity + quantity,
+          notes: notes || updated[existingIndex].notes,
         };
         return updated;
       }
 
       // Agregar nuevo item
       return [
-        ...prev,
-        {
-          key: itemKey,
-          id: product.id,
-          name: product.name,
-          price: unitPrice,
-          imageUrl: product.image_url,
-          quantity,
-          selectedOptions,
-          product,
-        },
-      ];
+          ...prev,
+          {
+            key: itemKey,
+            id: product.id,
+            name: product.name,
+            price: unitPrice,
+            imageUrl: product.image_url,
+            quantity,
+            selectedOptions,
+            notes: notes || '',
+            product,
+          },
+        ];
     });
     setIsCartOpen(true);
   }, []);

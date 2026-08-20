@@ -1,14 +1,15 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Store, MapPin, Phone, Clock, ChevronDown, X } from 'lucide-react';
+import { Store, MapPin, Phone, Clock, ChevronDown, X, Share2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import ThemeToggle from '@/components/theme/ThemeToggle';
 
 export default function HeaderVariant({  
   store, 
   settings, 
-  style = 'banner-large' 
+  style = 'banner-large',
+  storeUrl = ''
 }) {
   const { theme, banner } = settings;
   const [currentAnnouncement, setCurrentAnnouncement] = useState(0);
@@ -24,6 +25,23 @@ export default function HeaderVariant({
 
     return () => clearInterval(interval);
   }, [banner?.announcementText, banner?.showAnnouncementBar]);
+
+  // Compartir tienda: Web Share API nativa con fallback a portapapeles
+  const handleShare = async () => {
+    const url = storeUrl || (typeof window !== 'undefined' ? window.location.href : '');
+    const shareTitle = store?.business_name || store?.store_name || 'Mi Tienda';
+    try {
+      if (typeof navigator !== 'undefined' && navigator.share) {
+        await navigator.share({ title: shareTitle, url });
+      } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText(url);
+        alert('🔗 Link de tu tienda copiado al portapapeles');
+      }
+    } catch (e) {
+      // El usuario canceló el share nativo: no romper la UI
+      console.warn('[Share]', e);
+    }
+  };
 
   const headerStyles = {
     'minimal': {
@@ -250,7 +268,15 @@ export default function HeaderVariant({
             </div>
 
       {/* Theme toggle (light/dark) - fixed corner, covers every header style */}
-      <div className="absolute top-4 right-4 z-20">
+      <div className="absolute top-4 right-4 z-20 flex items-center gap-1.5">
+        <button
+          onClick={handleShare}
+          title="Compartir tienda"
+          aria-label="Compartir tienda"
+          className="w-9 h-9 rounded-full bg-white/80 dark:bg-zinc-800/80 backdrop-blur-md border border-gray-200 dark:border-zinc-700 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:scale-105 hover:bg-white dark:hover:bg-zinc-700 transition-all"
+        >
+          <Share2 className="w-4 h-4" />
+        </button>
         <ThemeToggle size="sm" variant="ghost" />
       </div>
     </header>

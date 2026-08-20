@@ -9,7 +9,7 @@ import { useTheme } from '@/components/theme/ThemeProvider';
 import { formatPrice, generateWhatsAppUrl } from '@/lib/whatsapp/checkout';
 import { fetchCouponByCode, calculateDiscount } from '@/lib/coupons';
 
-export default function CartDrawer({ store, settings }) {
+export default function CartDrawer({ store, settings, isOpen = true }) {
   const { 
     isCartOpen, 
     closeCart, 
@@ -64,7 +64,8 @@ export default function CartDrawer({ store, settings }) {
   }, [isCartOpen]);
 
   const storeName = store?.store_name || store?.full_name || 'Mi Tienda';
-  const storePhone = store?.whatsapp_number || store?.phone || '';
+  const storePhone = store?.whatsapp_number || store?.phone_whatsapp || store?.phone || '';
+  const storeCurrency = store?.store_currency || settings?.store_currency || 'USD';
 
   // Descuento aplicado por cupón activo
   const couponDiscount = useMemo(() => {
@@ -113,6 +114,10 @@ export default function CartDrawer({ store, settings }) {
 
   // Generar URL de WhatsApp y guardar pedido
   const handleWhatsAppCheckout = async () => {
+    if (!isOpen) {
+      alert('La tienda está cerrada en este momento. Vuelve en el horario de atención 🕓');
+      return;
+    }
     setIsSubmitting(true);
 
     // Validar campos requeridos
@@ -181,6 +186,7 @@ export default function CartDrawer({ store, settings }) {
         total: totalWithDelivery,
         coupon: activeCoupon,
         couponDiscount,
+        currency: storeCurrency,
       });
       
       // Abrir WhatsApp
@@ -314,8 +320,11 @@ export default function CartDrawer({ store, settings }) {
                                 ))}
                               </div>
                             )}
+                            {item.notes && item.notes.trim() && (
+                              <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">📝 {item.notes}</p>
+                            )}
                             <p className="text-sm font-bold mt-1" style={{ color: theme.primaryColor }}>
-                              {formatPrice(item.price)}
+                              {formatPrice(item.price, storeCurrency)}
                             </p>
                           </div>
                           <button
@@ -352,7 +361,7 @@ export default function CartDrawer({ store, settings }) {
                             </motion.button>
                           </div>
                           <p className="text-sm font-bold text-gray-900 dark:text-white">
-                            {formatPrice(item.price * item.quantity)}
+                            {formatPrice(item.price * item.quantity, storeCurrency)}
                           </p>
                         </div>
                       </div>
@@ -604,7 +613,7 @@ export default function CartDrawer({ store, settings }) {
                    <motion.button
                      whileTap={{ scale: 0.98 }}
                      onClick={handleWhatsAppCheckout}
-                     disabled={isSubmitting}
+                     disabled={isSubmitting || !isOpen}
                      className="w-full py-4 text-base font-bold text-white shadow-xl rounded-2xl flex items-center justify-center gap-2 disabled:opacity-60"
                      style={{ 
                        backgroundColor: '#25D366',
@@ -616,7 +625,7 @@ export default function CartDrawer({ store, settings }) {
                      ) : (
                        <>
                          <MessageCircle className="w-6 h-6" />
-                         <span className="text-lg">Finalizar compra por WhatsApp</span>
+                         <span className="text-lg">{isOpen ? 'Finalizar compra por WhatsApp' : 'Tienda cerrada en este momento'}</span>
                        </>
                      )}
                    </motion.button>

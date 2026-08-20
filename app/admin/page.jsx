@@ -4,10 +4,11 @@ import { motion } from 'framer-motion';
 import { 
           Palette, Package, ShoppingBag, Settings, ExternalLink, Store,
   ClipboardList, Eye, TrendingUp, MousePointer, Copy, CheckCircle,
-  Link as LinkIcon, Megaphone, Users
+  Link as LinkIcon, Megaphone, Users, QrCode, Crown
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import PlanUpgradeCard from '@/components/admin/PlanUpgradeCard';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -20,6 +21,9 @@ export default function AdminDashboard() {
   const [storeUrl, setStoreUrl] = useState('');
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
+    const [isStoreOpen, setIsStoreOpen] = useState(true);
+  const [togglingOpen, setTogglingOpen] = useState(false);
+  const [planType, setPlanType] = useState('free');
 
   useEffect(() => {
     loadDashboardData();
@@ -35,13 +39,15 @@ export default function AdminDashboard() {
       // Get store URL
       const { data: profile } = await supabase
         .from('profiles')
-        .select('slug')
+        .select('slug, is_open, plan_type')
         .eq('id', user.id)
         .maybeSingle();
 
       if (profile?.slug) {
         setStoreUrl(`${profile.slug}.hyuk.app`);
       }
+      setIsStoreOpen(profile?.is_open !== false);
+      setPlanType(profile?.plan_type || profile?.plan || 'free');
 
       // Get stats (cada consulta con fallback defensivo: si una tabla no existe
       // o falla en Supabase, devolvemos 0 en lugar de romper el dashboard)
@@ -92,6 +98,27 @@ export default function AdminDashboard() {
     navigator.clipboard.writeText(`https://${storeUrl}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const toggleStoreOpen = async () => {
+    setTogglingOpen(true);
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const next = !isStoreOpen;
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_open: next })
+        .eq('id', user.id);
+      if (error) throw error;
+      setIsStoreOpen(next);
+    } catch (e) {
+      console.error('Error actualizando estado de la tienda:', e);
+      alert('No se pudo actualizar el estado de la tienda. Intenta de nuevo.');
+    } finally {
+      setTogglingOpen(false);
+    }
   };
 
   const kpiCards = [
@@ -356,7 +383,47 @@ export default function AdminDashboard() {
                   </p>
                 </motion.div>
               );
-            })}
+                        })}
+          </div>
+
+          <PlanUpgradeCard plan={planType} />
+
+          {/* Control Rápido: Estado de la tienda + QR */}
+          <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-zinc-900/60 backdrop-blur-xl rounded-2xl p-6 border border-zinc-800 shadow-sm">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="font-semibold text-zinc-100 mb-1">Estado de la tienda</h3>
+                  <p className="text-sm text-zinc-400 mb-3">
+                    {isStoreOpen ? 'Abierta: los clientes pueden hacer pedidos' : 'Cerrada: se bloquea el checkout'}
+                  </p>
+                </div>
+                <button
+                  onClick={toggleStoreOpen}
+                  disabled={togglingOpen}
+                  className={`relative w-14 h-8 rounded-full transition-colors shrink-0 disabled:opacity-50 ${isStoreOpen ? 'bg-emerald-500' : 'bg-zinc-700'}`}
+                  title={isStoreOpen ? 'Cerrar tienda' : 'Abrir tienda'}
+                  aria-label="Alternar estado de la tienda"
+                >
+                  <span className={`absolute top-1 w-6 h-6 bg-white rounded-full shadow transition-all ${isStoreOpen ? 'left-7' : 'left-1'}`} />
+                </button>
+              </div>
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold ${isStoreOpen ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                {isStoreOpen ? '● Tienda abierta' : '● Tienda cerrada'}
+              </span>
+            </div>
+
+            <a
+              href="/admin/qr-generator"
+              className="group bg-zinc-900/60 backdrop-blur-xl rounded-2xl p-6 border border-zinc-800 shadow-sm hover:border-zinc-700 transition-all flex items-center justify-between"
+            >
+              <div>
+                <h3 className="font-semibold text-zinc-100 mb-1">Código QR de tu tienda</h3>
+                <p className="text-sm text-zinc-400 mb-3">Descárgalo en PNG para imprimir en tu local</p>
+                <span className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-400">Generar QR →</span>
+              </div>
+              <QrCode className="w-10 h-10 text-zinc-500 group-hover:text-emerald-400 transition-colors" />
+            </a>
           </div>
 
           {/* Quick Actions - Mobile First */}

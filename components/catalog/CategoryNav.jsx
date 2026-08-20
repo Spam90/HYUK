@@ -31,7 +31,7 @@ export default function CategoryNav({
   if (!categories || categories.length === 0) return null;
 
   return (
-    <div className="sticky top-0 z-40 backdrop-blur-md bg-background/80 border-b border-secondary/10">
+    <div className="sticky top-[64px] z-30 backdrop-blur-md bg-background/80 border-b border-secondary/10">
       <div className="relative">
         {/* Animated Indicator - Tiendanube Style */}
         <motion.div

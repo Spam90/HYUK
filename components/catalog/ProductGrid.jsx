@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import ProductCardVariant from './ProductCardVariant';
 
-export default function ProductGrid({ products, settings, categories }) {
+export default function ProductGrid({ products, settings, categories, onProductClick, lockedExtra = 0, onUpgradeClick }) {
   const { layout } = settings;
   const { productGrid, productCardStyle, layoutType } = layout;
 
@@ -77,10 +77,33 @@ export default function ProductGrid({ products, settings, categories }) {
               categoryName={getCategoryName(product.category_id)}
               settings={settings}
               cardStyle={productCardStyle}
+              onProductClick={onProductClick}
             />
           </motion.div>
         ))}
-      </AnimatePresence>
+            </AnimatePresence>
+      {lockedExtra > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+          className={isHorizontal ? 'snap-start shrink-0 w-64' : ''}
+        >
+          <div className="bg-white dark:bg-zinc-800 rounded-2xl shadow-lg shadow-black/5 border-2 border-dashed border-amber-200 dark:border-amber-900/40 p-6 flex flex-col items-center justify-center text-center h-full min-h-[180px]">
+            <Lock className="w-8 h-8 text-amber-400 mb-2" />
+            <p className="font-semibold text-amber-900 dark:text-amber-200">+{lockedExtra} productos ocultos</p>
+            <p className="text-xs text-text/50 mt-1">Pasá a Pro para verlos todos</p>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={onUpgradeClick}
+              className="mt-3 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 text-white text-xs font-semibold shadow hover:bg-amber-600 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-400"
+            >
+              Desbloquear
+            </motion.button>
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }

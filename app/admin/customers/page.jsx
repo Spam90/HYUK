@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Phone, ShoppingBag, DollarSign, Trophy, RefreshCw, X, Calendar } from 'lucide-react';
+import { Search, Phone, ShoppingBag, DollarSign, Trophy, RefreshCw, X, Calendar, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { getOrders } from '@/lib/orders';
 
@@ -99,10 +99,17 @@ export default function CustomersPage() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-16 text-gray-400">
-            <ShoppingBag className="w-12 h-12 mx-auto mb-3 opacity-30" />
-            <p className="font-medium">Sin clientes registrados todavía</p>
-            <p className="text-sm mt-1">Los pedidos aparecerán agrupados aquí por WhatsApp.</p>
+          <div className="flex flex-col items-center justify-center py-16 text-center bg-white dark:bg-zinc-900 rounded-2xl border border-dashed border-gray-300 dark:border-zinc-700">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-100 to-orange-100 dark:from-zinc-800 dark:to-zinc-800 flex items-center justify-center mb-4">
+              <Users className="w-10 h-10 text-amber-500" />
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">Tus mejores clientes aparecerán aquí</h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-sm">
+              Cuando tus clientes hagan pedidos por WhatsApp, los verás agrupados aquí con sus números y cuánto han gastado.
+            </p>
+            <button onClick={() => router.push('/admin/orders')} className="mt-5 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold shadow-lg hover:scale-[1.02] transition-all">
+              Ver pedidos entrantes
+            </button>
           </div>
         ) : (
           <div className="overflow-x-auto rounded-2xl border border-gray-200 dark:border-zinc-800">

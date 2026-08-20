@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Palette, LayoutGrid, Image as ImageIcon, MessageCircle, Save, RotateCcw, Check, Smartphone, Loader2, Sparkles } from 'lucide-react';
+import { Palette, LayoutGrid, Image as ImageIcon, MessageCircle, Save, RotateCcw, Check, Smartphone, Loader2, Sparkles, Instagram } from 'lucide-react';
 import ThemeProvider, { useTheme } from '@/components/theme/ThemeProvider';
 import { CartProvider } from '@/context/CartContext';
 import { DEFAULT_SETTINGS } from '@/lib/theme/defaults';
@@ -12,6 +12,7 @@ import LayoutControls from '@/components/admin/controls/LayoutControls';
 import BannerControls from '@/components/admin/controls/BannerControls';
 import WhatsAppControls from '@/components/admin/controls/WhatsAppControls';
 import AiCustomizePanel from '@/components/admin/controls/AiCustomizePanel';
+import SocialControls from '@/components/admin/controls/SocialControls';
 import PhonePreview from '@/components/admin/PhonePreview';
 
 // Tabs de configuración
@@ -21,6 +22,7 @@ const TABS = [
   { id: 'layout', label: 'Layout y Retícula', icon: LayoutGrid },
   { id: 'banner', label: 'Banners y Header', icon: ImageIcon },
   { id: 'whatsapp', label: 'WhatsApp & Checkout', icon: MessageCircle },
+  { id: 'social', label: 'Redes Sociales', icon: Instagram },
 ];
 
 function CustomizePanel() {
@@ -30,6 +32,7 @@ function CustomizePanel() {
   const [isSaved, setIsSaved] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [socialLinks, setSocialLinks] = useState({ instagram: '', tiktok: '' });
   
   // Lazy load Supabase client to avoid build errors
   const [supabase, setSupabase] = useState(null);
@@ -55,7 +58,7 @@ function CustomizePanel() {
 
         const { data, error: fetchError } = await supabase
           .from('profiles')
-          .select('settings')
+          .select('settings, social_links')
           .eq('id', user.id)
           .maybeSingle();
 
@@ -66,7 +69,14 @@ function CustomizePanel() {
 
         if (data?.settings) {
           updateFullSettings(data.settings);
-        } else {
+        }
+        if (data?.social_links) {
+          setSocialLinks({
+            instagram: typeof data.social_links.instagram === 'string' ? data.social_links.instagram : '',
+            tiktok: typeof data.social_links.tiktok === 'string' ? data.social_links.tiktok : '',
+          });
+        }
+        if (!data?.settings) {
           // Create profile if it doesn't exist
           const { error: insertError } = await supabase
             .from('profiles')
@@ -101,6 +111,15 @@ function CustomizePanel() {
 
       if (!user) {
         throw new Error('No hay sesión activa');
+      }
+
+      // Guardar enlaces de redes sociales (columna social_links)
+      const { error: socialError } = await supabase
+        .from('profiles')
+        .update({ social_links: socialLinks })
+        .eq('id', user.id);
+      if (socialError) {
+        console.error('Error guardando redes sociales:', socialError);
       }
 
       const { data, error: updateError } = await supabase
@@ -147,6 +166,8 @@ function CustomizePanel() {
         return <BannerControls settings={settings} updateSettings={updateSettings} />;
       case 'whatsapp':
         return <WhatsAppControls settings={settings} updateSettings={updateSettings} />;
+      case 'social':
+        return <SocialControls social={socialLinks} onChange={setSocialLinks} />;
       default:
         return null;
     }

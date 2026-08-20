@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ShoppingBag, X, ChevronRight } from 'lucide-react';
+import { Search, ShoppingBag, X, ChevronRight, Lock, Zap } from 'lucide-react';
 import ThemeProvider from '@/components/theme/ThemeProvider';
 import { CartProvider, useCart } from '@/context/CartContext';
 import HeaderVariant from '@/components/catalog/HeaderVariant';
@@ -10,12 +10,17 @@ import CategoryNav from '@/components/catalog/CategoryNav';
 import ProductGrid from '@/components/catalog/ProductGrid';
 import CartDrawer from '@/components/catalog/CartDrawer';
 import PromoBanner from '@/components/catalog/PromoBanner';
+import ProductModal from '@/components/catalog/ProductModal';
+import SocialFooter from '@/components/catalog/SocialFooter';
+import UpgradeBanner from '@/components/catalog/UpgradeBanner';
+import { getProductLimit, isFree, getLockedCount } from '@/lib/config/plans';
 
 // Componente interno para acceder al carrito
-function CatalogContent({ store, categories, products, settings }) {
+function CatalogContent({ store, categories, products, settings, plan }) {
   const [activeCategory, setActiveCategory] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const { cartItems, openCart, totalItems } = useCart();
+  const [selectedProduct, setSelectedProduct] = useState(null);
+  const { cartItems, openCart, totalItems, addItem } = useCart();
 
   // Demo data if no props provided
   const demoStore = store || {
@@ -118,6 +123,18 @@ function CatalogContent({ store, categories, products, settings }) {
     ? demoProducts.filter(p => p.category_id === activeCategory)
     : demoProducts;
 
+  const isStoreOpen = demoStore.is_open !== false;
+  const storeUrl = demoStore.slug ? `https://${demoStore.slug}.hyuk.app` : (typeof window !== 'undefined' ? window.location.href : '');
+    const storeCurrency = demoStore.store_currency || 'USD';
+
+  // --- Límite de productos por plan (Free = 6 visibles) ---
+  const planType = plan || 'free';
+  const isFreePlan = isFree(planType);
+  const productLimit = isFreePlan ? getProductLimit(planType) : Infinity;
+  const visibleProducts = isFreePlan ? filteredProducts.slice(0, productLimit) : filteredProducts;
+  const totalProducts = filteredProducts.length;
+  const lockedExtra = getLockedCount(planType, totalProducts);
+
   // Agrupar productos por categoría para mostrar secciones
   const groupedByCategory = !activeCategory && demoCategories.length > 0
     ? demoCategories.map(cat => ({
@@ -150,7 +167,8 @@ function CatalogContent({ store, categories, products, settings }) {
           <HeaderVariant
             store={demoStore}
             settings={demoSettings}
-            onCartClick={() => {}} // CartProvider manejará esto vía context
+            storeUrl={storeUrl}
+            onCartClick={() => {}}
           />
 
           {/* Search Bar - Fixed */}
@@ -187,6 +205,15 @@ function CatalogContent({ store, categories, products, settings }) {
             />
           )}
 
+                    {/* Banner de upsell (Free supera el límite de productos) */}
+          {lockedExtra > 0 && (
+            <UpgradeBanner
+              visible={visibleProducts.length}
+              total={totalProducts}
+              onUpgradeClick={() => { window.location.href = '/pricing?ref=catalog'; }}
+            />
+          )}
+
           {/* Contenido principal */}
           <main className="max-w-3xl mx-auto px-4 py-6">
             {/* Si estamos filtrando por categoría activa */}
@@ -218,6 +245,7 @@ function CatalogContent({ store, categories, products, settings }) {
                         products={filteredProducts}
                         settings={demoSettings}
                         categories={demoCategories}
+                        onProductClick={setSelectedProduct}
                       />
                     </>
                   );
@@ -246,6 +274,7 @@ function CatalogContent({ store, categories, products, settings }) {
                     products={searchResults}
                     settings={demoSettings}
                     categories={demoCategories}
+                    onProductClick={setSelectedProduct}
                   />
                 ) : (
                   <div className="text-center py-12">
@@ -290,6 +319,7 @@ function CatalogContent({ store, categories, products, settings }) {
                       products={group.products}
                       settings={demoSettings}
                       categories={demoCategories}
+                      onProductClick={setSelectedProduct}
                     />
                   </motion.section>
                 ))}
@@ -297,11 +327,14 @@ function CatalogContent({ store, categories, products, settings }) {
             )}
 
             {/* Vista simple (sin agrupar) */}
-            {!showGroupedLayout && !activeCategory && (
+                        {!showGroupedLayout && !activeCategory && (
               <ProductGrid
-                products={filteredProducts}
+                products={visibleProducts}
                 settings={demoSettings}
                 categories={demoCategories}
+                onProductClick={setSelectedProduct}
+                lockedExtra={lockedExtra}
+                onUpgradeClick={() => { window.location.href = '/pricing?ref=catalog'; }}
               />
             )}
 
@@ -318,11 +351,21 @@ function CatalogContent({ store, categories, products, settings }) {
               <p className="mt-3 text-sm font-semibold text-text">
                 {demoStore.store_name || demoStore.full_name || 'Mi Tienda'}
               </p>
+              <SocialFooter store={demoStore} settings={demoSettings} />
               <p className="text-xs text-text/40 mt-1">
                 Catálogo Digital © {new Date().getFullYear()} | Hecho con SAS
               </p>
             </footer>
           </main>
+
+          {/* Banner de tienda cerrada */}
+          {!isStoreOpen && (
+            <div className="fixed bottom-24 inset-x-4 md:left-1/2 md:-translate-x-1/2 md:max-w-sm z-[60]">
+              <div className="bg-zinc-900/95 dark:bg-black/85 backdrop-blur-md text-white text-sm font-semibold px-5 py-3.5 rounded-2xl shadow-2xl flex items-center justify-center gap-2 border border-white/10">
+                🔒 Tienda cerrada en este momento
+              </div>
+            </div>
+          )}
 
           {/* Floating Cart Bar */}
           <AnimatePresence>
@@ -367,7 +410,17 @@ function CatalogContent({ store, categories, products, settings }) {
           </AnimatePresence>
 
           {/* Cart Drawer */}
-          <CartDrawer store={demoStore} settings={demoSettings} />
+          <CartDrawer store={demoStore} settings={demoSettings} isOpen={isStoreOpen} />
+
+          {/* Product Modal (variantes + notas especiales) */}
+          <ProductModal
+            product={selectedProduct}
+            isOpen={!!selectedProduct}
+            onClose={() => setSelectedProduct(null)}
+            onAdd={addItem}
+            settings={demoSettings}
+            currency={storeCurrency}
+          />
         </div>
       </CartProvider>
     </ThemeProvider>

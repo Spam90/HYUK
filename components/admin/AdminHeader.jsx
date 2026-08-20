@@ -50,13 +50,14 @@ export default function AdminHeader() {
             // hay error de red, NO romper la UI del header (evita excepción roja).
             supabase
               .from('profiles')
-              .select('slug, plan')
+              .select('slug, plan_type')
               .eq('id', user.id)
               .maybeSingle()
               .then(({ data: p }) => {
                 if (cancelled) return;
                 if (p?.slug) setSlug(p.slug);
-                if (p?.plan) setPlan(p.plan);
+                if (p?.plan_type) setPlan(p.plan_type);
+                else if (p?.plan) setPlan(p.plan);
               })
               .catch((err) => {
                 console.warn('[AdminHeader] No se pudieron cargar slug/plan del perfil:', err?.message);

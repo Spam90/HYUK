@@ -9,6 +9,7 @@ export default function ProductCardVariant({
   product, 
   style = 'modern-shadow', 
   onAddToCart,
+  onProductClick,
   settings 
 }) {
   const { theme } = settings;
@@ -222,10 +223,10 @@ export default function ProductCardVariant({
         )}
 
         {/* Add to Cart Button - Mobile Always Visible */}
-        {product.is_available && onAddToCart && (
+        {product.is_available && (onAddToCart || onProductClick) && (
           <motion.button
             whileTap={{ scale: 0.95 }}
-            onClick={() => onAddToCart(product)}
+            onClick={() => (onProductClick || onAddToCart)(product)}
             className="
               flex items-center justify-center gap-2
               text-white text-sm font-semibold
