@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Search, Phone, ShoppingBag, DollarSign, Trophy, RefreshCw, X, Calendar, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { getOrders } from '@/lib/orders';
+import { getDbStatus } from '@/lib/db-status';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,6 +28,13 @@ export default function CustomersPage() {
     if (!supabase) return;
     setLoading(true);
     try {
+      // Si la tabla orders no existe, no la consultamos (evita 404 en consola)
+      const db = await getDbStatus();
+      if (!db.ordersTable) {
+        setOrders([]);
+        setLoading(false);
+        return;
+      }
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push('/login'); return; }
       const result = await getOrders(user.id);

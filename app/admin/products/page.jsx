@@ -5,6 +5,7 @@ import { motion, Reorder } from 'framer-motion';
 import { Plus, Edit2, Trash2, Search, Package, Image as ImageIcon, X, Upload, GripVertical, ChevronUp, ChevronDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import ProductModal from '@/components/admin/ProductModal';
+import { getDbStatus } from '@/lib/db-status';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,15 +55,19 @@ export default function ProductsPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      const db = await getDbStatus();
+      const profileQuery = db.planColumn
+        ? supabase.from('profiles').select(db.planColumn).eq('id', user.id).maybeSingle()
+        : Promise.resolve({ data: null });
       const [categoriesRes, productsRes, profileRes] = await Promise.all([
         supabase.from('categories').select('*').eq('store_id', user.id).order('sort_order'),
         supabase.from('products').select('*').eq('store_id', user.id).order('sort_order'),
-        supabase.from('profiles').select('plan_type').eq('id', user.id).maybeSingle(),
+        profileQuery,
       ]);
 
       setCategories(categoriesRes.data || []);
       setProducts(productsRes.data || []);
-      setPlan(profileRes.data?.plan_type || profileRes.data?.plan || 'free');
+      setPlan(profileRes.data?.[db.planColumn || 'plan_type'] || profileRes.data?.plan_type || profileRes.data?.plan || 'free');
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {

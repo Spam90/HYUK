@@ -14,6 +14,7 @@ import WhatsAppControls from '@/components/admin/controls/WhatsAppControls';
 import AiCustomizePanel from '@/components/admin/controls/AiCustomizePanel';
 import SocialControls from '@/components/admin/controls/SocialControls';
 import PhonePreview from '@/components/admin/PhonePreview';
+import { getDbStatus } from '@/lib/db-status';
 
 // Tabs de configuración
 const TABS = [
@@ -56,9 +57,12 @@ function CustomizePanel() {
           return;
         }
 
+        // Solo pedimos columnas que existen (evita 400 si social_links no está creada)
+        const db = await getDbStatus();
+        const cols = db.socialLinks ? 'settings, social_links' : 'settings';
         const { data, error: fetchError } = await supabase
           .from('profiles')
-          .select('settings, social_links')
+          .select(cols)
           .eq('id', user.id)
           .maybeSingle();
 
@@ -113,13 +117,16 @@ function CustomizePanel() {
         throw new Error('No hay sesión activa');
       }
 
-      // Guardar enlaces de redes sociales (columna social_links)
-      const { error: socialError } = await supabase
-        .from('profiles')
-        .update({ social_links: socialLinks })
-        .eq('id', user.id);
-      if (socialError) {
-        console.error('Error guardando redes sociales:', socialError);
+      // Guardar enlaces de redes sociales (solo si la columna social_links existe)
+      const db = await getDbStatus();
+      if (db.socialLinks) {
+        const { error: socialError } = await supabase
+          .from('profiles')
+          .update({ social_links: socialLinks })
+          .eq('id', user.id);
+        if (socialError) {
+          console.warn('[Customize] No se pudieron guardar redes sociales:', socialError?.message);
+        }
       }
 
       const { data, error: updateError } = await supabase

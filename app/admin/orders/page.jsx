@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { openPrintTicket } from '@/lib/print/thermal-ticket';
+import { getDbStatus } from '@/lib/db-status';
 
 export const dynamic = 'force-dynamic';
 
@@ -93,17 +94,24 @@ export default function OrdersPage() {
     if (!supabase) return;
 
     try {
+      // Si la tabla orders aún no existe, NO consultamos nada (evita 404 en cada poll).
+      const db = await getDbStatus();
+      if (!db.ordersTable) {
+        setLoading(false);
+        return;
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         router.push('/login');
         return;
       }
 
-      // Cargar perfil de tienda para tickets
+      // Cargar perfil de tienda para tickets (select('*') = solo columnas existentes)
       if (!storeProfile) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('business_name, store_name, full_name, phone_whatsapp, phone')
+          .select('*')
           .eq('id', user.id)
           .maybeSingle();
         if (profile) setStoreProfile(profile);

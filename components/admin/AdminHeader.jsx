@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { ArrowLeft, ExternalLink, LogOut, Settings, Home, ChevronRight } from 'lucide-react';
+import { getDbStatus } from '@/lib/db-status';
 
 const ROUTE_LABELS = {
   '/admin': 'Resumen',
@@ -38,7 +39,7 @@ export default function AdminHeader() {
       .then(({ createClient }) => {
         const supabase = createClient();
         supabase.auth.getUser()
-          .then(({ data }) => {
+          .then(async ({ data }) => {
             const user = data?.user;
             if (!user || cancelled) return;
             try {
@@ -46,22 +47,31 @@ export default function AdminHeader() {
             } catch {
               /* ignorible: estado del header no disponible */
             }
-            // slug/plan del perfil → fallback silencioso: si la tabla no existe o
-            // hay error de red, NO romper la UI del header (evita excepción roja).
-            supabase
-              .from('profiles')
-              .select('slug, plan_type')
-              .eq('id', user.id)
-              .maybeSingle()
-              .then(({ data: p }) => {
-                if (cancelled) return;
-                if (p?.slug) setSlug(p.slug);
-                if (p?.plan_type) setPlan(p.plan_type);
-                else if (p?.plan) setPlan(p.plan);
-              })
-              .catch((err) => {
-                console.warn('[AdminHeader] No se pudieron cargar slug/plan del perfil:', err?.message);
-              });
+            // slug/plan del perfil: sondeamos primero (server-side) qué columnas
+            // existen para NO pedir columnas inexistentes (evita 400 en consola).
+            const db = await getDbStatus();
+            if (cancelled) return;
+            try {
+              const planCol = db.planColumn
+                ? `slug, ${db.planColumn}`
+                : 'slug';
+              const { data: p } = await supabase
+                .from('profiles')
+                .select(planCol)
+                .eq('id', user.id)
+                .maybeSingle();
+              if (cancelled) return;
+              if (p?.slug) setSlug(p.slug);
+              // Sin columna de plan → mostramos 'free' (el CTA de upsell funciona igual).
+              setPlan(
+                (db.planColumn && p?.[db.planColumn]) ||
+                p?.plan ||
+                p?.plan_type ||
+                'free'
+              );
+            } catch (err) {
+              console.warn('[AdminHeader] No se pudieron cargar slug/plan del perfil:', err?.message);
+            }
           })
           .catch((err) => {
             console.warn('[AdminHeader] getUser falló:', err?.message);

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
+import { getDbStatus } from '@/lib/db-status';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,6 +38,13 @@ export default function AnalyticsPage() {
       }
 
       // Obtener todos los pedidos completados
+      // Si la tabla orders aún no existe, las métricas quedan en 0 (sin 404 en consola)
+      const db = await getDbStatus();
+      if (!db.ordersTable) {
+        setLoading(false);
+        return;
+      }
+
       const { data: orders, error } = await supabase
         .from('orders')
         .select('*')

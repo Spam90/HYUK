@@ -9,6 +9,7 @@ import {
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import PlanUpgradeCard from '@/components/admin/PlanUpgradeCard';
+import { getDbStatus } from '@/lib/db-status';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -36,10 +37,16 @@ export default function AdminDashboard() {
       
       if (!user) return;
 
-      // Get store URL
+      // Get store URL (solo columnas que existen: evita 400 de plan_type/is_open)
+      const db = await getDbStatus();
+      const profileCols = [
+        'slug',
+        ...(db.isOpen ? ['is_open'] : []),
+        ...(db.planColumn ? [db.planColumn] : []),
+      ].join(', ');
       const { data: profile } = await supabase
         .from('profiles')
-        .select('slug, is_open, plan_type')
+        .select(profileCols)
         .eq('id', user.id)
         .maybeSingle();
 
@@ -47,7 +54,12 @@ export default function AdminDashboard() {
         setStoreUrl(`${profile.slug}.hyuk.app`);
       }
       setIsStoreOpen(profile?.is_open !== false);
-      setPlanType(profile?.plan_type || profile?.plan || 'free');
+      setPlanType(
+        (db.planColumn && profile?.[db.planColumn]) ||
+        profile?.plan ||
+        profile?.plan_type ||
+        'free'
+      );
 
       // Get stats (cada consulta con fallback defensivo: si una tabla no existe
       // o falla en Supabase, devolvemos 0 en lugar de romper el dashboard)
@@ -65,13 +77,16 @@ export default function AdminDashboard() {
       };
 
       const [ordersCount, activeProducts, categories, pendingOrders] = await Promise.all([
-        safeCount('orders', [{ column: 'store_id', value: user.id }]),
+        // Si la tabla orders aún no existe, NO se consulta (evita el 404 en consola).
+        db.ordersTable ? safeCount('orders', [{ column: 'store_id', value: user.id }]) : Promise.resolve(0),
         safeCount('products', [{ column: 'store_id', value: user.id }]),
         safeCount('categories', [{ column: 'store_id', value: user.id }]),
-        safeCount('orders', [
-          { column: 'store_id', value: user.id },
-          { column: 'status', value: 'pending' },
-        ]),
+        db.ordersTable
+          ? safeCount('orders', [
+              { column: 'store_id', value: user.id },
+              { column: 'status', value: 'pending' },
+            ])
+          : Promise.resolve(0),
       ]);
 
       setStats({
