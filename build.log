@@ -1,0 +1,60 @@
+  ▲ Next.js 14.2.35
+  - Environments: .env.local
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/28) ...
+   Generating static pages (7/28) 
+   Generating static pages (14/28) 
+   Generating static pages (21/28) 
+ ✓ Generating static pages (28/28)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                              Size     First Load JS
+┌ ƒ /                                    5.08 kB         137 kB
+├ ○ /_not-found                          876 B          88.3 kB
+├ ƒ /[slug]                              190 B           152 kB
+├ ƒ /[slug]/opengraph-image              0 B                0 B
+├ ○ /admin                               7.18 kB         197 kB
+├ ○ /admin/ai-importer                   4.43 kB         128 kB
+├ ○ /admin/analytics                     4.02 kB         194 kB
+├ ○ /admin/categories                    3.49 kB         127 kB
+├ ○ /admin/customers                     5.24 kB         195 kB
+├ ○ /admin/customize                     11.7 kB         208 kB
+├ ○ /admin/flyer-maker                   2.46 kB        96.6 kB
+├ ○ /admin/marketing                     8.03 kB         132 kB
+├ ○ /admin/orders                        9.52 kB         133 kB
+├ ○ /admin/products                      5.83 kB         130 kB
+├ ○ /admin/qr-generator                  2.4 kB         96.5 kB
+├ ○ /admin/settings                      5.62 kB         129 kB
+├ ○ /admin/settings/domain               3.04 kB         127 kB
+├ ƒ /api/ai/generate-description         0 B                0 B
+├ ƒ /api/ai/generate-theme               0 B                0 B
+├ ƒ /api/ai/scan-menu                    0 B                0 B
+├ ƒ /api/analytics/track                 0 B                0 B
+├ ƒ /api/db/status                       0 B                0 B
+├ ƒ /api/orders/public/[id]              0 B                0 B
+├ ƒ /auth/callback                       0 B                0 B
+├ ○ /demo                                1.35 kB         153 kB
+├ ƒ /login                               2.11 kB         126 kB
+├ ○ /onboarding                          3.56 kB         194 kB
+├ ƒ /pedido/[id]                         2.69 kB        90.2 kB
+├ ○ /pricing                             179 B          96.4 kB
+├ ○ /privacy                             155 B          87.6 kB
+├ ○ /signup                              3.12 kB         193 kB
+├ ƒ /sitemap.xml                         0 B                0 B
+└ ○ /terms                               155 B          87.6 kB
++ First Load JS shared by all            87.5 kB
+  ├ chunks/2117-feed8af2790ba6a7.js      31.7 kB
+  ├ chunks/fd9d1056-188bb05699a3fe5b.js  53.6 kB
+  └ other shared chunks (total)          2.1 kB
+
+
+ƒ Middleware                             83.7 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

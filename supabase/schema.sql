@@ -15,6 +15,8 @@ ALTER TABLE profiles ADD COLUMN IF NOT EXISTS is_open BOOLEAN DEFAULT true;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS store_currency TEXT DEFAULT 'USD';
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS social_links JSONB DEFAULT '{}'::jsonb;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS plan_type TEXT DEFAULT 'free';
+-- Trial de 28 días con beneficios Pro (el catálogo público nunca se recorta)
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMPTZ;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS layout_type TEXT DEFAULT 'grid_modern';
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS settings JSONB DEFAULT '{
   "theme": {

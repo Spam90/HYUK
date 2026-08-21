@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { ArrowLeft, ExternalLink, LogOut, Settings, Home, ChevronRight } from 'lucide-react';
 import { getDbStatus } from '@/lib/db-status';
+import { isTrialActive } from '@/lib/config/plans';
 
 const ROUTE_LABELS = {
   '/admin': 'Resumen',
@@ -30,6 +31,7 @@ export default function AdminHeader() {
   const router = useRouter();
   const [slug, setSlug] = useState(null);
   const [plan, setPlan] = useState(null);
+  const [trialActive, setTrialActive] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [userInitials, setUserInitials] = useState('U');
 
@@ -47,21 +49,22 @@ export default function AdminHeader() {
             } catch {
               /* ignorible: estado del header no disponible */
             }
-            // slug/plan del perfil: sondeamos primero (server-side) qué columnas
+            // slug/plan/trial del perfil: sondeamos primero (server-side) qué columnas
             // existen para NO pedir columnas inexistentes (evita 400 en consola).
             const db = await getDbStatus();
             if (cancelled) return;
             try {
-              const planCol = db.planColumn
-                ? `slug, ${db.planColumn}`
-                : 'slug';
+              const cols = ['slug'];
+              if (db.planColumn) cols.push(db.planColumn);
+              if (db.trialEnds) cols.push('trial_ends_at');
               const { data: p } = await supabase
                 .from('profiles')
-                .select(planCol)
+                .select(cols.join(', '))
                 .eq('id', user.id)
                 .maybeSingle();
               if (cancelled) return;
               if (p?.slug) setSlug(p.slug);
+              setTrialActive(isTrialActive(p?.trial_ends_at));
               // Sin columna de plan → mostramos 'free' (el CTA de upsell funciona igual).
               setPlan(
                 (db.planColumn && p?.[db.planColumn]) ||
@@ -127,12 +130,17 @@ export default function AdminHeader() {
 
         {/* Acciones */}
         <div className="ml-auto flex items-center gap-1.5 shrink-0">
-          {plan === 'free' && (
+          {trialActive && (
+            <span className="hidden lg:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-[11px] font-black uppercase tracking-wide">
+              ✨ Prueba Pro
+            </span>
+          )}
+          {plan === 'free' && !trialActive && (
             <span className="hidden lg:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-[11px] font-black uppercase tracking-wide">
               ⚡ Plan Gratuito
             </span>
           )}
-          {plan === 'free' && (
+          {plan === 'free' && !trialActive && (
             <a
               href="/admin/settings"
               className="hidden md:inline-flex items-center px-2.5 py-2 rounded-lg text-amber-600 dark:text-amber-400 text-xs font-bold hover:bg-amber-500/10 transition-colors"
@@ -141,7 +149,7 @@ export default function AdminHeader() {
               Mejorar a Pro
             </a>
           )}
-          {plan === 'pro' && (
+          {plan === 'pro' && !trialActive && (
             <span className="hidden lg:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-[11px] font-black uppercase tracking-wide">
               ✦ Plan Pro
             </span>

@@ -16,6 +16,13 @@ ALTER TABLE profiles ADD COLUMN IF NOT EXISTS plan TEXT DEFAULT 'free';
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS is_open BOOLEAN DEFAULT true;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS store_currency TEXT DEFAULT 'USD';
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS social_links JSONB DEFAULT '{}'::jsonb;
+-- Trial de 28 días con beneficios Pro (sin recorte del catálogo público)
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS trial_ends_at TIMESTAMPTZ;
+
+-- Backfill: usuarios existentes sin trial → 28 días desde ahora
+UPDATE profiles
+SET trial_ends_at = NOW() + INTERVAL '28 days'
+WHERE trial_ends_at IS NULL;
 
 -- Mantener `plan` y `plan_type` sincronizados
 UPDATE profiles
@@ -104,5 +111,46 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER update_orders_updated_at
   BEFORE UPDATE ON public.orders
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- 5) TRIAL AUTOMÁTICO DE 28 DÍAS ---------------------------------------------
+-- Todo perfil NUEVO nace con trial_ends_at = NOW() + 28 days (beneficios Pro).
+CREATE OR REPLACE FUNCTION set_trial_ends_at_on_insert()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.trial_ends_at IS NULL THEN
+    NEW.trial_ends_at = NOW() + INTERVAL '28 days';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS set_profiles_trial_ends_at ON profiles;
+CREATE TRIGGER set_profiles_trial_ends_at
+  BEFORE INSERT ON profiles
+  FOR EACH ROW EXECUTE FUNCTION set_trial_ends_at_on_insert();
+
+-- 6) ANALYTICS + LECTURA PÚBLICA DE PEDIDOS -----------------------------------
+CREATE TABLE IF NOT EXISTS public.analytics_events (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  store_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  event text NOT NULL,
+  session_id text,
+  metadata jsonb DEFAULT '{}'::jsonb,
+  created_at timestamptz DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS analytics_events_store_id_idx ON public.analytics_events(store_id);
+CREATE INDEX IF NOT EXISTS analytics_events_event_idx ON public.analytics_events(event);
+ALTER TABLE public.analytics_events ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "public_insert_analytics_events" ON public.analytics_events
+  FOR INSERT WITH CHECK (true);
+CREATE POLICY "owners_read_analytics_events" ON public.analytics_events
+  FOR SELECT USING (auth.uid() = store_id);
+
+-- El cliente puede ver el estado de su pedido sin loguearse (/pedido/[id])
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='orders' AND policyname='public_read_orders') THEN
+    CREATE POLICY "public_read_orders" ON public.orders FOR SELECT USING (true);
+  END IF;
+END $$;
 
 -- LISTO ✅ Cierra el SQL Editor y recarga tu panel.

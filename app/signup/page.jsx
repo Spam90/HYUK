@@ -41,6 +41,9 @@ export default function SignupPage() {
             full_name: name,
             email: email,
             slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
+            plan_type: 'free',
+            // Trial de 28 días con beneficios Pro temporales (regla de negocio v2)
+            trial_ends_at: new Date(Date.now() + 28 * 24 * 60 * 60 * 1000).toISOString(),
             settings: {
               theme: {
                 primaryColor: '#10B981',

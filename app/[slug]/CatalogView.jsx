@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, ShoppingBag, X, ChevronRight, Lock, Zap } from 'lucide-react';
+import { Search, ShoppingBag, X, ChevronRight } from 'lucide-react';
 import ThemeProvider from '@/components/theme/ThemeProvider';
 import { CartProvider, useCart } from '@/context/CartContext';
 import HeaderVariant from '@/components/catalog/HeaderVariant';
@@ -12,15 +12,25 @@ import CartDrawer from '@/components/catalog/CartDrawer';
 import PromoBanner from '@/components/catalog/PromoBanner';
 import ProductModal from '@/components/catalog/ProductModal';
 import SocialFooter from '@/components/catalog/SocialFooter';
-import UpgradeBanner from '@/components/catalog/UpgradeBanner';
-import { getProductLimit, isFree, getLockedCount } from '@/lib/config/plans';
+import { track } from '@/lib/analytics';
 
 // Componente interno para acceder al carrito
-function CatalogContent({ store, categories, products, settings, plan }) {
+function CatalogContent({ store, categories, products, settings }) {
   const [activeCategory, setActiveCategory] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const { cartItems, openCart, totalItems, addItem } = useCart();
+  const { cartItems, openCart, totalItems, addItem, addItemWithOptions } = useCart();
+
+  // Registrar una visita al catálogo (analytics) al montar el componente.
+  useEffect(() => {
+    if (store?.id) track(store.id, 'pageView');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store?.id]);
+
+  const handleAddItem = (product, quantity = 1, selectedOptions = [], notes = '') => {
+    addItem(product, quantity, selectedOptions, notes);
+    if (store?.id) track(store.id, 'addToCart', { productId: product.id, name: product.name, quantity });
+  };
 
   // Demo data if no props provided
   const demoStore = store || {
@@ -128,12 +138,8 @@ function CatalogContent({ store, categories, products, settings, plan }) {
     const storeCurrency = demoStore.store_currency || 'USD';
 
   // --- Límite de productos por plan (Free = 6 visibles) ---
-  const planType = plan || 'free';
-  const isFreePlan = isFree(planType);
-  const productLimit = isFreePlan ? getProductLimit(planType) : Infinity;
-  const visibleProducts = isFreePlan ? filteredProducts.slice(0, productLimit) : filteredProducts;
-  const totalProducts = filteredProducts.length;
-  const lockedExtra = getLockedCount(planType, totalProducts);
+  // NOTA: el catálogo público SIEMPRE muestra todos los productos.
+  // El plan (y el trial) nunca recorta ni oculta nada para el visitante (regla de negocio v2).
 
   // Agrupar productos por categoría para mostrar secciones
   const groupedByCategory = !activeCategory && demoCategories.length > 0
@@ -205,16 +211,7 @@ function CatalogContent({ store, categories, products, settings, plan }) {
             />
           )}
 
-                    {/* Banner de upsell (Free supera el límite de productos) */}
-          {lockedExtra > 0 && (
-            <UpgradeBanner
-              visible={visibleProducts.length}
-              total={totalProducts}
-              onUpgradeClick={() => { window.location.href = '/pricing?ref=catalog'; }}
-            />
-          )}
-
-          {/* Contenido principal */}
+                    {/* Contenido principal */}
           <main className="max-w-3xl mx-auto px-4 py-6">
             {/* Si estamos filtrando por categoría activa */}
             {activeCategory && (
@@ -329,12 +326,10 @@ function CatalogContent({ store, categories, products, settings, plan }) {
             {/* Vista simple (sin agrupar) */}
                         {!showGroupedLayout && !activeCategory && (
               <ProductGrid
-                products={visibleProducts}
+                products={filteredProducts}
                 settings={demoSettings}
                 categories={demoCategories}
                 onProductClick={setSelectedProduct}
-                lockedExtra={lockedExtra}
-                onUpgradeClick={() => { window.location.href = '/pricing?ref=catalog'; }}
               />
             )}
 
@@ -417,7 +412,7 @@ function CatalogContent({ store, categories, products, settings, plan }) {
             product={selectedProduct}
             isOpen={!!selectedProduct}
             onClose={() => setSelectedProduct(null)}
-            onAdd={addItem}
+            onAdd={handleAddItem}
             settings={demoSettings}
             currency={storeCurrency}
           />

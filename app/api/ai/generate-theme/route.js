@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { hasAiFeatureAccess, aiUpgradeError } from '@/lib/ai-guard';
 
 // Prompt para generar una paleta de colores y estilo a partir de una imagen
 const SYSTEM_PROMPT = `Eres un diseñador experto de interfaces para catálogos digitales de comercio.
@@ -28,6 +29,11 @@ export async function POST(request) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return Response.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
+    // La IA es un beneficio Pro o del trial de 28 días (regla de negocio v2)
+    if (!(await hasAiFeatureAccess(supabase, user.id))) {
+      return aiUpgradeError();
     }
 
     const body = await request.json();

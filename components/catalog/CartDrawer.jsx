@@ -8,6 +8,7 @@ import { useCart } from '@/context/CartContext';
 import { useTheme } from '@/components/theme/ThemeProvider';
 import { formatPrice, generateWhatsAppUrl } from '@/lib/whatsapp/checkout';
 import { fetchCouponByCode, calculateDiscount } from '@/lib/coupons';
+import { track } from '@/lib/analytics';
 
 export default function CartDrawer({ store, settings, isOpen = true }) {
   const { 
@@ -143,6 +144,12 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
     }
 
     try {
+      // Registrar inicio de checkout + clic en WhatsApp (analytics) — no bloquea.
+      if (store?.id) {
+        track(store.id, 'checkoutStart', { total: totalWithDelivery });
+        track(store.id, 'whatsappClick', { total: totalWithDelivery, coupon: activeCoupon?.code || null });
+      }
+
       // Guardar pedido en la base de datos
       const { createOrder } = await import('@/lib/orders');
       const orderResult = await createOrder({
@@ -161,12 +168,21 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
         deliveryFee: isHomeDelivery ? deliveryFee : 0,
       });
 
+      const orderId = orderResult.success ? orderResult.order?.id : null;
+
       if (!orderResult.success) {
         console.error('Error guardando pedido:', orderResult.error);
         // Continuar de todas formas para enviar por WhatsApp
       } else {
-        console.log('Pedido guardado exitosamente:', orderResult.order.id);
+        console.log('Pedido guardado exitosamente:', orderId);
+        // Registrar conversión (analytics) — no bloquea.
+        if (store?.id) track(store.id, 'purchase', { orderId, total: totalWithDelivery });
       }
+
+      // Link de seguimiento del pedido (aparece en el mensaje de WhatsApp)
+      const trackingLink = orderId
+        ? `\n📦 *Seguimiento:* ${typeof window !== 'undefined' ? window.location.origin : ''}/pedido/${orderId}`
+        : '';
 
       // Generar URL de WhatsApp
       const whatsappUrl = generateWhatsAppUrl({
@@ -181,7 +197,7 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
           deliveryZone: isHomeDelivery ? (deliveryZone?.label || '') : '',
           deliveryFee: isHomeDelivery ? deliveryFee : 0,
           paymentMethod,
-          notes: notes.trim(),
+          notes: notes.trim() + trackingLink,
         },
         total: totalWithDelivery,
         coupon: activeCoupon,

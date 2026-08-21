@@ -155,6 +155,9 @@ export default async function StorePage({ params }) {
   };
 
     const storePlan = store.plan_type || store.plan || 'free';
+    // Trial vigente → la tienda opera con beneficios Pro (sin límites ni watermark).
+    const trialActive = !!store.trial_ends_at && new Date(store.trial_ends_at).getTime() > Date.now();
+    const effectivePlan = trialActive && storePlan === 'free' ? 'pro' : storePlan;
 
   return (
     <div>
@@ -163,11 +166,11 @@ export default async function StorePage({ params }) {
         categories={categories || []}
         products={productsWithOptions}
         settings={settings}
-        plan={storePlan}
+        plan={effectivePlan}
       />
 
-      {/* Marca de agua: solo en plan gratuito */}
-      {storePlan === 'free' && (
+      {/* Marca de agua: solo cuentas Free fuera de trial (el trial tiene beneficios Pro) */}
+      {effectivePlan === 'free' && (
         <a
           href="https://hyuk.app"
           target="_blank"

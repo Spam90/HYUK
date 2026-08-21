@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { hasAiFeatureAccess, aiUpgradeError } from '@/lib/ai-guard';
 
 export async function POST(request) {
   try {
@@ -8,6 +9,11 @@ export async function POST(request) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return Response.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
+    // Generar descripciones con IA es beneficio Pro o trial activo (regla v2)
+    if (!(await hasAiFeatureAccess(supabase, user.id))) {
+      return aiUpgradeError();
     }
 
     const body = await request.json();

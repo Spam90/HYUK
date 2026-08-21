@@ -47,7 +47,9 @@ const FALLBACK_STATUS = {
   planColumn: null,
   isOpen: false,
   socialLinks: false,
+  trialEnds: false,
   ordersTable: false,
+  analyticsTable: false,
 };
 
 export async function GET() {
@@ -61,12 +63,14 @@ export async function GET() {
       });
     }
 
-    const [planType, plan, isOpen, socialLinks, ordersTable] = await Promise.all([
+    const [planType, plan, isOpen, socialLinks, trialEnds, ordersTable, analyticsTable] = await Promise.all([
       probeColumn(supabase, 'plan_type'),
       probeColumn(supabase, 'plan'),
       probeColumn(supabase, 'is_open'),
       probeColumn(supabase, 'social_links'),
+      probeColumn(supabase, 'trial_ends_at'),
       probeTable(supabase, 'orders'),
+      probeTable(supabase, 'analytics_events'),
     ]);
 
     return NextResponse.json(
@@ -76,7 +80,9 @@ export async function GET() {
         planColumn: planType ? 'plan_type' : plan ? 'plan' : null,
         isOpen,
         socialLinks,
+        trialEnds,
         ordersTable,
+        analyticsTable,
       },
       { headers: { 'Cache-Control': 'no-store' } }
     );

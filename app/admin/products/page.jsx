@@ -6,6 +6,7 @@ import { Plus, Edit2, Trash2, Search, Package, Image as ImageIcon, X, Upload, Gr
 import { useRouter } from 'next/navigation';
 import ProductModal from '@/components/admin/ProductModal';
 import { getDbStatus } from '@/lib/db-status';
+import { getProductLimit, isTrialActive } from '@/lib/config/plans';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,8 +22,14 @@ export default function ProductsPage() {
   
   const [supabase, setSupabase] = useState(null);
   const [plan, setPlan] = useState('free');
-  const PLAN_LIMIT = 15;
-  const planReached = plan === 'free' && products.length >= PLAN_LIMIT;
+  const [trialEndsAt, setTrialEndsAt] = useState(null);
+
+  // Regla de negocio v2: el límite de productos SOLO aplica al CREAR, y solo para
+  // cuentas Free con trial vencido. Durante el trial (28 días) hay acceso Pro.
+  const trialActive = isTrialActive(trialEndsAt);
+  const limitedPlan = plan === 'free' && !trialActive;
+  const productLimit = limitedPlan ? getProductLimit('free') : Infinity;
+  const planReached = limitedPlan && products.length >= productLimit;
   
   useEffect(() => {
     import('@/lib/supabase/client').then(({ createClient }) => {
@@ -56,8 +63,11 @@ export default function ProductsPage() {
       if (!user) return;
 
       const db = await getDbStatus();
-      const profileQuery = db.planColumn
-        ? supabase.from('profiles').select(db.planColumn).eq('id', user.id).maybeSingle()
+      const cols = [];
+      if (db.planColumn) cols.push(db.planColumn);
+      if (db.trialEnds) cols.push('trial_ends_at');
+      const profileQuery = cols.length
+        ? supabase.from('profiles').select(cols.join(', ')).eq('id', user.id).maybeSingle()
         : Promise.resolve({ data: null });
       const [categoriesRes, productsRes, profileRes] = await Promise.all([
         supabase.from('categories').select('*').eq('store_id', user.id).order('sort_order'),
@@ -65,9 +75,11 @@ export default function ProductsPage() {
         profileQuery,
       ]);
 
+      const profile = profileRes.data;
       setCategories(categoriesRes.data || []);
       setProducts(productsRes.data || []);
-      setPlan(profileRes.data?.[db.planColumn || 'plan_type'] || profileRes.data?.plan_type || profileRes.data?.plan || 'free');
+      setTrialEndsAt(profile?.trial_ends_at || null);
+      setPlan(profile?.[db.planColumn || 'plan_type'] || profile?.plan_type || profile?.plan || 'free');
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -197,7 +209,9 @@ export default function ProductsPage() {
           </div>
           <div className="flex items-center gap-3">
             <span className="hidden sm:inline text-xs font-semibold text-gray-500 dark:text-gray-400">
-              {plan === 'free' ? `Plan Gratuito · ${products.length}/${PLAN_LIMIT} productos` : '✦ Plan Pro'}
+              {trialActive ? '✨ Prueba Pro · sin límite de productos'
+                : plan === 'free' ? `Plan Gratuito · ${products.length}/${productLimit} productos`
+                : '✦ Plan Pro'}
             </span>
             <button
               onClick={() => { if (planReached) return; resetForm(); setEditingProduct(null); setShowModal(true); }}
@@ -217,10 +231,10 @@ export default function ProductsPage() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-2xl border border-amber-300/60 bg-amber-50 dark:bg-amber-950/20 p-4">
             <div>
               <p className="font-semibold text-amber-800 dark:text-amber-300">
-                ⚡ Has alcanzado el límite del Plan Gratuito ({products.length}/{PLAN_LIMIT})
+                ⚡ Has alcanzado el límite del Plan Gratuito ({products.length}/{productLimit})
               </p>
               <p className="text-sm text-amber-700 dark:text-amber-400 mt-0.5">
-                Actualiza a Pro para productos ilimitados.
+                Tus productos siguen siendo visibles en tu catálogo. Actualizá a Pro para seguir creando.
               </p>
             </div>
             <a

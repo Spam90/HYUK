@@ -1,10 +1,11 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  TrendingUp, DollarSign, ShoppingBag, Award, 
-  Calendar, ArrowUpRight, ArrowDownRight, Loader2 
+import {
+  TrendingUp, DollarSign, ShoppingBag, Award,
+  Calendar, ArrowUpRight, ArrowDownRight, Loader2,
+  Eye, MousePointerClick
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
@@ -19,6 +20,9 @@ export default function AnalyticsPage() {
     averageTicket: 0,
     topProduct: null,
     salesByDay: [],
+    totalVisits: 0,
+    whatsappClicks: 0,
+    conversion: 0,
   });
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -38,7 +42,7 @@ export default function AnalyticsPage() {
       }
 
       // Obtener todos los pedidos completados
-      // Si la tabla orders aún no existe, las métricas quedan en 0 (sin 404 en consola)
+      // Si la tabla orders aÃºn no existe, las mÃ©tricas quedan en 0 (sin 404 en consola)
       const db = await getDbStatus();
       if (!db.ordersTable) {
         setLoading(false);
@@ -54,12 +58,30 @@ export default function AnalyticsPage() {
 
       if (error) throw error;
 
-      // Calcular métricas
+      // Cargar eventos de analytics (visitas + clics WhatsApp) si la tabla existe
+      let totalVisits = 0;
+      let whatsappClicks = 0;
+      if (db.analyticsTable) {
+        try {
+          const { data: events } = await supabase
+            .from('analytics_events')
+            .select('event')
+            .eq('store_id', user.id);
+          const ev = events || [];
+          totalVisits = ev.filter((e) => e.event === 'page_view').length;
+          whatsappClicks = ev.filter((e) => e.event === 'whatsapp_click').length;
+        } catch {
+          // si falla analytics no romper el resto
+        }
+      }
+
+      // Calcular mÃ©tricas
       const totalSales = orders?.reduce((sum, order) => sum + parseFloat(order.total_amount), 0) || 0;
       const totalOrders = orders?.length || 0;
       const averageTicket = totalOrders > 0 ? totalSales / totalOrders : 0;
 
-      // Producto más vendido
+      const conversion = totalVisits > 0 ? (totalOrders / totalVisits) * 100 : 0;
+      // Producto mÃ¡s vendido
       const productCount = {};
       orders?.forEach(order => {
         order.items?.forEach(item => {
@@ -69,7 +91,7 @@ export default function AnalyticsPage() {
 
       const topProduct = Object.entries(productCount).sort((a, b) => b[1] - a[1])[0];
 
-      // Ventas por día (últimos 7 días)
+      // Ventas por dÃ­a (Ãºltimos 7 dÃ­as)
       const last7Days = [];
       const today = new Date();
       for (let i = 6; i >= 0; i--) {
@@ -94,6 +116,9 @@ export default function AnalyticsPage() {
         averageTicket,
         topProduct: topProduct ? { name: topProduct[0], quantity: topProduct[1] } : null,
         salesByDay: last7Days,
+        totalVisits,
+        whatsappClicks,
+        conversion,
       });
     } catch (error) {
       console.error('Error loading analytics:', error);
@@ -117,8 +142,8 @@ export default function AnalyticsPage() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-text mb-2">Analíticas de Ventas</h1>
-          <p className="text-text/60">Métricas y rendimiento de tu tienda</p>
+          <h1 className="text-3xl font-bold text-text mb-2">AnalÃ­ticas de Ventas</h1>
+          <p className="text-text/60">MÃ©tricas y rendimiento de tu tienda</p>
         </div>
 
         {/* KPI Cards */}
@@ -199,6 +224,55 @@ export default function AnalyticsPage() {
                 {analytics.topProduct.quantity} unidades vendidas
               </p>
             )}
+                    </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-card rounded-theme-xl p-6 border border-secondary/10 shadow-sm"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+                <Eye className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              </div>
+              <span className="flex items-center gap-1 text-xs font-medium text-blue-600 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg">
+                <ArrowUpRight className="w-3 h-3" />
+                <span>{analytics.conversion.toFixed(1)}%</span>
+              </span>
+            </div>
+            <p className="text-sm text-text/60 mb-1">Visitas del sitio</p>
+            <p className="text-3xl font-bold text-text">{analytics.totalVisits}</p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+            className="bg-card rounded-theme-xl p-6 border border-secondary/10 shadow-sm"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-900/20 flex items-center justify-center">
+                <MousePointerClick className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+              </div>
+            </div>
+            <p className="text-sm text-text/60 mb-1">Clics en WhatsApp</p>
+            <p className="text-3xl font-bold text-text">{analytics.whatsappClicks}</p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="bg-card rounded-theme-xl p-6 border border-secondary/10 shadow-sm"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
+                <TrendingUp className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+              </div>
+            </div>
+            <p className="text-sm text-text/60 mb-1">ConversiÃ³n</p>
+            <p className="text-3xl font-bold text-text">{analytics.conversion.toFixed(1)}%</p>
           </motion.div>
         </div>
 
@@ -211,7 +285,7 @@ export default function AnalyticsPage() {
         >
           <div className="flex items-center gap-2 mb-6">
             <Calendar className="w-5 h-5 text-primary" />
-            <h2 className="text-xl font-bold text-text">Ventas de los Últimos 7 Días</h2>
+            <h2 className="text-xl font-bold text-text">Ventas de los Ãšltimos 7 DÃ­as</h2>
           </div>
 
           <div className="flex items-end justify-between gap-2 h-64">
@@ -260,10 +334,22 @@ export default function AnalyticsPage() {
                 <span className="text-sm font-bold text-text">${analytics.averageTicket.toFixed(2)}</span>
               </div>
               <div className="flex items-center justify-between py-2">
-                <span className="text-sm text-text/60">Producto más vendido</span>
-                <span className="text-sm font-bold text-text line-clamp-1">
+                <span className="text-sm text-text/60">Producto mÃ¡s vendido</span>
+                                <span className="text-sm font-bold text-text line-clamp-1">
                   {analytics.topProduct?.name || 'N/A'}
                 </span>
+              </div>
+              <div className="flex items-center justify-between py-2 border-t border-secondary/10">
+                <span className="text-sm text-text/60">Visitas del sitio</span>
+                <span className="text-sm font-bold text-text">{analytics.totalVisits}</span>
+              </div>
+              <div className="flex items-center justify-between py-2 border-t border-secondary/10">
+                <span className="text-sm text-text/60">Clics en WhatsApp</span>
+                <span className="text-sm font-bold text-text">{analytics.whatsappClicks}</span>
+              </div>
+              <div className="flex items-center justify-between py-2 border-t border-secondary/10">
+                <span className="text-sm text-text/60">Conversión</span>
+                <span className="text-sm font-bold text-text">{analytics.conversion.toFixed(1)}%</span>
               </div>
             </div>
           </motion.div>
@@ -281,16 +367,16 @@ export default function AnalyticsPage() {
                 <div>
                   <p className="text-sm font-medium text-text">Aumenta tu visibilidad</p>
                   <p className="text-xs text-text/60 mt-1">
-                    Comparte tu catálogo en redes sociales para atraer más clientes
+                    Comparte tu catÃ¡logo en redes sociales para atraer mÃ¡s clientes
                   </p>
                 </div>
               </div>
               <div className="flex items-start gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
                 <Award className="w-5 h-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-text">Optimiza tu menú</p>
+                  <p className="text-sm font-medium text-text">Optimiza tu menÃº</p>
                   <p className="text-xs text-text/60 mt-1">
-                    Destaca tus productos más populares en la portada
+                    Destaca tus productos mÃ¡s populares en la portada
                   </p>
                 </div>
               </div>

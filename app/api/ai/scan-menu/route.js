@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { hasAiFeatureAccess, aiUpgradeError } from '@/lib/ai-guard';
 
 // Prompt de sistema para el análisis de menús
 const SYSTEM_PROMPT = `Eres un asistente de IA especializado en extraer información estructurada de menús y catálogos físicos.
@@ -33,6 +34,11 @@ export async function POST(request) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       return Response.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
+    // La generación con IA es beneficio Pro / Trial (regla de negocio v2)
+    if (!(await hasAiFeatureAccess(supabase, user.id))) {
+      return aiUpgradeError();
     }
 
     const body = await request.json();

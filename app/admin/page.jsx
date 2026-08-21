@@ -25,6 +25,7 @@ export default function AdminDashboard() {
     const [isStoreOpen, setIsStoreOpen] = useState(true);
   const [togglingOpen, setTogglingOpen] = useState(false);
   const [planType, setPlanType] = useState('free');
+  const [trialEndsAt, setTrialEndsAt] = useState(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -43,6 +44,7 @@ export default function AdminDashboard() {
         'slug',
         ...(db.isOpen ? ['is_open'] : []),
         ...(db.planColumn ? [db.planColumn] : []),
+        ...(db.trialEnds ? ['trial_ends_at'] : []),
       ].join(', ');
       const { data: profile } = await supabase
         .from('profiles')
@@ -54,6 +56,7 @@ export default function AdminDashboard() {
         setStoreUrl(`${profile.slug}.hyuk.app`);
       }
       setIsStoreOpen(profile?.is_open !== false);
+      setTrialEndsAt(profile?.trial_ends_at || null);
       setPlanType(
         (db.planColumn && profile?.[db.planColumn]) ||
         profile?.plan ||
@@ -401,7 +404,7 @@ export default function AdminDashboard() {
                         })}
           </div>
 
-          <PlanUpgradeCard plan={planType} />
+          <PlanUpgradeCard plan={planType} trialEndsAt={trialEndsAt} />
 
           {/* Control Rápido: Estado de la tienda + QR */}
           <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
