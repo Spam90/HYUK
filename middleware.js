@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { extractSubdomain, isSystemSubdomain } from '@/lib/domains';
+import { getStoreIdBySlug } from '@/lib/tenant';
 
 // Rutas públicas que no requieren autenticación
 const PUBLIC_PATHS = ['/login', '/signup', '/demo', '/'];
@@ -64,13 +65,9 @@ export async function middleware(request) {
 
   if (subdomain && !isSystemSubdomain(subdomain) && !pathname.startsWith('/admin')) {
     try {
-      const { data: store } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('slug', subdomain)
-        .maybeSingle();
-
-      if (store) {
+      // Usa caché en memoria (lib/tenant) para no golpear Supabase en cada request.
+      const storeId = await getStoreIdBySlug(supabase, subdomain);
+      if (storeId) {
         const url = request.nextUrl.clone();
         url.pathname = `/${subdomain}`;
         return NextResponse.rewrite(url);

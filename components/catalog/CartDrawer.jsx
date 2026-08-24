@@ -28,7 +28,8 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
   const [deliveryMethod, setDeliveryMethod] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
   const [notes, setNotes] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isStripeLoading, setIsStripeLoading] = useState(false);
 
   // Estado de cupones
   const [couponCode, setCouponCode] = useState('');
@@ -217,6 +218,106 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
       alert('Error al procesar el pedido. Por favor intenta de nuevo.');
     } finally {
       setIsSubmitting(false);
+    }
+    };
+
+  // Pagar con Stripe (checkout real). Si no hay pasarela configurada,
+  // el endpoint devuelve 402 y hacemos fallback graceful al WhatsApp.
+  const handleStripeCheckout = async () => {
+    if (!isOpen) {
+      alert('La tienda está cerrada en este momento. Vuelve en el horario de atención 🕓');
+      return;
+    }
+    if (checkoutConfig.requireClientName && !customerName) {
+      alert('Por favor ingresa tu nombre');
+      return;
+    }
+    if (checkoutConfig.askForAddress && !customerAddress) {
+      alert('Por favor ingresa tu dirección');
+      return;
+    }
+    if (checkoutConfig.deliveryMethods?.length > 0 && !deliveryMethod) {
+      alert('Por favor selecciona el tipo de entrega');
+      return;
+    }
+
+    setIsStripeLoading(true);
+    let orderId = null;
+
+    try {
+      if (store?.id) {
+        track(store.id, 'checkoutStart', { total: totalWithDelivery, payment: 'stripe' });
+      }
+
+      // 1) Crear la orden (estado pending / payment_status pending)
+      const { createOrder } = await import('@/lib/orders');
+      const orderResult = await createOrder({
+        storeId: store?.id,
+        customerName,
+        customerPhone: '',
+        deliveryAddress: customerAddress,
+        deliveryMethod: deliveryMethod,
+        paymentMethod: 'online',
+        items: cartItems,
+        total: totalWithDelivery,
+        notes: notes.trim(),
+        couponCode: activeCoupon?.code || null,
+        discountAmount: couponDiscount,
+        deliveryZone: isHomeDelivery ? deliveryZone?.label || '' : '',
+        deliveryFee: isHomeDelivery ? deliveryFee : 0,
+        payment_provider: 'stripe',
+        payment_status: 'pending',
+      });
+
+      orderId = orderResult.success ? orderResult.order?.id : null;
+      if (!orderResult.success) {
+        console.warn('No se pudo guardar la orden (continuamos):', orderResult.error);
+      }
+
+      // 2) Crear preferencia / checkout de Stripe
+      const res = await fetch('/api/checkout/create-preference', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mode: 'payment',
+          storeId: store?.id,
+          orderId,
+          items: cartItems,
+          total: totalWithDelivery,
+          currency: storeCurrency,
+          description: `${storeName} · Pedido${orderId ? ' #' + orderId : ''}`,
+          customer: {
+            name: customerName,
+            phone: '',
+            address: customerAddress,
+            notes: notes.trim(),
+          },
+          successUrl: orderId ? `${window.location.origin}/pedido/${orderId}?paid=1` : undefined,
+          cancelUrl: window.location.href,
+        }),
+      });
+
+      const json = await res.json().catch(() => null);
+
+      if (json?.ok && json.url) {
+        // Redirigir al checkout de Stripe
+        window.location.href = json.url;
+        return;
+      }
+
+      // Sin pasarela o error → fallback graceful a WhatsApp
+      const msg = json?.error || res.statusText || 'Pasarela no disponible';
+      console.warn('[checkout] Stripe no disponible:', msg);
+      alert('El pago online no está disponible en este momento. Se abrirá WhatsApp. 🛒');
+      closeCart(); // el handler de WhatsApp crea su propia orden
+      handleWhatsAppCheckout();
+    } catch (err) {
+      console.error('[checkout] Error en pago Stripe:', err);
+      alert('Error iniciando el pago. Se abrirá WhatsApp. 🙏');
+      closeCart();
+      handleWhatsAppCheckout();
+    } finally {
+      setIsStripeLoading(false);
     }
   };
 
@@ -624,6 +725,23 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
                       className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none focus:border-primary/50 resize-none"
                     />
                   </div>
+
+                                      {/* Stripe Button - real checkout (graceful fallback to WhatsApp) */}
+                   <motion.button
+                     whileTap={{ scale: 0.98 }}
+                     onClick={handleStripeCheckout}
+                     disabled={isStripeLoading || isSubmitting || !isOpen}
+                     className="w-full py-3 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl flex items-center justify-center gap-2 disabled:opacity-60 shadow"
+                   >
+                     {isStripeLoading ? (
+                       <span className="animate-pulse">Redirigiendo al pago…</span>
+                     ) : (
+                       <>
+                         <CreditCard className="w-5 h-5" />
+                         <span>Pagar con tarjeta (Stripe)</span>
+                       </>
+                     )}
+                   </motion.button>
 
                    {/* WhatsApp Button - High Impact */}
                    <motion.button

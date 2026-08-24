@@ -23,6 +23,7 @@ export default function AnalyticsPage() {
     totalVisits: 0,
     whatsappClicks: 0,
     conversion: 0,
+      funnel: [],
   });
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -58,9 +59,16 @@ export default function AnalyticsPage() {
 
       if (error) throw error;
 
-      // Cargar eventos de analytics (visitas + clics WhatsApp) si la tabla existe
+                  // Cargar eventos de analytics (funnel + clics WhatsApp) si la tabla existe
       let totalVisits = 0;
       let whatsappClicks = 0;
+      const funnelStages = {
+        page_view: 0,
+        add_to_cart: 0,
+        checkout_start: 0,
+        whatsapp_click: 0,
+        purchase: 0,
+      };
       if (db.analyticsTable) {
         try {
           const { data: events } = await supabase
@@ -70,10 +78,21 @@ export default function AnalyticsPage() {
           const ev = events || [];
           totalVisits = ev.filter((e) => e.event === 'page_view').length;
           whatsappClicks = ev.filter((e) => e.event === 'whatsapp_click').length;
+          ev.forEach((e) => {
+            if (e.event in funnelStages) funnelStages[e.event] += 1;
+          });
         } catch {
           // si falla analytics no romper el resto
         }
       }
+      // Etapas del funnel con label e icono para el dashboard
+      const funnel = [
+        { label: 'Visitas', event: 'page_view', count: funnelStages.page_view, icon: '👁️' },
+        { label: 'Añadió al carrito', event: 'add_to_cart', count: funnelStages.add_to_cart, icon: '🛒' },
+        { label: 'Inició checkout', event: 'checkout_start', count: funnelStages.checkout_start, icon: '💳' },
+        { label: 'Clic WhatsApp', event: 'whatsapp_click', count: funnelStages.whatsapp_click, icon: '🔗' },
+        { label: 'Pedidos', event: 'purchase', count: funnelStages.purchase, icon: '✅' },
+      ];
 
       // Calcular mÃ©tricas
       const totalSales = orders?.reduce((sum, order) => sum + parseFloat(order.total_amount), 0) || 0;
@@ -110,7 +129,7 @@ export default function AnalyticsPage() {
         });
       }
 
-      setAnalytics({
+                              setAnalytics({
         totalSales,
         totalOrders,
         averageTicket,
@@ -119,6 +138,7 @@ export default function AnalyticsPage() {
         totalVisits,
         whatsappClicks,
         conversion,
+        funnel,
       });
     } catch (error) {
       console.error('Error loading analytics:', error);
@@ -311,6 +331,65 @@ export default function AnalyticsPage() {
           </div>
         </motion.div>
 
+        {/* Funnel de conversión */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-card rounded-theme-xl p-6 border border-secondary/10 shadow-sm mb-8"
+        >
+          <h3 className="text-lg font-bold text-text mb-4">Funnel de conversión</h3>
+          {analytics.funnel && analytics.funnel.length > 0 && (() => {
+            const maxFunnel = Math.max(
+              1,
+              ...analytics.funnel.map((s) => s.count)
+            );
+            const first = analytics.funnel[0].count;
+            const last = analytics.funnel[analytics.funnel.length - 1].count;
+            const rate = first > 0 ? (last / first) * 100 : 0;
+            return (
+              <div className="space-y-3">
+                {analytics.funnel.map((stage, index) => {
+                  const widthPct = maxFunnel > 0 ? (stage.count / maxFunnel) * 100 : 0;
+                  const drop = index > 0
+                    ? Math.round(((analytics.funnel[index - 1].count - stage.count) /
+                      (analytics.funnel[index - 1].count || 1)) * 100)
+                    : 0;
+                  return (
+                    <div key={stage.event} className="space-y-1">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-base">{stage.icon}</span>
+                          <span className="text-sm font-medium text-text">{stage.label}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-text/60">
+                          <span className="font-bold text-text">{stage.count}</span>
+                          {index > 0 && (
+                            <span className={`text-xs font-medium ${drop >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                              (−{Math.abs(drop)}%)
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="relative h-6 bg-secondary/10 rounded-lg overflow-hidden">
+                        <motion.div
+                          className="h-full bg-gradient-to-t from-primary to-accent rounded-lg flex items-center"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${widthPct}%` }}
+                          transition={{ delay: index * 0.1, duration: 0.5 }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+                <div className="flex items-center justify-between pt-1 text-sm">
+                  <span className="text-text/60">Conversión total</span>
+                  <span className="font-bold text-emerald-400">{rate.toFixed(1)}%</span>
+                </div>
+              </div>
+            );
+          })()}
+        </motion.div>
         {/* Additional Insights */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <motion.div

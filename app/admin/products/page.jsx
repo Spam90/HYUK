@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import ProductModal from '@/components/admin/ProductModal';
 import { getDbStatus } from '@/lib/db-status';
 import { getProductLimit, isTrialActive } from '@/lib/config/plans';
+import { getStockLevels, STOCK_LOW_THRESHOLD } from '@/lib/inventory';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,9 +21,11 @@ export default function ProductsPage() {
   const [editingProduct, setEditingProduct] = useState(null);
   const router = useRouter();
   
-  const [supabase, setSupabase] = useState(null);
+    const [supabase, setSupabase] = useState(null);
   const [plan, setPlan] = useState('free');
   const [trialEndsAt, setTrialEndsAt] = useState(null);
+  // Map product_id -> { total, low } (cargado de product_skus; null si tabla inexistente)
+  const [stockLevels, setStockLevels] = useState(null);
 
   // Regla de negocio v2: el límite de productos SOLO aplica al CREAR, y solo para
   // cuentas Free con trial vencido. Durante el trial (28 días) hay acceso Pro.
@@ -75,10 +78,18 @@ export default function ProductsPage() {
         profileQuery,
       ]);
 
-      const profile = profileRes.data;
+            const profile = profileRes.data;
       setCategories(categoriesRes.data || []);
       setProducts(productsRes.data || []);
       setTrialEndsAt(profile?.trial_ends_at || null);
+
+      // Inventario (SKUs) — tolera la tabla inexistente (migración 09)
+      try {
+        const levels = await getStockLevels(user.id, supabase);
+        setStockLevels(levels);
+      } catch (invErr) {
+        setStockLevels(null);
+      }
       setPlan(profile?.[db.planColumn || 'plan_type'] || profile?.plan_type || profile?.plan || 'free');
     } catch (error) {
       console.error('Error loading data:', error);
@@ -290,6 +301,19 @@ export default function ProductsPage() {
           )}
         </div>
 
+          {/* Banner de alerta de stock bajo */}
+          {stockLevels &&
+            (() => {
+              const low = Array.from(stockLevels.values()).filter((v) => v.low).length;
+              if (low === 0) return null;
+              return (
+                <div className="mb-4 flex items-center gap-2 rounded-xl bg-red-50 dark:bg-red-900/20 px-3 py-2 text-sm text-red-700 dark:text-red-300">
+                  <Package className="w-4 h-4" />
+                  <span>⚠ {low} producto(s) con stock bajo (≤ {STOCK_LOW_THRESHOLD}).</span>
+                </div>
+              );
+            })()}
+
         {/* Products List - Mobile First Cards */}
         {filteredProducts.length === 0 ? (
           <div className="text-center py-12 bg-white dark:bg-zinc-900 rounded-2xl border border-gray-200 dark:border-zinc-800">
@@ -331,13 +355,31 @@ export default function ProductsPage() {
                         <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1 mt-0.5">
                           {product.description}
                         </p>
-                        <div className="flex items-center gap-2 mt-1.5">
+                                                <div className="flex items-center gap-2 mt-1.5">
                           <span className="text-sm font-bold text-primary">
                             ${parseFloat(product.price).toFixed(2)}
                           </span>
                           {product.original_price && (
                             <span className="text-xs text-gray-400 line-through">
                               ${parseFloat(product.original_price).toFixed(2)}
+                            </span>
+                          )}
+                          {/* Badge de stock (SKU) */}
+                          {stockLevels?.has(product.id) ? (
+                            <span
+                              className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                                stockLevels.get(product.id).low
+                                  ? 'bg-red-100 text-red-700'
+                                  : 'bg-green-100 text-green-700'
+                              }`}
+                              title="Stock disponible (suma de SKUs activos)"
+                            >
+                              <Package className="w-3 h-3 mr-0.5" />
+                              {stockLevels.get(product.id).total}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-500">
+                              Sin SKU
                             </span>
                           )}
                         </div>

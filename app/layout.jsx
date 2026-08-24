@@ -1,6 +1,7 @@
 import { Inter } from 'next/font/google';
 import './globals.css';
 import PWAProvider from '@/components/PWAProvider';
+import PWAInstallBanner from '@/components/PWAInstallBanner';
 import AppThemeProvider from '@/components/theme/AppThemeProvider';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -45,9 +46,10 @@ export default function RootLayout({ children }) {
         <link rel="manifest" href="/manifest.json" />
       </head>
       <body className={inter.className} suppressHydrationWarning>
-        <AppThemeProvider>
+                <AppThemeProvider>
           {children}
           <PWAProvider />
+          <PWAInstallBanner />
         </AppThemeProvider>
       </body>
     </html>
