@@ -52,8 +52,7 @@ async function checkSupabaseConnection() {
     // Intentar una consulta simple para verificar la conexión
     const { data, error } = await supabase
       .from('profiles')
-      .select('count')
-      .limit(1);
+      .select('*', { count: 'exact', head: true });
 
     if (error && error.code !== '42P01') { // Ignorar error de tabla no existente
       throw error;
@@ -86,8 +85,7 @@ async function checkTables(supabase) {
     try {
       const { data, error } = await supabase
         .from(table.name)
-        .select('count')
-        .limit(1);
+        .select('*', { count: 'exact', head: true });
 
       if (error && error.code === '42P01') {
         log.error(`Tabla '${table.name}' NO EXISTE`);

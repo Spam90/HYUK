@@ -48,13 +48,12 @@ export default function CategoriesPage() {
       const { data: { user } } = await client.auth.getUser();
       if (!user) return;
 
-      const { data } = await client
-        .from('categories')
-        .select('*')
-        .eq('store_id', user.id)
-        .order('sort_order');
+      // Vía /api/store-data (service_role server-side): evita políticas RLS rotas
+      const r = await fetch('/api/store-data?type=categories')
+        .then((x) => x.json())
+        .catch(() => ({}));
 
-      setCategories(data || []);
+      setCategories(r.data || []);
     } catch (error) {
       console.warn('[Categories] No se pudieron cargar categorías:', error?.message);
     } finally {

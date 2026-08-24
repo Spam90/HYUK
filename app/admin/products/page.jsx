@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import ProductModal from '@/components/admin/ProductModal';
 import { getDbStatus } from '@/lib/db-status';
 import { getProductLimit, isTrialActive } from '@/lib/config/plans';
-import { getStockLevels, STOCK_LOW_THRESHOLD } from '@/lib/inventory';
+import { STOCK_LOW_THRESHOLD } from '@/lib/inventory';
 
 export const dynamic = 'force-dynamic';
 
@@ -72,24 +72,22 @@ export default function ProductsPage() {
       const profileQuery = cols.length
         ? supabase.from('profiles').select(cols.join(', ')).eq('id', user.id).maybeSingle()
         : Promise.resolve({ data: null });
-      const [categoriesRes, productsRes, profileRes] = await Promise.all([
-        supabase.from('categories').select('*').eq('store_id', user.id).order('sort_order'),
-        supabase.from('products').select('*').eq('store_id', user.id).order('sort_order'),
+      // Lecturas vía /api/store-data (service_role server-side) — evita
+      // las políticas RLS rotas (request.store_slug) del rol autenticado.
+      const [catR, prodR, skuR, profileRes] = await Promise.all([
+        fetch('/api/store-data?type=categories').then((r) => r.json()).catch(() => ({})),
+        fetch('/api/store-data?type=products').then((r) => r.json()).catch(() => ({})),
+        fetch('/api/store-data?type=skus').then((r) => r.json()).catch(() => ({})),
         profileQuery,
       ]);
 
             const profile = profileRes.data;
-      setCategories(categoriesRes.data || []);
-      setProducts(productsRes.data || []);
+      setCategories(catR.data || []);
+      setProducts(prodR.data || []);
       setTrialEndsAt(profile?.trial_ends_at || null);
 
-      // Inventario (SKUs) — tolera la tabla inexistente (migración 09)
-      try {
-        const levels = await getStockLevels(user.id, supabase);
-        setStockLevels(levels);
-      } catch (invErr) {
-        setStockLevels(null);
-      }
+      // Inventario (SKUs): objeto plano -> Map para la UI
+      setStockLevels(skuR.data ? new Map(Object.entries(skuR.data)) : null);
       setPlan(profile?.[db.planColumn || 'plan_type'] || profile?.plan_type || profile?.plan || 'free');
     } catch (error) {
       console.error('Error loading data:', error);

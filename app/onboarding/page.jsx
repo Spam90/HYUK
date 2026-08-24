@@ -134,12 +134,10 @@ const goBack = () => setStep((s) => Math.max(0, s - 1));
       if (catError && !/duplicate/i.test(catError.message || '')) throw catError;
       // 3) Primer producto (opcional)
       if (!skipProduct && productName.trim()) {
-        const { data: firstCat } = await supabase
-          .from('categories')
-          .select('id')
-          .eq('store_id', user.id)
-          .eq('name', 'Productos Destacados')
-          .maybeSingle();
+        const catR = await fetch('/api/store-data?type=categories')
+          .then((x) => x.json())
+          .catch(() => ({}));
+        const firstCat = (catR.data || []).find((c) => c.name === 'Productos Destacados') || null;
         const { error: prodError } = await supabase
           .from('products')
           .insert({

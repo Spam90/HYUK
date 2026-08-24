@@ -1,0 +1,76 @@
+// =============================================================
+// /api/store-data — lectura de products/categories/product_skus
+// vía service_role (bypassea las políticas RLS rotas que dependen
+// del parámetro inexistente request.store_slug).
+//
+// SEGURIDAD:
+//  - Exige sesión válida (cookie Supabase).
+//  - store_id SIEMPRE se fuerza al usuario autenticado; cualquier
+//    storeId del query string se ignora → sin fugas cross-tenant.
+// =============================================================
+import { NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/service-role';
+import { getStockLevels } from '@/lib/inventory';
+
+export const dynamic = 'force-dynamic';
+
+function json(obj, status = 200) {
+  return new Response(JSON.stringify(obj), {
+    status,
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+  });
+}
+
+export async function GET(req) {
+  try {
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return json({ ok: false, error: 'No autenticado' }, 401);
+
+    const admin = createServiceClient();
+    if (!admin) {
+      return json(
+        { ok: false, error: 'SUPABASE_SERVICE_ROLE_KEY no configurada en el servidor' },
+        503
+      );
+    }
+
+    const storeId = user.id; // SIEMPRE el dueño de la sesión
+    const { searchParams } = new URL(req.url);
+    const type = searchParams.get('type');
+
+    if (type === 'products') {
+      const { data, error } = await admin
+        .from('products')
+        .select('*')
+        .eq('store_id', storeId)
+        .order('sort_order');
+      if (error) throw error;
+      return json({ ok: true, data });
+    }
+
+    if (type === 'categories') {
+      const { data, error } = await admin
+        .from('categories')
+        .select('*')
+        .eq('store_id', storeId)
+        .order('sort_order');
+      if (error) throw error;
+      return json({ ok: true, data });
+    }
+
+    if (type === 'skus') {
+      const levels = await getStockLevels(storeId, admin);
+      // Map -> objeto plano serializable
+      const out = {};
+      levels.forEach((v, k) => { out[k] = v; });
+      return json({ ok: true, data: out });
+    }
+
+    return json({ ok: false, error: `type inválido: ${type}` }, 400);
+  } catch (err) {
+    console.error('[store-data]', err?.message);
+    return json({ ok: false, error: err?.message || 'Error interno' }, 500);
+  }
+}

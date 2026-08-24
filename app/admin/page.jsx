@@ -68,7 +68,7 @@ export default function AdminDashboard() {
       // o falla en Supabase, devolvemos 0 en lugar de romper el dashboard)
       const safeCount = async (table, filters = []) => {
         try {
-          let query = supabase.from(table).select('count', { count: 'exact', head: true });
+          let query = supabase.from(table).select('*', { count: 'exact', head: true });
           filters.forEach((f) => { query = query.eq(f.column, f.value); });
           const { count, error } = await query;
           if (error) throw error;

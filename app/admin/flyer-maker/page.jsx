@@ -26,15 +26,15 @@ export default function FlyerMakerPage() {
         if (!user) return;
         Promise.all([
           supabase.from('profiles').select('slug, business_name').eq('id', user.id).maybeSingle(),
-          supabase.from('products').select('*').eq('store_id', user.id).order('sort_order'),
-        ]).then(([profileRes, productsRes]) => {
+          fetch('/api/store-data?type=products').then((r) => r.json()).catch(() => ({})),
+        ]).then(([profileRes, prodR]) => {
           if (cancelled) return;
           const profile = profileRes?.data || {};
           const s = profile?.slug || 'mi-tienda';
           setSlug(s);
           setStoreName(profile?.business_name || 'Mi Tienda');
           setStoreUrl(`https://${s}.hyuk.app`);
-          const list = productsRes?.data || [];
+          const list = prodR?.data || [];
           setProducts(list);
           if (list.length > 0) setSelectedId(list[0].id);
         });

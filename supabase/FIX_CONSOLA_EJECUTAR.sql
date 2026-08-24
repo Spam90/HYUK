@@ -287,26 +287,40 @@ BEGIN
 END;
 $$;
 DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'orders_no_store_change') THEN
-    CREATE TRIGGER orders_no_store_change BEFORE UPDATE ON public.orders FOR EACH ROW EXECUTE FUNCTION public.prevent_store_change();
+  -- orders
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'orders')
+  AND NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'orders_no_store_change') THEN
+    EXECUTE $trigger$CREATE TRIGGER orders_no_store_change BEFORE UPDATE ON public.orders FOR EACH ROW EXECUTE FUNCTION public.prevent_store_change()$trigger$;
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'products_no_store_change') THEN
-    CREATE TRIGGER products_no_store_change BEFORE UPDATE ON public.products FOR EACH ROW EXECUTE FUNCTION public.prevent_store_change();
+  -- products
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'products')
+  AND NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'products_no_store_change') THEN
+    EXECUTE $trigger$CREATE TRIGGER products_no_store_change BEFORE UPDATE ON public.products FOR EACH ROW EXECUTE FUNCTION public.prevent_store_change()$trigger$;
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'categories_no_store_change') THEN
-    CREATE TRIGGER categories_no_store_change BEFORE UPDATE ON public.categories FOR EACH ROW EXECUTE FUNCTION public.prevent_store_change();
+  -- categories
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'categories')
+  AND NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'categories_no_store_change') THEN
+    EXECUTE $trigger$CREATE TRIGGER categories_no_store_change BEFORE UPDATE ON public.categories FOR EACH ROW EXECUTE FUNCTION public.prevent_store_change()$trigger$;
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'customers_no_store_change') THEN
-    CREATE TRIGGER customers_no_store_change BEFORE UPDATE ON public.customers FOR EACH ROW EXECUTE FUNCTION public.prevent_store_change();
+  -- customers
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'customers')
+  AND NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'customers_no_store_change') THEN
+    EXECUTE $trigger$CREATE TRIGGER customers_no_store_change BEFORE UPDATE ON public.customers FOR EACH ROW EXECUTE FUNCTION public.prevent_store_change()$trigger$;
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'coupons_no_store_change') THEN
-    CREATE TRIGGER coupons_no_store_change BEFORE UPDATE ON public.coupons FOR EACH ROW EXECUTE FUNCTION public.prevent_store_change();
+  -- coupons
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'coupons')
+  AND NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'coupons_no_store_change') THEN
+    EXECUTE $trigger$CREATE TRIGGER coupons_no_store_change BEFORE UPDATE ON public.coupons FOR EACH ROW EXECUTE FUNCTION public.prevent_store_change()$trigger$;
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'order_items_no_store_change') THEN
-    CREATE TRIGGER order_items_no_store_change BEFORE UPDATE ON public.order_items FOR EACH ROW EXECUTE FUNCTION public.prevent_store_change();
+  -- order_items
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'order_items')
+  AND NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'order_items_no_store_change') THEN
+    EXECUTE $trigger$CREATE TRIGGER order_items_no_store_change BEFORE UPDATE ON public.order_items FOR EACH ROW EXECUTE FUNCTION public.prevent_store_change()$trigger$;
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'product_skus_no_store_change') THEN
-    CREATE TRIGGER product_skus_no_store_change BEFORE UPDATE ON public.product_skus FOR EACH ROW EXECUTE FUNCTION public.prevent_store_change();
+  -- product_skus
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'product_skus')
+  AND NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'product_skus_no_store_change') THEN
+    EXECUTE $trigger$CREATE TRIGGER product_skus_no_store_change BEFORE UPDATE ON public.product_skus FOR EACH ROW EXECUTE FUNCTION public.prevent_store_change()$trigger$;
   END IF;
 END $$;
 

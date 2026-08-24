@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { DEFAULT_SETTINGS } from '@/lib/theme/defaults';
+import { createServiceClient } from '@/lib/supabase/service-role';
 import CatalogView from './CatalogView';
 
 // Generar metadatos dinámicos para SEO
@@ -67,6 +68,9 @@ export const revalidate = 60;
 
 export default async function StorePage({ params }) {
   const supabase = createClient();
+  // service_role bypassea las políticas RLS rotas (request.store_slug).
+  // Fallback al cliente anónimo si la key no está configurada.
+  const db = createServiceClient() || supabase;
 
     // Obtener datos de la tienda (con fallback seguro)
   let store = null;
@@ -86,7 +90,7 @@ export default async function StorePage({ params }) {
   // Obtener categorías de la tienda con revalidación
   let categories = [];
   try {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('categories')
       .select('*')
       .eq('store_id', store.id)
@@ -102,7 +106,7 @@ export default async function StorePage({ params }) {
   // Obtener productos de la tienda con revalidación
   let products = [];
   try {
-    const { data, error } = await supabase
+    const { data, error } = await db
       .from('products')
       .select('*')
       .eq('store_id', store.id)
@@ -120,7 +124,7 @@ export default async function StorePage({ params }) {
   let productOptions = [];
   if (productIds.length > 0) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from('product_options')
         .select('*')
         .in('product_id', productIds)
