@@ -109,11 +109,17 @@ export default function ProductsPage() {
 
       const productData = {
         ...formData,
-        price: parseFloat(formData.price),
+        // Sanitizar: '' → null en campos numéricos/fecha para que PostgREST
+        // no devuelva 400 (no puede castear string vacío a numeric/timestamptz).
+        price: parseFloat(formData.price) || 0,
         original_price: formData.original_price ? parseFloat(formData.original_price) : null,
+        flash_sale_price: formData.flash_sale_price ? parseFloat(formData.flash_sale_price) : null,
+        flash_sale_end: formData.flash_sale_end || null,
+        image_url: formData.image_url || null,
+        badge: formData.badge || null,
+        is_featured: Boolean(formData.is_featured),
         store_id: user.id,
         category_id: formData.category_id || null,
-        badge: formData.badge || null,
       };
 
       let error;

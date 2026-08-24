@@ -26,15 +26,24 @@ export async function POST(request) {
     // Verificar API key
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      console.error('GEMINI_API_KEY no está configurada');
+      console.error('[ai] GEMINI_API_KEY no está configurada (Vercel env)');
       return Response.json(
-        { error: 'La API de IA no está configurada. Contacta al administrador.' },
+        { error: 'La IA no está habilitada: falta configurar GEMINI_API_KEY en el entorno del servidor.' },
         { status: 500 }
       );
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    let model;
+    try {
+      model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    } catch (modelErr) {
+      console.error('[ai] Modelo no disponible:', modelErr?.message);
+      return Response.json(
+        { error: 'No se pudo inicializar el modelo de IA. Contacta al administrador.' },
+        { status: 500 }
+      );
+    }
 
     const prompt = `
 Actúa como un experto en marketing de comercio electrónico.
