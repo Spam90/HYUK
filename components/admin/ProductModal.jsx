@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { X, Sparkles, Loader2 } from 'lucide-react';
+import ImageUploader from '@/components/admin/ImageUploader';
 
 /**
  * ProductModal - Modal de creación/edición de productos.
@@ -172,43 +173,14 @@ export default function ProductModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">URL de Imagen</label>
-            <input
-              type="text"
-              value={formData.image_url}
-              onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-              placeholder="https://..."
-              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-800 text-sm focus:outline-none focus:border-primary/50"
-            />
-          </div>
-
-          <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
-              Descripción
+              🖼️ Imagen del producto
             </label>
-            <div className="flex items-end gap-2">
-              <textarea
-                value={formData.description || ''}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                rows={3}
-                placeholder="Descripción atractiva del producto..."
-                className="flex-1 w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-800 text-sm focus:outline-none focus:border-primary/50 resize-none"
-              />
-              <motion.button
-                type="button"
-                whileTap={{ scale: 0.9 }}
-                onClick={handleGenerateDescription}
-                disabled={generatingDescription}
-                title="Generar descripción con IA"
-                className="shrink-0 p-3 rounded-xl bg-gradient-to-r from-primary to-accent text-white shadow-lg disabled:opacity-60 hover:opacity-90 transition-opacity mb-1"
-              >
-                {generatingDescription ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <Sparkles className="w-5 h-5" />
-                )}
-              </motion.button>
-            </div>
+            <ImageUploader
+              value={formData.image_url}
+              onChange={(url) => setFormData({ ...formData, image_url: url })}
+              folder="products"
+            />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

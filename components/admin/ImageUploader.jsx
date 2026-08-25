@@ -2,20 +2,18 @@
 
 import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Upload, X, Loader2, Check, Image as ImageIcon } from 'lucide-react';
+import { Upload, X, Loader2, Check, Image as ImageIcon, Camera } from 'lucide-react';
 
 export default function ImageUploader({
   value,
   onChange,
-  bucket = 'store-assets',
+  bucket = 'products',
   folder = 'products',
-  accept = 'image/*',
-  maxSize = 5 * 1024 * 1024, // 5MB
+  maxSize = 8 * 1024 * 1024, // 8MB
 }) {
   const [isUploading, setIsUploading] = useState(false);
   const [error, setError] = useState('');
   const [preview, setPreview] = useState(value || null);
-  const [isDragging, setIsDragging] = useState(false);
 
   const uploadImage = useCallback(async (file) => {
     if (!file) return;
@@ -28,86 +26,60 @@ export default function ImageUploader({
 
     // Validar tamaño
     if (file.size > maxSize) {
-      setError(`La imagen no debe superar los ${maxSize / 1024 / 1024}MB`);
+      setError(`La imagen no debe superar los ${Math.round(maxSize / 1024 / 1024)}MB`);
       return;
     }
 
     setError('');
     setIsUploading(true);
 
+    // Preview local instantáneo (la cámara del celular trae un blob)
     try {
-      // Lazy load Supabase client
-      const { createClient } = await import('@/lib/supabase/client');
-      const supabase = createClient();
+      setPreview(URL.createObjectURL(file));
+    } catch { /* noop */ }
 
-      // Obtener usuario autenticado
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setError('Debes estar autenticado para subir imágenes');
-        setIsUploading(false);
-        return;
-      }
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('folder', folder);
 
-      // Generar nombre único para el archivo
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-      const filePath = `${user.id}/${folder}/${fileName}`;
+      const res = await fetch('/api/upload', { method: 'POST', body: fd });
+      const result = await res.json().catch(() => ({}));
 
-      // Subir archivo a Supabase Storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from(bucket)
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false,
-        });
+      if (!res.ok) throw new Error(result.error || `HTTP ${res.status}`);
+      if (!result.ok) throw new Error(result.error || 'Error al subir la imagen');
 
-      if (uploadError) throw uploadError;
-
-      // Obtener URL pública
-      const { data: { publicUrl } } = supabase.storage
-        .from(bucket)
-        .getPublicUrl(filePath);
-
-      // Actualizar preview y valor
-      setPreview(publicUrl);
-      onChange(publicUrl);
+      setPreview(result.url);
+      onChange(result.url);
     } catch (err) {
       console.error('Error uploading image:', err);
       setError(err.message || 'Error al subir la imagen');
     } finally {
       setIsUploading(false);
     }
-  }, [bucket, folder, maxSize, onChange]);
+  }, [folder, maxSize, onChange]);
 
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
-    if (file) {
-      // Mostrar preview local inmediatamente
-      const localPreview = URL.createObjectURL(file);
-      setPreview(localPreview);
-      uploadImage(file);
-    }
+    if (file) uploadImage(file);
+    // Permite volver a elegir el mismo archivo/captura
+    e.target.value = '';
   };
 
   const handleDrop = useCallback((e) => {
     e.preventDefault();
-    setIsDragging(false);
     const file = e.dataTransfer.files?.[0];
-    if (file) {
-      const localPreview = URL.createObjectURL(file);
-      setPreview(localPreview);
-      uploadImage(file);
-    }
+    if (file) uploadImage(file);
   }, [uploadImage]);
 
   const handleDragOver = useCallback((e) => {
     e.preventDefault();
-    setIsDragging(true);
+    e.currentTarget.classList.add('ring-2', 'ring-primary');
   }, []);
 
   const handleDragLeave = useCallback((e) => {
     e.preventDefault();
-    setIsDragging(false);
+    e.currentTarget.classList.remove('ring-2', 'ring-primary');
   }, []);
 
   const handleRemove = () => {
@@ -115,45 +87,58 @@ export default function ImageUploader({
     onChange('');
   };
 
+  const uid = typeof window !== 'undefined' ? `${folder}` : folder;
+
   return (
     <div className="w-full">
       <AnimatePresence mode="wait">
-        {preview ? (
+{preview ? (
           <motion.div
+            key="preview"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
-            className="relative aspect-video rounded-theme-lg overflow-hidden border-2 border-secondary/10"
+            className="relative rounded-theme-lg overflow-hidden border border-secondary/10"
           >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={preview}
-              alt="Preview"
-              className="w-full h-full object-cover"
+              alt="Vista previa"
+              className="w-full aspect-video object-cover"
             />
-            <div className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+            {isUploading && (
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                <Loader2 className="w-8 h-8 text-white animate-spin" />
+              </div>
+            )}
+            <div className="absolute bottom-2 right-2 flex items-center gap-2">
               <label
-                htmlFor="image-replace"
-                className="cursor-pointer px-4 py-2 bg-white rounded-theme-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+                htmlFor={`image-gallery-${uid}`}
+                className="cursor-pointer px-3 py-2 rounded-lg bg-white text-sm font-medium hover:bg-gray-100 transition-colors shadow"
               >
                 Cambiar
               </label>
               <button
+                type="button"
                 onClick={handleRemove}
-                className="p-2 bg-red-500 text-white rounded-theme-lg hover:bg-red-600 transition-colors"
+                className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors shadow"
+                aria-label="Quitar imagen"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <input
-              id="image-replace"
+              id={`image-gallery-${uid}`}
               type="file"
-              accept={accept}
+              accept="image/*"
+              capture="environment"
               onChange={handleFileChange}
               className="hidden"
             />
           </motion.div>
         ) : (
           <motion.div
+            key="empty"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
@@ -163,43 +148,67 @@ export default function ImageUploader({
             className={`
               relative aspect-video rounded-theme-lg border-2 border-dashed
               flex flex-col items-center justify-center gap-3 p-6
-              transition-all cursor-pointer
-              ${isDragging 
-                ? 'border-primary bg-primary/5 scale-[1.02]' 
+              transition-all
+              ${isUploading
+                ? 'border-primary bg-primary/5'
                 : 'border-secondary/20 hover:border-primary/40 hover:bg-secondary/5'
               }
             `}
           >
+            {isUploading ? (
+              <div className="text-center">
+                <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto mb-3" />
+                <p className="text-sm text-text/60">Subiendo imagen...</p>
+              </div>
+            ) : (
+              <>
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                  <ImageIcon className="w-8 h-8 text-primary" />
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-medium text-text mb-1">
+                    Arrastra una imagen o sube desde tu dispositivo
+                  </p>
+                  <p className="text-xs text-text/50">
+                    PNG, JPG, WEBP hasta {Math.round(maxSize / 1024 / 1024)}MB
+                  </p>
+                </div>
+
+                {/* Botones: galería + cámara */}
+                <div className="flex flex-wrap items-center justify-center gap-2 mt-1">
+                  <label
+                    htmlFor={`image-gallery-${uid}`}
+                    className="cursor-pointer inline-flex items-center gap-1.5 px-4 py-2.5 bg-primary text-white text-sm font-medium rounded-xl hover:opacity-90 transition-opacity"
+                  >
+                    <Upload className="w-4 h-4" />
+                    Subir foto
+                  </label>
+                  <label
+                    htmlFor={`image-camera-${uid}`}
+                    className="cursor-pointer inline-flex items-center gap-1.5 px-4 py-2.5 bg-zinc-800 dark:bg-zinc-100 text-white dark:text-zinc-900 text-sm font-medium rounded-xl hover:opacity-90 transition-opacity"
+                  >
+                    <Camera className="w-4 h-4" />
+                    Tomar foto
+                  </label>
+                </div>
+              </>
+            )}
+
             <input
-              id="image-upload"
+              id={`image-gallery-${uid}`}
               type="file"
-              accept={accept}
+              accept="image/*"
               onChange={handleFileChange}
               className="hidden"
             />
-            
-            <label htmlFor="image-upload" className="cursor-pointer w-full h-full flex flex-col items-center justify-center gap-3">
-              {isUploading ? (
-                <>
-                  <Loader2 className="w-12 h-12 text-primary animate-spin" />
-                  <p className="text-sm text-text/60">Subiendo imagen...</p>
-                </>
-              ) : (
-                <>
-                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Upload className="w-8 h-8 text-primary" />
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-text mb-1">
-                      Arrastra una imagen o haz clic para seleccionar
-                    </p>
-                    <p className="text-xs text-text/50">
-                      PNG, JPG, WEBP hasta {maxSize / 1024 / 1024}MB
-                    </p>
-                  </div>
-                </>
-              )}
-            </label>
+            <input
+              id={`image-camera-${uid}`}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleFileChange}
+              className="hidden"
+            />
           </motion.div>
         )}
       </AnimatePresence>
@@ -222,7 +231,7 @@ export default function ImageUploader({
           className="flex items-center gap-1 text-green-600 text-sm mt-2"
         >
           <Check className="w-4 h-4" />
-          Imagen subida correctamente
+          Imagen lista
         </motion.div>
       )}
     </div>
