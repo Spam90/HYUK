@@ -68,6 +68,31 @@ export async function GET(req) {
       return json({ ok: true, data: out });
     }
 
+    if (type === 'stats') {
+      // Conteos con service_role: bypasea las políticas RLS rotas.
+      const countWith = async (table, filters = []) => {
+        try {
+          let q = admin.from(table).select('*', { count: 'exact', head: true });
+          for (const f of filters) q = q.eq(f.column, f.value);
+          const { count, error } = await q;
+          if (error) throw error;
+          return count || 0;
+        } catch {
+          return 0; // tabla inexistente o error -> 0, sin romper el dashboard
+        }
+      };
+      const [products, categories, orders, pendingOrders] = await Promise.all([
+        countWith('products', [{ column: 'store_id', value: storeId }]),
+        countWith('categories', [{ column: 'store_id', value: storeId }]),
+        countWith('orders', [{ column: 'store_id', value: storeId }]),
+        countWith('orders', [
+          { column: 'store_id', value: storeId },
+          { column: 'status', value: 'pending' },
+        ]),
+      ]);
+      return json({ ok: true, data: { products, categories, orders, pendingOrders } });
+    }
+
     return json({ ok: false, error: `type inválido: ${type}` }, 400);
   } catch (err) {
     console.error('[store-data]', err?.message);

@@ -64,40 +64,19 @@ export default function AdminDashboard() {
         'free'
       );
 
-      // Get stats (cada consulta con fallback defensivo: si una tabla no existe
-      // o falla en Supabase, devolvemos 0 en lugar de romper el dashboard)
-      const safeCount = async (table, filters = []) => {
-        try {
-          let query = supabase.from(table).select('*', { count: 'exact', head: true });
-          filters.forEach((f) => { query = query.eq(f.column, f.value); });
-          const { count, error } = await query;
-          if (error) throw error;
-          return count || 0;
-        } catch (err) {
-          console.warn(`[Dashboard] No se pudo contar "${table}", se muestra 0:`, err.message);
-          return 0;
-        }
-      };
-
-      const [ordersCount, activeProducts, categories, pendingOrders] = await Promise.all([
-        // Si la tabla orders aún no existe, NO se consulta (evita el 404 en consola).
-        db.ordersTable ? safeCount('orders', [{ column: 'store_id', value: user.id }]) : Promise.resolve(0),
-        safeCount('products', [{ column: 'store_id', value: user.id }]),
-        safeCount('categories', [{ column: 'store_id', value: user.id }]),
-        db.ordersTable
-          ? safeCount('orders', [
-              { column: 'store_id', value: user.id },
-              { column: 'status', value: 'pending' },
-            ])
-          : Promise.resolve(0),
-      ]);
+      // Stats vía /api/store-data (service_role server-side) — evita las
+      // políticas RLS rotas (request.store_slug) del rol autenticado.
+      const statsRes = await fetch('/api/store-data?type=stats')
+        .then((r) => r.json())
+        .catch(() => ({}));
+      const s = statsRes.data || {};
 
       setStats({
-        visits: ordersCount,
-        whatsappClicks: ordersCount,
-        activeProducts,
-        categories,
-        pendingOrders,
+        visits: s.orders || 0,
+        whatsappClicks: s.orders || 0,
+        activeProducts: s.products || 0,
+        categories: s.categories || 0,
+        pendingOrders: s.pendingOrders || 0,
       });
     } catch (error) {
       console.error('Error loading dashboard:', error);
