@@ -46,9 +46,9 @@ function CustomizePanel() {
 
   // Cargar settings desde Supabase al montar
   useEffect(() => {
+    if (!supabase) return;
     const loadSettings = async () => {
       try {
-        if (!supabase) return;
         const { data: { user } } = await supabase.auth.getUser();
 
         if (!user) {
@@ -99,8 +99,8 @@ function CustomizePanel() {
       }
     };
 
-    loadSettings();
-  }, [updateFullSettings]);
+    if (supabase) loadSettings();
+  }, [supabase, updateFullSettings]);
 
   // Guardar cambios en Supabase
   const handleSave = async () => {

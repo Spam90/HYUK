@@ -283,36 +283,22 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                 </div>
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0">
-                  <a
-                    href={typeof window !== 'undefined' && window.location.hostname.includes('localhost')
-                      ? `/${storeUrl.split('.')[0]}`
-                      : `https://${storeUrl}`}
-                    target={typeof window !== 'undefined' && window.location.hostname.includes('localhost') ? undefined : '_blank'}
-                    rel="noopener noreferrer"
-                    title="Ver mi catálogo"
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-zinc-800 text-zinc-100 rounded-xl text-sm font-medium hover:bg-zinc-700 transition-colors border border-zinc-700"
-                  >
-                    <Eye className="w-4 h-4" />
-                    Ver mi tienda
-                  </a>
-                  <button
-                    onClick={copyToClipboard}
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 text-white rounded-xl text-sm font-medium hover:bg-emerald-600 transition-colors shrink-0 shadow-lg shadow-emerald-500/30"
-                  >
-                    {copied ? (
-                      <>
-                        <Check className="w-4 h-4" />
-                        Copiado
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-4 h-4" />
-                        Copiar Link
-                      </>
-                    )}
-                  </button>
-                </div>
+                <button
+                  onClick={copyToClipboard}
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 text-white rounded-xl text-sm font-medium hover:bg-emerald-600 transition-colors shrink-0 shadow-lg shadow-emerald-500/30"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="w-4 h-4" />
+                      Copiado
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-4 h-4" />
+                      Copiar Link
+                    </>
+                  )}
+                </button>
               </div>
             </motion.div>
           )}
@@ -438,7 +424,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Quick Actions - Mobile First */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <motion.a
               href="/admin/customize"
               initial={{ opacity: 0, y: 20 }}
@@ -485,36 +471,6 @@ export default function AdminDashboard() {
                   </p>
                   <span className="inline-flex items-center gap-1 text-sm font-medium text-emerald-400 group-hover:gap-2 transition-all">
                     Gestionar productos
-                    <ExternalLink className="w-4 h-4" />
-                  </span>
-                </div>
-              </div>
-            </motion.a>
-
-            <motion.a
-              href={typeof window !== 'undefined' && window.location.hostname.includes('localhost')
-                ? `/${storeUrl.split('.')[0]}`
-                : `https://${storeUrl}`}
-              target={typeof window !== 'undefined' && window.location.hostname.includes('localhost') ? undefined : '_blank'}
-              rel="noopener noreferrer"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="group bg-zinc-900/60 backdrop-blur-xl rounded-2xl p-6 border border-zinc-800 shadow-sm hover:border-zinc-700 transition-all"
-            >
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                  <Eye className="w-6 h-6 text-blue-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-zinc-100 mb-1">
-                    Ver mi Catálogo
-                  </h3>
-                  <p className="text-sm text-zinc-400 mb-3">
-                    Mirá cómo lo ven tus clientes
-                  </p>
-                  <span className="inline-flex items-center gap-1 text-sm font-medium text-blue-400 group-hover:gap-2 transition-all">
-                    Ver tienda
                     <ExternalLink className="w-4 h-4" />
                   </span>
                 </div>
