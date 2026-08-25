@@ -154,16 +154,27 @@ export default function AdminHeader() {
               ✦ Plan Pro
             </span>
           )}
-          {slug && (
+          {slug ? (
             <a
-              href={`https://${slug}.hyuk.app`}
-              target="_blank"
+              href={typeof window !== 'undefined' && window.location.hostname.includes('localhost')
+                ? `/${slug}`
+                : `https://${slug}.hyuk.app`}
+              target={typeof window !== 'undefined' && window.location.hostname.includes('localhost') ? undefined : '_blank'}
               rel="noopener noreferrer"
               title="Ver mi tienda"
               className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-500 text-white text-sm font-semibold hover:bg-emerald-600 transition-colors"
             >
               <ExternalLink className="w-4 h-4" />
               <span className="hidden md:inline">Ver mi tienda</span>
+            </a>
+          ) : (
+            <a
+              href="/admin/settings"
+              title="Configura el slug de tu tienda para poder publicarla"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-500/90 text-white text-sm font-semibold hover:bg-emerald-600 transition-colors"
+            >
+              <ExternalLink className="w-4 h-4" />
+              <span className="hidden md:inline">Configurar tienda</span>
             </a>
           )}
           {/* Menú de usuario: Ajustes + Cerrar sesión (único lugar) */}
