@@ -9,6 +9,7 @@ import HeaderVariant from '@/components/catalog/HeaderVariant';
 import CategoryNav from '@/components/catalog/CategoryNav';
 import ProductGrid from '@/components/catalog/ProductGrid';
 import CartDrawer from '@/components/catalog/CartDrawer';
+import FloatingCartButton from '@/components/catalog/FloatingCartButton';
 import PromoBanner from '@/components/catalog/PromoBanner';
 import ProductModal from '@/components/catalog/ProductModal';
 import SocialFooter from '@/components/catalog/SocialFooter';
@@ -170,12 +171,15 @@ function CatalogContent({ store, categories, products, settings }) {
           <PromoBanner settings={demoSettings} storeId={demoStore.id} />
 
           {/* Header */}
-          <HeaderVariant
+                    <HeaderVariant
             store={demoStore}
             settings={demoSettings}
             storeUrl={storeUrl}
             onCartClick={() => {}}
           />
+
+          {/* 🛒 Carrito flotante esquina superior derecha */}
+          <FloatingCartButton store={demoStore} settings={demoSettings} />
 
           {/* Search Bar - Fixed */}
           <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-md border-b border-secondary/10">
