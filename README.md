@@ -208,7 +208,11 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-anon-key
 │   │   ├── CategoryNav.jsx        # 4 estilos de navegación
 │   │   ├── ProductGrid.jsx        # 5 layouts de grid
 │   │   ├── ProductCardVariant.jsx # 4 estilos de tarjetas + variantes
-│   │   └── CartDrawer.jsx         # Drawer de checkout WhatsApp
+│   │   ├── CartDrawer.jsx         # Drawer de checkout WhatsApp (cupones, delivery zones)
+│   │   ├── FloatingCartButton.jsx # Carrito flotante esquina sup. derecha + panel lateral
+│   │   ├── ProductModal.jsx       # Modal de producto (variantes, notas, oferta flash)
+│   │   ├── PromoBanner.jsx        # Banner promocional / barra de anuncios
+│   │   └── SocialFooter.jsx       # Footer con redes sociales
 │   └── theme/
 │       └── ThemeProvider.jsx      # Motor de temas dinámico (CSS vars)
 ├── context/
@@ -263,11 +267,13 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-anon-key
 
 ## 📝 Notas de Producción
 
-1. **Supabase Storage**: Reemplazar la subida de imágenes local (FileReader) por Supabase Storage para banners y productos
+1. ~~Supabase Storage~~ ✅ Implementado en Fase 5: `app/api/upload/route.js` (service_role, máx 8MB, solo `image/*`) + `ImageUploader.jsx` mobile-first
 2. **Guardado persistente**: Conectar el botón "Guardar" del panel de personalización con la actualización del settings JSONB
 3. **CRUD completo**: Implementar gestión de productos y categorías en el dashboard admin
 4. **SEO**: Añadir sitemap.xml y metadatos por tienda
 5. **Analytics**: Integrar seguimiento de visitas y pedidos
+
+> ℹ️ **Nota de mantenimiento**: las listas "Siguientes pasos" de fases anteriores quedan como registro histórico — varios ítems ya están cubiertos hoy (`/admin/products`, `/admin/categories`, `/admin/orders`, `/admin/analytics`, OG dinámico, upload con Storage). El estado vigente del proyecto está en la sección **Fase 5** y en el RUNBOOK de producción.
 
 ---
 
@@ -303,7 +309,7 @@ Este proyecto es propietario. Todos los derechos reservados.
 - `public/favicon.ico` - Favicon para corregir error 404
 
 ### 🚀 Siguientes pasos recomendados / Faltantes
-- **Subida de imágenes**: Implementar Supabase Storage para banners y productos
+- ~~Subida de imágenes~~ ✅ Implementada en Fase 5 (`app/api/upload` + `ImageUploader.jsx`)
 - **Gestión de opciones de producto**: CRUD de variantes/tamaños/extras
 - **Dashboard de pedidos**: Ver pedidos recibidos por WhatsApp
 - **Analytics**: Métricas de visitas y conversiones
@@ -353,7 +359,8 @@ Este proyecto es propietario. Todos los derechos reservados.
   - Mapeos de fuentes y bordes a CSS
 - **`context/CartContext.jsx`**: 
   - Estado del carrito con `cartItems`, `isCartOpen`
-  - Funciones: `addItem`, `removeItem`, `updateQuantity`, `clearCart`
+  - Funciones: `addItem`, `removeItem`, `updateQuantity`, `clearCart`, `openCart`, `closeCart` (+ `addItemWithOptions` desde `ProductModal`)
+  - Cada ítem genera una `key` única (id de producto + opciones elegidas) que identifica su línea en el carrito y usan `updateQuantity(key)` / `removeItem(key)`
   - Cálculo de `cartCount` y `cartTotal` con `useMemo`
   - Soporte para opciones de producto con precio dinámico
 - **`lib/whatsapp/checkout.js`**: 
@@ -387,7 +394,7 @@ Este proyecto es propietario. Todos los derechos reservados.
 - `components/theme/ThemeProvider.jsx` - Motor de temas dinámicos (verificado)
 
 ### 🚀 Siguientes pasos recomendados / Faltantes
-- **Subida de imágenes**: Implementar Supabase Storage para banners y productos
+- ~~Subida de imágenes~~ ✅ Implementada en Fase 5 (`app/api/upload` + `ImageUploader.jsx`)
 - **Gestión de opciones de producto**: CRUD de variantes/tamaños/extras en panel admin
 - **Dashboard de pedidos**: Ver pedidos recibidos por WhatsApp
 - **Analytics**: Métricas de visitas y conversiones
@@ -574,7 +581,14 @@ Si tienes un dominio propio (ej: `mitienda.com`):
   - Animaciones framer-motion
   - Lista de productos con cantidades
   - Formulario de datos del cliente
-  - Botón de envío por WhatsApp
+  - Cupones de descuento, zonas de delivery con costo dinámico
+  - Botón de envío por WhatsApp + pago con tarjeta (Stripe)
+- **`components/catalog/FloatingCartButton.jsx`**: Carrito flotante fijo en la esquina superior derecha (`fixed top-4 right-4 z-50`) con:
+  - Botón circular con icono de carrito y **badge rojo animado** (`framer-motion`) que muestra `cartCount` en tiempo real
+  - Panel lateral deslizable bajo demanda (`AnimatePresence`), independiente del `CartDrawer`: lista de ítems (nombre, precio unitario y por línea), controles `+`/`-`, eliminar y "Vaciar carrito"
+  - Subtotal calculado automáticamente y checkout directo con `generateWhatsAppUrl()` de `lib/whatsapp/checkout.js`
+  - Estado vacío amigable ("Tu carrito está vacío") y bloqueo de scroll del body mientras está abierto
+  - Consume el mismo `CartContext` global → al pulsar "Agregar" en cualquier tarjeta, el badge del carrito se actualiza al instante
 
 #### MÓDULO 6: Middleware y Rutas Protegidas ✅
 - **`middleware.js`**: Protección completa de `/admin/*` con:
@@ -591,7 +605,7 @@ Si tienes un dominio propio (ej: `mitienda.com`):
 - `README.md` - Guía de despliegue completa agregada
 
 ### 🚀 Siguientes pasos recomendados / Faltantes
-- **Subida de imágenes**: Implementar Supabase Storage para banners y productos
+- ~~Subida de imágenes~~ ✅ Implementada en Fase 5 (`app/api/upload` + `ImageUploader.jsx`)
 - **Gestión de opciones de producto**: CRUD de variantes/tamaños/extras
 - **Dashboard de pedidos**: Ver pedidos recibidos por WhatsApp
 - **Analytics**: Métricas de visitas y conversiones
@@ -630,6 +644,13 @@ Si tienes un dominio propio (ej: `mitienda.com`):
 
 - **Alertas de escasez**: `supabase/schema.sql` añade `products.stock INTEGER DEFAULT 0`. `components/catalog/ProductCardVariant.jsx` muestra una etiqueta roja pulsante **🔥 ¡Solo quedan N!** cuando el producto está disponible y `stock ≤ 5` (absoluta sobre la imagen, sin conflicto con el badge ni el overlay de "Agotado"). Configurable desde `ProductModal.jsx`.
 - **CRM de clientes** (`/admin/customers`): nueva página que **lee la tabla `orders`** y agrupa a los clientes por número de WhatsApp. Tabla con columnas **Cliente, WhatsApp, Total Pedidos, Dinero Total Gastado**, ordenada de mayor a menor gasto. Los **3 primeros** se resaltan con medallas 🥇🥈🥉 y fondo de tierra. Clic en una fila abre un modal con el historial de pedidos del cliente. Reutiliza `lib/orders.js` (`getOrders`).
+
+### 🛒 Fase 5 — Carrito Flotante Global + Subida de Imágenes Móvil
+
+- **Carrito flotante** (`components/catalog/FloatingCartButton.jsx`): botón `fixed top-4 right-4 z-50` visible en todo el catálogo `/[slug]`, con badge rojo contador en tiempo real y panel lateral deslizable (ítems, controles +/-, eliminar, subtotal, vaciar y "Enviar pedido por WhatsApp"). Comparte el estado global `CartContext` con el `CartDrawer`: cualquier botón "Agregar" de las tarjetas actualiza ambos instantáneamente.
+- **API de subida de imágenes** (`app/api/upload/route.js`): endpoint `POST` multipart/form-data protegido con sesión Supabase (`401 No autenticado` sin sesión). Usa el cliente `service_role` para evitar problemas de RLS en Storage, valida tipo `image/*` y tamaño máximo 8MB, y devuelve la URL pública del archivo subido.
+- **Uploader mobile-first** (`components/admin/ImageUploader.jsx`): input `type="file"` con `accept="image/*"` + `capture="environment"` → en teléfonos abre directamente la cámara trasera o la galería; en desktop funciona como selector normal. Incluye drag & drop, preview inmediata y estados de carga. Integrado en el `ProductModal` del panel admin alimentando `formData.image_url`.
+
 ---
 
 ## 🚀 PUESTA EN PRODUCCIÓN (RUNBOOK)
@@ -654,7 +675,7 @@ Si tienes un dominio propio (ej: `mitienda.com`):
 - Inspeccionar `public/sw.js` confirmando estrategia `NetworkOnly` (`fetch`) para `/` `/login` `/signup` `/admin` `/api`.
 
 ### 🔐 Pendientes que requieren configuración externa
-- **Pasarela de pago online** (Stripe/MercadoPago): todavía no implementada; el checkout hoy es por WhatsApp.
+- ~~Pasarela de pago online~~ ✅ **Implementada** con arquitectura provider-agnóstica: `lib/payments.js` detecta `STRIPE_SECRET_KEY` (Stripe) o `MP_ACCESS_TOKEN` (Mercado Pago); `POST /api/checkout/create-preference` crea la sesión de pago y `app/api/webhooks/payment/route.js` procesa confirmaciones y suscripciones (planes Pro/Enterprise vía `SUBSCRIPTION_PLANS`). Si no hay pasarela configurada responde `402` y el cliente hace **fallback graceful al checkout por WhatsApp**. Solo falta definir las claves en Vercel para activarla.
 - **Sentry**: dependencia instalada; activarla con `SENTRY_DSN` en Vercel (el SDK se desactiva si está vacío).
 - **Notificaciones email/SMS** al comerciante cuando llega un pedido.
 - **Límites por plan** (Gratis/Pro) y cobro recurrente al comerciante.
