@@ -29,7 +29,7 @@ export default function OrderTrackingPage({ params }) {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/orders/public/${orderId}`, { cache: 'no-store' });
+        const res = await fetch(`/api/orders/public/${orderId}${typeof window !== 'undefined' ? window.location.search : ''}`, { cache: 'no-store' });
         if (!res.ok) throw new Error('not_found');
         const data = await res.json();
         if (!cancelled) setOrder(data.order);

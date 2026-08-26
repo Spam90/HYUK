@@ -1,54 +1,98 @@
 // =============================================================
-// /api/orders/public/[id] — lectura pública de un pedido para la
-// página de seguimiento (/pedido/[id]).
+// /api/orders/public/[id] — SEGUIMIENTO PÚBLICO de un pedido
+// para la página /pedido/[id].
 //
-// La tabla orders tiene RLS: los clientes pueden INSERTAR pedidos y
-// los dueños leer los suyos. Esta ruta lee el pedido con el cliente
-// de servidor (anon) usando una política de lectura pública por id,
-// para que el cliente final pueda consultar su estado sin estar logueado.
-// Devolvemos SOLO campos no sensibles (sin la dirección completa ni
-// datos del dueño).
+// FASE 0 SEGURIDAD:
+//  - La lectura ya NO depende de la política RLS pública eliminada
+//    en la migración 11 (antes USING(true) exponía TODA la tabla
+//    por REST). Esta ruta usa service_role pero SOLO devuelve la
+//    proyección mínima de abajo (nunca dirección/teléfono/dueño).
+//  - Anti-enumeración: si el pedido tiene tracking_token, exige
+//    coincidir con ?t=<token>; si no coincide → 404 genérico.
+//  - Compatibilidad: pedidos creados antes de aplicar la migración
+//    11 (o creados entre deploy y migración, cuyo token quedó NULL)
+//    siguen accesibles solo por su UUID v4 (impredecible). Queda
+//    documentado como ventana legada hasta el backfill.
 // =============================================================
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/service-role';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(_request, { params }) {
-  try {
-    const id = params?.id;
-    if (!id || typeof id !== 'string') {
-      return NextResponse.json({ error: 'Pedido no encontrado' }, { status: 404 });
-    }
+const UUIDISH = /^[0-9a-fA-F-]{10,64}$/;
 
-    const supabase = createClient();
-    const { data: order, error } = await supabase
+const FULL_FIELDS =
+  'id, created_at, status, customer_name, items, total_amount, currency, notes, delivery_method, payment_method, tracking_token';
+
+/**
+ * Lee la orden tolerando que `tracking_token` aún no exista
+ * (migración 11 pendiente). Reintenta una vez con proyección legacy.
+ */
+async function fetchOrderTolerant(admin, id) {
+  let selection = FULL_FIELDS;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const { data, error } = await admin
       .from('orders')
-      .select(
-        'id, created_at, status, customer_name, items, total_amount, currency, notes, delivery_method, payment_method'
-      )
+      .select(selection)
       .eq('id', id)
       .maybeSingle();
 
-    if (error || !order) {
-      return NextResponse.json({ error: 'Pedido no encontrado' }, { status: 404 });
-    }
+    const missingTokenCol =
+      error && String(error?.message || '').includes('tracking_token');
+    if (!missingTokenCol) return { data, error };
+    // Columna aún no existe → repetir sin ella.
+    selection = FULL_FIELDS.replace(', tracking_token', '');
+  }
+  return { data: null, error: null };
+}
 
-    return NextResponse.json({
-      order: {
-        id: order.id,
-        created_at: order.created_at,
-        status: order.status,
-        customer_name: order.customer_name,
-        items: order.items || [],
-        total: order.total_amount,
-        currency: order.currency || 'USD',
-        notes: order.notes,
-        delivery_method: order.delivery_method,
-        payment_method: order.payment_method,
+function notFound() {
+  return NextResponse.json(
+    { error: 'Pedido no encontrado' },
+    { status: 404, headers: { 'Cache-Control': 'private, no-store' } }
+  );
+}
+
+export async function GET(request, { params }) {
+  try {
+    const id = params?.id;
+    if (!id || typeof id !== 'string' || !UUIDISH.test(id)) return notFound();
+
+    const admin = createServiceClient();
+    if (!admin) return notFound(); // Sin service key no hay vía segura de lectura.
+
+    const { data: order } = await fetchOrderTolerant(admin, id);
+    if (!order) return notFound();
+
+    // ── Token anti-enumeración ──────────────────────────────────
+    const url = new URL(request.url);
+    const providedToken = url.searchParams.get('t');
+
+    if (order.tracking_token) {
+      // Pedido "moderno": exige token exacto; mismatches = 404 idéntico.
+      if (!providedToken || providedToken !== order.tracking_token) return notFound();
+    }
+    // Pedidos legacy (sin token): se permiten por UUID impredecible.
+
+    // Proyección MÍNIMA publicable (sin dirección/teléfono/interno).
+    return NextResponse.json(
+      {
+        order: {
+          id: order.id,
+          created_at: order.created_at,
+          status: order.status,
+          customer_name: order.customer_name,
+          items: order.items || [],
+          total: order.total_amount,
+          currency: order.currency || 'USD',
+          notes: order.notes,
+          delivery_method: order.delivery_method,
+          payment_method: order.payment_method,
+        },
       },
-    });
+      { headers: { 'Cache-Control': 'private, no-store' } }
+    );
   } catch {
-    return NextResponse.json({ error: 'Pedido no encontrado' }, { status: 404 });
+    return notFound();
   }
 }

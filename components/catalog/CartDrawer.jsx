@@ -180,9 +180,11 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
         if (store?.id) track(store.id, 'purchase', { orderId, total: totalWithDelivery });
       }
 
-      // Link de seguimiento del pedido (aparece en el mensaje de WhatsApp)
+      // Link de seguimiento del pedido (aparece en el mensaje de WhatsApp).
+      // FASE 0: incluye el token anti-enumeración cuando existe (migración 11).
+      const trackingToken = orderResult.order?.tracking_token;
       const trackingLink = orderId
-        ? `\n📦 *Seguimiento:* ${typeof window !== 'undefined' ? window.location.origin : ''}/pedido/${orderId}`
+        ? `\n📦 *Seguimiento:* ${typeof window !== 'undefined' ? window.location.origin : ''}/pedido/${orderId}${trackingToken ? `?t=${trackingToken}` : ''}`
         : '';
 
       // Generar URL de WhatsApp
