@@ -9,6 +9,9 @@ import { isTrialActive, getTrialDaysLeft } from '@/lib/config/plans';
  * temporales (profiles.trial_ends_at). El catálogo público NUNCA se recorta.
  */
 export default function PlanUpgradeCard({ plan = 'free', trialEndsAt = null }) {
+  // Normalización defensiva: el valor puede venir crudo de la BD ("Pro", " PRO ").
+  plan = String(plan || 'free').trim().toLowerCase();
+  const isPaid = plan === 'starter' || plan === 'pro' || plan === 'enterprise';
   const trialActive = isTrialActive(trialEndsAt);
   const trialDays = getTrialDaysLeft(trialEndsAt);
   const planName = plan === 'free' ? 'Free'
@@ -24,7 +27,9 @@ export default function PlanUpgradeCard({ plan = 'free', trialEndsAt = null }) {
         {trialActive ? (
           <p className="text-sm text-emerald-400 capitalize flex items-center gap-1.5">
             <Sparkles className="w-4 h-4" />
-            Prueba Pro — quedan {trialDays} {trialDays === 1 ? 'día' : 'días'}
+            {/* Plan de pago: mostrarlo explícitamente (antes "Prueba Pro" ocultaba
+                que la cuenta YA es Pro); Free en trial: beneficio temporal. */}
+            {isPaid ? `${planName} — prueba activa, quedan ${trialDays} ${trialDays === 1 ? 'día' : 'días'}` : `Prueba Pro — quedan ${trialDays} ${trialDays === 1 ? 'día' : 'días'}`}
           </p>
         ) : (
           <p className="text-sm text-zinc-400 capitalize">{planName}</p>
