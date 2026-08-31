@@ -66,11 +66,14 @@ export default function AdminHeader() {
               if (p?.slug) setSlug(p.slug);
               setTrialActive(isTrialActive(p?.trial_ends_at));
               // Sin columna de plan → mostramos 'free' (el CTA de upsell funciona igual).
+              // Normalizar a minúscula: la BD pudo tener valores legacy "Pro" (capitalizado).
               setPlan(
-                (db.planColumn && p?.[db.planColumn]) ||
-                p?.plan ||
-                p?.plan_type ||
-                'free'
+                String(
+                  (db.planColumn && p?.[db.planColumn]) ||
+                  p?.plan_type ||
+                  p?.plan ||
+                  'free'
+                ).toLowerCase()
               );
             } catch (err) {
               console.warn('[AdminHeader] No se pudieron cargar slug/plan del perfil:', err?.message);

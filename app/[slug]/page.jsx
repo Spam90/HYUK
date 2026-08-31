@@ -161,7 +161,8 @@ export default async function StorePage({ params }) {
     ...(store.settings || {}),
   };
 
-    const storePlan = store.plan_type || store.plan || 'free';
+    // Normalizar a minúscula: la BD pudo tener valores legacy "Pro" (capitalizado).
+    const storePlan = String(store.plan_type || store.plan || 'free').toLowerCase();
     // Trial vigente → la tienda opera con beneficios Pro (sin límites ni watermark).
     const trialActive = !!store.trial_ends_at && new Date(store.trial_ends_at).getTime() > Date.now();
     const effectivePlan = trialActive && storePlan === 'free' ? 'pro' : storePlan;

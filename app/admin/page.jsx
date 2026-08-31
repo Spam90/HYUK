@@ -57,11 +57,16 @@ export default function AdminDashboard() {
       }
       setIsStoreOpen(profile?.is_open !== false);
       setTrialEndsAt(profile?.trial_ends_at || null);
+      // Normalizar SIEMPRE a minúscula: la BD tuvo valores legacy como "Pro"
+      // (capitalizado) que no coinciden con las claves de PLAN_LIMITS/PLAN_NAME
+      // y hacían que la UI tratara una cuenta Pro como Free.
       setPlanType(
-        (db.planColumn && profile?.[db.planColumn]) ||
-        profile?.plan ||
-        profile?.plan_type ||
-        'free'
+        String(
+          (db.planColumn && profile?.[db.planColumn]) ||
+          profile?.plan_type ||
+          profile?.plan ||
+          'free'
+        ).toLowerCase()
       );
 
       // Stats vía /api/store-data (service_role server-side) — evita las

@@ -88,7 +88,8 @@ export default function ProductsPage() {
 
       // Inventario (SKUs): objeto plano -> Map para la UI
       setStockLevels(skuR.data ? new Map(Object.entries(skuR.data)) : null);
-      setPlan(profile?.[db.planColumn || 'plan_type'] || profile?.plan_type || profile?.plan || 'free');
+      // Normalizar a minúscula: la BD pudo tener valores legacy "Pro" (capitalizado)
+      setPlan(String(profile?.[db.planColumn || 'plan_type'] || profile?.plan_type || profile?.plan || 'free').toLowerCase());
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
