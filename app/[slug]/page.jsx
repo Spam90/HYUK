@@ -22,7 +22,10 @@ export async function generateMetadata({ params }) {
   }
 
   const settings = store.settings || DEFAULT_SETTINGS;
-  const storeName = store.store_name || store.full_name || 'Mi Tienda';
+  // FASE 0.5: columnas reales de profiles (BD verificada). Antes se usaba
+  // store.store_name || store.full_name, pero el nombre del negocio vive en
+  // business_name (store_name/full_name existen pero pueden venir null).
+  const storeName = store.business_name || store.store_name || store.full_name || 'Mi Tienda';
   const tagline = settings.banner?.tagline || 'Los mejores productos a un clic';
   const bannerImage = settings.banner?.imageUrl || '';
   const storeDescription = store.description || `Catálogo digital de ${storeName}. Realiza tus pedidos fácilmente por WhatsApp.`;

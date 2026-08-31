@@ -20,7 +20,7 @@ function CatalogContent({ store, categories, products, settings }) {
   const [activeCategory, setActiveCategory] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const { cartItems, openCart, totalItems, addItem, addItemWithOptions } = useCart();
+  const { cartItems, openCart, cartCount, addItem, addItemWithOptions } = useCart();
 
   // Registrar una visita al catálogo (analytics) al montar el componente.
   useEffect(() => {
@@ -368,7 +368,7 @@ function CatalogContent({ store, categories, products, settings }) {
 
           {/* Floating Cart Bar */}
           <AnimatePresence>
-            {totalItems > 0 && (
+            {cartCount > 0 && (
               <motion.div
                 initial={{ y: 100, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
@@ -390,12 +390,12 @@ function CatalogContent({ store, categories, products, settings }) {
                     >
                       <ShoppingBag className="w-6 h-6" />
                       <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-white text-xs font-bold flex items-center justify-center">
-                        {totalItems}
+                        {cartCount}
                       </span>
                     </div>
                     <div className="text-left">
                       <p className="text-sm font-medium text-text/60">
-                        {totalItems} {totalItems === 1 ? 'producto' : 'productos'}
+                        {cartCount} {cartCount === 1 ? 'producto' : 'productos'}
                       </p>
                       <p className="text-lg font-bold text-text">
                         Ver Pedido

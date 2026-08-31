@@ -9,6 +9,10 @@
 -- Agregar columnas necesarias a profiles si no existen
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS slug TEXT UNIQUE;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS business_name TEXT;
+-- Columnas usadas por el flujo de signup (antes solo existían en scripts FIX)
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS email TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS full_name TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS store_name TEXT;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS tagline TEXT;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS phone_whatsapp TEXT;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS is_open BOOLEAN DEFAULT true;
@@ -358,7 +362,7 @@ CREATE TABLE IF NOT EXISTS orders (
   payment_method TEXT,
   items JSONB NOT NULL DEFAULT '[]'::jsonb,
   total_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
-  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'preparing', 'completed', 'cancelled')),
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'preparing', 'ready', 'completed', 'cancelled')),
   notes TEXT,
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
@@ -437,10 +441,11 @@ CREATE POLICY "Owner delete store assets" ON storage.objects
 -- 10. MÓDULO DE MARKETING - TABLA DE CUPONES
 -- =============================================
 
--- Corregir constraint de orders para soportar el estado 'ready'
+-- Corregir constraint de orders para soportar los estados del ciclo de vida
+-- (incluye 'paid', usado por el webhook de Stripe)
 ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_status_check;
 ALTER TABLE orders ADD CONSTRAINT orders_status_check
-  CHECK (status IN ('pending', 'preparing', 'ready', 'completed', 'cancelled'));
+  CHECK (status IN ('pending', 'paid', 'preparing', 'ready', 'completed', 'cancelled'));
 
 -- Agregar columnas de descuento/cupón a orders
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS coupon_code TEXT;
@@ -545,12 +550,63 @@ CREATE POLICY "Owner update customers" ON customers
 CREATE POLICY "Owner delete customers" ON customers
   FOR DELETE USING (auth.uid() = store_id);
 
--- El público puede crear o actualizar registros (upsert automático al hacer pedidos)
-CREATE POLICY "Public insert customers" ON customers
-  FOR INSERT WITH CHECK (true);
+-- El upsert automático de clientes (flujo público de pedidos) NO usa políticas
+-- públicas: lo realiza la función SECURITY DEFINER upsert_customer_from_order,
+-- que escribe siempre dentro del store_id recibido y jamás expone lecturas.
+-- (Ver migración 20240101000012_phase05_stability.sql — misma definición.)
+CREATE OR REPLACE FUNCTION upsert_customer_from_order(
+  p_store_id uuid,
+  p_name     text,
+  p_phone    text DEFAULT NULL,
+  p_address  text DEFAULT NULL,
+  p_total    numeric DEFAULT 0
+)
+RETURNS uuid
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+DECLARE
+  v_phone text := nullif(regexp_replace(coalesce(p_phone, ''), '\D', '', 'g'), '');
+  v_name  text := nullif(trim(coalesce(p_name, '')), '');
+  v_addr  text := nullif(trim(coalesce(p_address, '')), '');
+  v_total numeric := greatest(coalesce(p_total, 0), 0);
+  v_id    uuid;
+BEGIN
+  IF p_store_id IS NULL OR v_name IS NULL THEN
+    RETURN NULL;
+  END IF;
 
-CREATE POLICY "Public update customers" ON customers
-  FOR UPDATE USING (true);
+  IF v_phone IS NOT NULL THEN
+    INSERT INTO customers (store_id, name, phone, address, last_order_date, total_spent, total_orders)
+    VALUES (p_store_id, v_name, v_phone, v_addr, now(), v_total, 1)
+    ON CONFLICT (store_id, phone) WHERE phone IS NOT NULL
+    DO UPDATE
+      SET name = EXCLUDED.name,
+          phone = EXCLUDED.phone,
+          address = COALESCE(EXCLUDED.address, customers.address),
+          last_order_date = now(),
+          total_spent = customers.total_spent + EXCLUDED.total_spent,
+          total_orders = customers.total_orders + 1
+    RETURNING id INTO v_id;
+  ELSE
+    INSERT INTO customers (store_id, name, phone, address, last_order_date, total_spent, total_orders)
+    VALUES (p_store_id, v_name, NULL, v_addr, now(), v_total, 1)
+    ON CONFLICT (store_id, name) WHERE phone IS NULL
+    DO UPDATE
+      SET address = COALESCE(EXCLUDED.address, customers.address),
+          last_order_date = now(),
+          total_spent = customers.total_spent + EXCLUDED.total_spent,
+          total_orders = customers.total_orders + 1
+    RETURNING id INTO v_id;
+  END IF;
+
+  RETURN v_id;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION upsert_customer_from_order(uuid, text, text, text, numeric)
+  TO anon, authenticated;
 
 -- Trigger updated_at para customers
 CREATE TRIGGER update_customers_updated_at

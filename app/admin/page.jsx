@@ -72,8 +72,11 @@ export default function AdminDashboard() {
       const s = statsRes.data || {};
 
       setStats({
-        visits: s.orders || 0,
-        whatsappClicks: s.orders || 0,
+        // KPIs reales: visitas y clics WhatsApp vienen de analytics_events
+        // (endpoint /api/store-data?type=stats). "Pedidos" ya no se usa como
+        // visitas; pendingOrders/orders conservan su significado propio.
+        visits: s.pageViews || 0,
+        whatsappClicks: s.whatsappClicks || 0,
         activeProducts: s.products || 0,
         categories: s.categories || 0,
         pendingOrders: s.pendingOrders || 0,

@@ -81,7 +81,7 @@ export async function GET(req) {
           return 0; // tabla inexistente o error -> 0, sin romper el dashboard
         }
       };
-      const [products, categories, orders, pendingOrders] = await Promise.all([
+      const [products, categories, orders, pendingOrders, pageViews, whatsappClicks, addToCarts] = await Promise.all([
         countWith('products', [{ column: 'store_id', value: storeId }]),
         countWith('categories', [{ column: 'store_id', value: storeId }]),
         countWith('orders', [{ column: 'store_id', value: storeId }]),
@@ -89,8 +89,24 @@ export async function GET(req) {
           { column: 'store_id', value: storeId },
           { column: 'status', value: 'pending' },
         ]),
+        // KPIs reales desde analytics_events (visitas / clics WhatsApp / carritos)
+        countWith('analytics_events', [
+          { column: 'store_id', value: storeId },
+          { column: 'event', value: 'page_view' },
+        ]),
+        countWith('analytics_events', [
+          { column: 'store_id', value: storeId },
+          { column: 'event', value: 'whatsapp_click' },
+        ]),
+        countWith('analytics_events', [
+          { column: 'store_id', value: storeId },
+          { column: 'event', value: 'add_to_cart' },
+        ]),
       ]);
-      return json({ ok: true, data: { products, categories, orders, pendingOrders } });
+      return json({
+        ok: true,
+        data: { products, categories, orders, pendingOrders, pageViews, whatsappClicks, addToCarts },
+      });
     }
 
     return json({ ok: false, error: `type inválido: ${type}` }, 400);
