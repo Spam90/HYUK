@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
-import { X, Plus, Minus, Trash2, MessageCircle, MapPin, User, CreditCard, Bike, Store, ShoppingBag, Percent, CheckCircle } from 'lucide-react';
+import { X, Plus, Minus, Trash2, MessageCircle, MapPin, User, Phone, CreditCard, Bike, Store, ShoppingBag, Percent, CheckCircle } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useTheme } from '@/components/theme/ThemeProvider';
 import { formatPrice, generateWhatsAppUrl } from '@/lib/whatsapp/checkout';
@@ -24,6 +24,7 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
   const { theme, whatsapp_checkout: checkoutConfig } = settings;
 
   const [customerName, setCustomerName] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
   const [customerAddress, setCustomerAddress] = useState('');
   const [deliveryMethod, setDeliveryMethod] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('');
@@ -56,6 +57,7 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
   useEffect(() => {
     if (!isCartOpen) {
       setCustomerName('');
+      setCustomerPhone('');
       setCustomerAddress('');
       setDeliveryMethod('');
       setPaymentMethod('');
@@ -156,7 +158,7 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
       const orderResult = await createOrder({
         storeId: store?.id,
         customerName: customerName,
-        customerPhone: '',
+        customerPhone: customerPhone.trim(),
         deliveryAddress: customerAddress,
         deliveryMethod: deliveryMethod,
         paymentMethod: paymentMethod,
@@ -195,6 +197,7 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
         checkoutConfig,
         customerInfo: {
           name: customerName,
+          phone: customerPhone.trim(),
           address: customerAddress,
           deliveryMethod,
           deliveryZone: isHomeDelivery ? (deliveryZone?.label || '') : '',
@@ -256,7 +259,7 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
       const orderResult = await createOrder({
         storeId: store?.id,
         customerName,
-        customerPhone: '',
+        customerPhone: customerPhone.trim(),
         deliveryAddress: customerAddress,
         deliveryMethod: deliveryMethod,
         paymentMethod: 'online',
@@ -290,7 +293,7 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
           description: `${storeName} · Pedido${orderId ? ' #' + orderId : ''}`,
           customer: {
             name: customerName,
-            phone: '',
+            phone: customerPhone.trim(),
             address: customerAddress,
             notes: notes.trim(),
           },
@@ -625,6 +628,22 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
                         value={customerName}
                         onChange={(e) => setCustomerName(e.target.value)}
                         placeholder="Tu nombre *"
+                        className="flex-1 bg-transparent text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none"
+                      />
+                    </div>
+                  )}
+
+                  {/* Customer Phone (opcional — alimenta el pedido y el CRM) */}
+                  {checkoutConfig.requireClientName && (
+                    <div className="flex items-center gap-3 bg-gray-50 dark:bg-zinc-800/50 rounded-xl p-3 border border-gray-200 dark:border-zinc-800">
+                      <div className="w-9 h-9 rounded-lg bg-gray-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
+                        <Phone className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                      </div>
+                      <input
+                        type="tel"
+                        value={customerPhone}
+                        onChange={(e) => setCustomerPhone(e.target.value)}
+                        placeholder="Tu teléfono (opcional)"
                         className="flex-1 bg-transparent text-sm text-gray-900 dark:text-white placeholder:text-gray-400 focus:outline-none"
                       />
                     </div>
