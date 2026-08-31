@@ -1,6 +1,7 @@
 import { getStripe, stripeConfigured } from '@/lib/stripe';
 import { detectPaymentProvider, normalizeCurrency, SUBSCRIPTION_PLANS } from '@/lib/payments';
 import { createServiceClient } from '@/lib/supabase/service-role';
+import { RateLimiters, clientIp, rateLimitResponse } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
@@ -170,6 +171,11 @@ async function recomputeAuthoritativeTotal(admin, order) {
  */
 export async function POST(req) {
   try {
+    // Rate limit por IP (endpoint público; evita creación masiva de sesiones
+    // de checkout / scraping del cálculo server-side).
+    const rl = RateLimiters.checkout.check(`ip:${clientIp(req)}`);
+    if (!rl.ok) return rateLimitResponse(rl.retryAfter);
+
     const body = await req.json().catch(() => ({}));
     const {
       mode = 'payment', // 'payment' | 'subscription'

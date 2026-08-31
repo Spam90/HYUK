@@ -1,5 +1,16 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { hasAiFeatureAccess, aiUpgradeError } from '@/lib/ai-guard';
+import { RateLimiters, rateLimitResponse } from '@/lib/rate-limit';
+
+// Validación de imagen (controla el coste de Gemini):
+// solo PNG/JPEG/WebP base64, tamaño máximo ~5 MB (≈6.8M chars base64).
+const IMG_DATA_PREFIX = /^data:image\/(png|jpeg|jpg|webp);base64,/;
+const MAX_IMG_B64 = 6_800_000;
+
+function mimeFromPrefix(b64) {
+  const m = (b64.match(/(png|jpeg|jpg|webp)/) || ['', 'jpeg'])[1];
+  return m === 'jpg' ? 'jpeg' : m;
+}
 
 // Prompt de sistema para el análisis de menús
 const SYSTEM_PROMPT = `Eres un asistente de IA especializado en extraer información estructurada de menús y catálogos físicos.
@@ -48,6 +59,20 @@ export async function POST(request) {
       return Response.json({ error: 'No se proporcionó imagen' }, { status: 400 });
     }
 
+    // Rate limit por usuario autenticado (endpoint de coste).
+    const rl = RateLimiters.aiImage.check(`user:${user.id}`);
+    if (!rl.ok) return rateLimitResponse(rl.retryAfter);
+
+    // Validación estricta de la imagen antes de llamar a Gemini.
+    if (typeof imageBase64 !== 'string' || !IMG_DATA_PREFIX.test(imageBase64)) {
+      return Response.json({ error: 'Formato de imagen no válido (PNG/JPG/WebP)' }, { status: 400 });
+    }
+    const b64 = imageBase64.replace(IMG_DATA_PREFIX, '');
+    if (b64.length > MAX_IMG_B64) {
+      return Response.json({ error: 'Imagen demasiado grande (máximo ~5 MB)' }, { status: 413 });
+    }
+    const mimeType = `image/${mimeFromPrefix(imageBase64)}`;
+
     // Verificar API key
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
@@ -77,9 +102,9 @@ export async function POST(request) {
     // Preparar la imagen para Gemini
     const image = {
       inlineData: {
-        data: imageBase64.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, ''),
-        mimeType: 'image/jpeg'
-      }
+        data: b64,
+        mimeType,
+      },
     };
 
     const result = await model.generateContent([prompt, image]);

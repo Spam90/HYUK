@@ -10,6 +10,7 @@
 // =============================================================
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { RateLimiters, clientIp, rateLimitResponse } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,6 +25,10 @@ const ALLOWED_EVENTS = new Set([
 
 export async function POST(request) {
   try {
+    // Rate limit por IP (ingestión pública; evita inflar la BD de eventos).
+    const rl = RateLimiters.analytics.check(`ip:${clientIp(request)}`);
+    if (!rl.ok) return rateLimitResponse(rl.retryAfter);
+
     const body = await request.json().catch(() => ({}));
     const storeId = body?.storeId;
     const event = body?.event;

@@ -165,9 +165,18 @@ ALTER TABLE product_options ENABLE ROW LEVEL SECURITY;
 -- POLÍTICAS PARA PROFILES
 -- =============================================
 
--- Lectura pública de perfiles (para catálogos públicos)
-CREATE POLICY "Public read profiles" ON profiles
-  FOR SELECT USING (true);
+-- Lectura pública SOLO de tiendas publicadas (slug) y SOLO columnas públicas.
+-- email/whatsapp/teléfono/plan/stripe/trial están REVOCADOS para anon
+-- (migraciones 11/13): el catálogo usa service_role para columnas completas.
+CREATE POLICY "public_read_published_stores" ON profiles
+  FOR SELECT USING (slug IS NOT NULL AND slug <> '');
+
+REVOKE SELECT ON public.profiles FROM anon;
+GRANT SELECT (
+  id, slug, business_name, store_name, full_name, logo_url, settings,
+  store_currency, is_open, social_links, primary_color, secondary_color,
+  tagline, layout_type, created_at, updated_at
+) ON public.profiles TO anon;
 
 -- El usuario puede actualizar su propio perfil
 CREATE POLICY "Owner update profile" ON profiles
@@ -181,9 +190,13 @@ CREATE POLICY "Owner insert profile" ON profiles
 -- POLÍTICAS PARA CATEGORIES
 -- =============================================
 
--- Lectura pública de categorías activas
-CREATE POLICY "Public read active categories" ON categories
-  FOR SELECT USING (is_active = true);
+-- Lectura pública de categorías activas SOLO de tiendas publicadas (slug).
+CREATE POLICY "public_read_categories_published" ON categories
+  FOR SELECT USING (
+    is_active = true AND store_id IN (
+      SELECT id FROM profiles WHERE slug IS NOT NULL AND slug <> ''
+    )
+  );
 
 -- Lectura de todas las categorías para el dueño
 CREATE POLICY "Owner read categories" ON categories
@@ -205,9 +218,13 @@ CREATE POLICY "Owner delete categories" ON categories
 -- POLÍTICAS PARA PRODUCTS
 -- =============================================
 
--- Lectura pública de productos disponibles
-CREATE POLICY "Public read available products" ON products
-  FOR SELECT USING (is_available = true);
+-- Lectura pública de productos SOLO de tiendas publicadas (slug).
+CREATE POLICY "public_read_products_published" ON products
+  FOR SELECT USING (
+    is_available = true AND store_id IN (
+      SELECT id FROM profiles WHERE slug IS NOT NULL AND slug <> ''
+    )
+  );
 
 -- Lectura de todos los productos para el dueño
 CREATE POLICY "Owner read products" ON products
@@ -229,9 +246,16 @@ CREATE POLICY "Owner delete products" ON products
 -- POLÍTICAS PARA PRODUCT_OPTIONS
 -- =============================================
 
--- Lectura pública de opciones de productos
-CREATE POLICY "Public read product options" ON product_options
-  FOR SELECT USING (true);
+-- Lectura pública de opciones de productos SOLO de tiendas publicadas (slug).
+CREATE POLICY "public_read_product_options_published" ON product_options
+  FOR SELECT USING (
+    product_id IN (
+      SELECT p.id FROM products p
+      WHERE p.store_id IN (
+        SELECT id FROM profiles WHERE slug IS NOT NULL AND slug <> ''
+      )
+    )
+  );
 
 -- El dueño puede crear opciones (a través de sus productos)
 CREATE POLICY "Owner insert product options" ON product_options

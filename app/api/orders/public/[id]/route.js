@@ -16,6 +16,7 @@
 // =============================================================
 import { NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/service-role';
+import { RateLimiters, clientIp, rateLimitResponse } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,6 +56,10 @@ function notFound() {
 
 export async function GET(request, { params }) {
   try {
+    // Rate limit por IP (ráfagas de scraping / enumeración de tracking).
+    const rl = RateLimiters.tracking.check(`ip:${clientIp(request)}`);
+    if (!rl.ok) return rateLimitResponse(rl.retryAfter);
+
     const id = params?.id;
     if (!id || typeof id !== 'string' || !UUIDISH.test(id)) return notFound();
 

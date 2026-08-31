@@ -8,9 +8,11 @@ import CatalogView from './CatalogView';
 export async function generateMetadata({ params }) {
   try {
     const supabase = createClient();
+    // FASE Prom-6: columna-safe vs anon. select columnas públicas concedidas
+    // (la REVOKE de PII para anon en migración 13 impide select '*').
     const { data: store } = await supabase
       .from('profiles')
-      .select('*')
+      .select('id, slug, business_name, store_name, full_name, settings, tagline, logo_url')
       .eq('slug', params.slug)
       .single();
 
@@ -78,7 +80,10 @@ export default async function StorePage({ params }) {
     // Obtener datos de la tienda (con fallback seguro)
   let store = null;
   try {
-    const res = await supabase
+    // FASE La tienda necesita columnas completas (whatsapp, plan, trial…):
+    // se lee con service_role (igual que categorías/productos), nunca con
+    // el cliente anónimo (que en migración 13 quedó sin acceso a PII).
+    const res = await db
       .from('profiles')
       .select('*')
       .eq('slug', params.slug)

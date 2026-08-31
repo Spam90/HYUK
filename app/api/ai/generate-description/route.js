@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { hasAiFeatureAccess, aiUpgradeError } from '@/lib/ai-guard';
+import { RateLimiters, rateLimitResponse } from '@/lib/rate-limit';
 
 export async function POST(request) {
   try {
@@ -21,6 +22,15 @@ export async function POST(request) {
 
     if (!productName || typeof productName !== 'string') {
       return Response.json({ error: 'El nombre del producto es requerido' }, { status: 400 });
+    }
+
+    // Rate limit por usuario autenticado (endpoint de coste).
+    const rl = RateLimiters.aiText.check(`user:${user.id}`);
+    if (!rl.ok) return rateLimitResponse(rl.retryAfter);
+
+    // Límite de longitud para evitar prompts abusivos.
+    if (productName.length > 200) {
+      return Response.json({ error: 'El nombre del producto es demasiado largo (máx 200 caracteres)' }, { status: 400 });
     }
 
     // Verificar API key

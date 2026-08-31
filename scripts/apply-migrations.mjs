@@ -40,6 +40,7 @@ const api = async (query) => {
 const MIGRATIONS = [
   'supabase/migrations/20240101000011_phase0_security.sql',
   'supabase/migrations/20240101000012_phase05_stability.sql',
+  'supabase/migrations/20240101000013_security_hardening.sql',
 ];
 
 let failures = 0;
