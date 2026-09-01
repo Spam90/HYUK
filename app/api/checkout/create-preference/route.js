@@ -2,6 +2,13 @@ import { getStripe, stripeConfigured } from '@/lib/stripe';
 import { detectPaymentProvider, normalizeCurrency, SUBSCRIPTION_PLANS } from '@/lib/payments';
 import { createServiceClient } from '@/lib/supabase/service-role';
 import { RateLimiters, clientIp, rateLimitResponse } from '@/lib/rate-limit';
+import {
+  round2,
+  isValidQuantity,
+  expectedUnitPrice,
+  couponDiscountFor,
+  isCouponValidToday,
+} from '@/lib/checkout-core';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
@@ -9,7 +16,7 @@ export const maxDuration = 30;
 function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
     status,
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json' }, 
   });
 }
 
@@ -21,67 +28,12 @@ function json(obj, status = 200) {
 // y se contrasta con lo almacenado en la orden (orders.items JSONB y
 // orders.total_amount). Cualquier manipulación de precio/subtotal/
 // descuento/envío produce un rechazo explícito (400), nunca un cobro.
+//
+// PROMPT 7 — añadido:
+//   - validación estricta de cantidades (entero 1..99)
+//   - cupón inválido/agotado/vencido/ajeno → 400 (antes se ignoraba en silencio)
+//   - reglas monetarias centralizadas en lib/checkout-core.js
 // ---------------------------------------------------------------------
-const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
-
-/** Precio base vigente de un producto (respeta oferta relámpago activa). */
-function effectiveProductPrice(p = {}) {
-  const base = Number(p.price) || 0;
-  const end = p.flash_sale_end ? new Date(p.flash_sale_end).getTime() : null;
-  const flashActive = end && end > Date.now();
-  const flashPrice = Number(p.flash_sale_price);
-  return flashActive && flashPrice > 0 ? flashPrice : base;
-}
-
-/**
- * Normaliza las opciones de producto aceptando las dos formas usadas por el
- * proyecto:  [{ name, values:[{label, priceDelta}] }]  (seed/admin)
- *        y   [{ name, choices:[{label, priceDelta}] }]  (product_options)
- */
-function normalizeOptionGroups(rawOptions) {
-  if (!Array.isArray(rawOptions)) return [];
-  return rawOptions.map((g) => ({
-    label: g?.name || g?.label || '',
-    values: Array.isArray(g?.values) ? g.values : Array.isArray(g?.choices) ? g.choices : [],
-  }));
-}
-
-/**
- * Precio unitario esperado de un ítem recalculado desde BD.
- * Devuelve null si alguna opción elegida no existe o su delta difiere
- * (→ señal de carrito inválido/manipulado).
- */
-function expectedUnitPrice(item = {}, product = {}) {
-  let unit = effectiveProductPrice(product);
-  const groups = normalizeOptionGroups(product.options);
-
-  const sel = Array.isArray(item.selectedOptions) ? item.selectedOptions : [];
-  for (const chosen of sel) {
-    const chosenLabel = String(chosen?.label ?? '');
-    let found = null;
-    for (const g of groups) {
-      const hit = (g.values || []).find(
-        (v) => String(v?.label ?? '') === chosenLabel
-      );
-      if (hit) { found = hit; break; }
-    }
-    // Opción desconocida para este producto → manipulación o producto cambió.
-    if (!found) return null;
-    unit += Number(found.priceDelta) || 0;
-  }
-  return round2(unit);
-}
-
-/**
- * Descuento válido de cupón server-side (misma semántica que lib/coupons.js).
- */
-function couponDiscountFor(couponRow, subtotal) {
-  if (!couponRow) return 0;
-  if (couponRow.discount_type === 'percent') {
-    return round2((subtotal * (Number(couponRow.discount_value) || 0)) / 100);
-  }
-  return Math.min(Number(couponRow.discount_value) || 0, subtotal);
-}
 
 /**
  * Recalcula el TOTAL AUTORITATIVO de una orden desde la BD.
@@ -113,14 +65,18 @@ async function recomputeAuthoritativeTotal(admin, order) {
     if (!prod) {
       return { ok: false, status: 400, error: 'El pedido incluye productos inexistentes o de otra tienda. Vuelve a armar tu pedido.' };
     }
+    // PROMPT 7: validacion estricta de cantidad (entero 1..99).
+    const qty = it?.quantity;
+    if (!isValidQuantity(qty)) {
+      return { ok: false, status: 400, error: 'Cantidad invalida para un producto del pedido.' };
+    }
     const unit = expectedUnitPrice(it, prod);
     if (unit == null) {
-      return { ok: false, status: 400, error: 'Las opciones elegidas ya no coinciden con el catálogo. Vuelve a armar tu pedido.' };
+      return { ok: false, status: 400, error: 'Las opciones elegidas ya no coinciden con el catalogo. Vuelve a armar tu pedido.' };
     }
-    subtotal += unit * (Number(it?.quantity) || 1);
+    subtotal += unit * qty;
   }
   subtotal = round2(subtotal);
-
   // 3) Cupón server-side
   let discount = 0;
   if (order.coupon_code) {

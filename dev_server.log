@@ -1,0 +1,80 @@
+
+> sas-catalogo-digital@1.0.0 dev
+> next dev
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3000
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 4.5s
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 756ms (172 modules)
+ ○ Compiling / ...
+ ✓ Compiled / in 6.1s (1369 modules)
+ GET / 200 in 6870ms
+ ○ Compiling /[slug] ...
+ ✓ Compiled /[slug] in 4.3s (1634 modules)
+ GET /anyelo-tienda 200 in 7298ms
+ ○ Compiling /api/products/skus ...
+ ✓ Compiled /api/products/skus in 859ms (881 modules)
+ GET /api/products/skus 401 in 1112ms
+ ○ Compiling /api/store-data ...
+ ✓ Compiled /api/store-data in 592ms (909 modules)
+ GET /api/store-data?type=products 401 in 789ms
+ ○ Compiling /api/ai/generate-description ...
+ ✓ Compiled /api/ai/generate-description in 732ms (914 modules)
+ POST /api/ai/generate-description 401 in 820ms
+ ✓ Compiled /api/ai/scan-menu in 441ms (916 modules)
+ POST /api/ai/scan-menu 401 in 514ms
+ GET /api/products/skus?storeId=00000000-0000-0000-0000-000000000000 401 in 31ms
+ ○ Compiling /api/analytics/track ...
+ ✓ Compiled /api/analytics/track in 616ms (918 modules)
+ POST /api/analytics/track 204 in 696ms
+ POST /api/analytics/track 204 in 17ms
+ POST /api/analytics/track 204 in 26ms
+ POST /api/analytics/track 204 in 21ms
+ POST /api/analytics/track 204 in 16ms
+ POST /api/analytics/track 204 in 19ms
+ POST /api/analytics/track 204 in 24ms
+ POST /api/analytics/track 204 in 20ms
+ POST /api/analytics/track 204 in 25ms
+ POST /api/analytics/track 204 in 20ms
+ POST /api/analytics/track 204 in 22ms
+ POST /api/analytics/track 204 in 19ms
+ POST /api/analytics/track 204 in 22ms
+ POST /api/analytics/track 204 in 16ms
+ POST /api/analytics/track 204 in 16ms
+ POST /api/analytics/track 204 in 16ms
+ POST /api/analytics/track 204 in 16ms
+ POST /api/analytics/track 204 in 22ms
+ POST /api/analytics/track 204 in 19ms
+ POST /api/analytics/track 204 in 19ms
+ POST /api/analytics/track 204 in 23ms
+ POST /api/analytics/track 204 in 21ms
+ POST /api/analytics/track 204 in 26ms
+ POST /api/analytics/track 204 in 25ms
+ POST /api/analytics/track 204 in 48ms
+ POST /api/analytics/track 204 in 24ms
+ POST /api/analytics/track 204 in 20ms
+ POST /api/analytics/track 204 in 28ms
+ POST /api/analytics/track 204 in 22ms
+ POST /api/analytics/track 204 in 25ms
+ POST /api/analytics/track 429 in 21ms
+ POST /api/analytics/track 429 in 24ms
+ POST /api/analytics/track 429 in 32ms
+ POST /api/analytics/track 429 in 27ms
+ POST /api/analytics/track 429 in 23ms
+ ✓ Compiled /api/orders/public/[id] in 424ms (920 modules)
+ GET /api/orders/public/a2a7abdd-ab76-4a8b-bc09-24994c9f8074?t=b661c4f3b3105cb22e1a14d130c55035 200 in 1694ms
+ GET /api/orders/public/a2a7abdd-ab76-4a8b-bc09-24994c9f8074 404 in 53ms
+ GET /api/orders/public/a2a7abdd-ab76-4a8b-bc09-24994c9f8074?t=deadbeef 404 in 34ms
+ GET /api/orders/public/abc 404 in 23ms
+ GET /anyelo-tienda 200 in 1164ms
+ POST /api/analytics/track 204 in 19ms
+ ✓ Compiled in 6.3s (771 modules)
+ ✓ Compiled in 2.1s (771 modules)
+ ✓ Compiled in 1419ms (771 modules)
+ ✓ Compiled in 1389ms (771 modules)
+ ✓ Compiled in 1124ms (771 modules)
+ ✓ Compiled in 783ms (771 modules)
