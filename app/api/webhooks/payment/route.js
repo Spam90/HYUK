@@ -1,5 +1,6 @@
 import { constructWebhookEvent } from '@/lib/stripe';
 import { createServiceClient } from '@/lib/supabase/service-role';
+import { decrementOrderStock } from '@/lib/inventory';
 import { planFromPriceId } from '@/lib/payments';
 
 export const dynamic = 'force-dynamic';
@@ -110,6 +111,17 @@ async function handlePaymentCompleted(session, admin) {
       updated_at: new Date().toISOString(),
     })
     .eq('id', orderId);
+
+  // Decrementar stock de forma atómica e idempotente (migración 15) vía el
+  // wrapper centralizado de lib/inventory.js. Si el pedido ya fue procesado,
+  // devuelve already_processed y no descuenta dos veces. Un fallo de stock
+  // se registra pero NO revierte el pago (auditable en inventory_movements).
+  const dec = await decrementOrderStock(orderId, admin);
+  if (!dec.ok) {
+    console.error('[webhook] decrement_order_stock falló:', dec.error);
+  } else {
+    console.log('[webhook] stock:', dec.status);
+  }
 
   // Normalizar order_items desde el JSON del carrito
   let items = [];
