@@ -34,3 +34,6 @@ yarn-error.log*
 next-env.d.ts
 dev_server.log
 build_p*.log
+
+build*.log
+build*.err.log
