@@ -40,3 +40,10 @@ build*.err.log
 
 build-p9.log
 build-p9.err
+
+# lint/build logs
+lint*.log
+lint*.err
+build*.log
+build*.err
+dev*.log
