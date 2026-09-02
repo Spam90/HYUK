@@ -184,17 +184,19 @@ export async function POST(req) {
     const normCurrency = normalizeCurrency(currency);
     const success = successUrl || (orderId ? `${baseUrl}/pedido/${orderId}?paid=1` : `${baseUrl}/`);
     const cancel = cancelUrl || `${baseUrl}/`;
-        if (mode === 'subscription') {
-      let pid = priceId;
-      if (!pid) {
-        pid = SUBSCRIPTION_PLANS[priceTier]?.priceId;
-      }
-      if (!pid) {
+                if (mode === 'subscription') {
+      // SEGURIDAD: NUNCA confíes en un priceId arbitrario del cliente.
+      // El priceId autorizado debe provenir de SUBSCRIPTION_PLANS (server-side)
+      // y coincidir con el priceTier solicitado. Si el cliente envía un priceId
+      // inventado, se ignora y se resuelve el canonical server-side.
+      const canonical = SUBSCRIPTION_PLANS[priceTier]?.priceId;
+      if (!canonical) {
         return json(
-          { ok: false, error: 'priceId o priceTier inválido para suscripción.', code: 'invalid_price' },
+          { ok: false, error: 'Plan de suscripción inválido.', code: 'invalid_price_tier' },
           400
         );
       }
+      const pid = canonical;
 
       // Buscar o crear el customer de Stripe vinculado al perfil.
       let customerId = customer?.stripeCustomerId;

@@ -1,6 +1,6 @@
 import { constructWebhookEvent } from '@/lib/stripe';
 import { createServiceClient } from '@/lib/supabase/service-role';
-import { planFromPriceId } from '@/lib/payments';
+import { planFromPriceId, SUBSCRIPTION_PLANS } from '@/lib/payments';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
@@ -143,10 +143,30 @@ async function handlePaymentCompleted(session, admin) {
   }
 }
 
+// Resolve el plan de suscripción verdaderamente autorizado.
+// NO confiamos en session.metadata.priceId ni priceTier (enviados por el cliente).
+// El price real lo tomamos de la suscripción de Stripe; si no coincide con
+// SUBSCRIPTION_PLANS (server-side), el plan queda null → NUNCA se eleva al cliente.
+async function resolveSubscriptionPlan(session) {
+  const sub = session?.subscription
+    ? await stripeGetSubscription(session.subscription)
+    : null;
+  const stripePriceId = sub?.items?.data?.[0]?.price?.id;
+  const plan = stripePriceId ? planFromPriceId(stripePriceId) : null;
+  // Fallback seguro: solo aceptamos priceTier si coincide con un price canónico.
+  if (!plan && session?.metadata?.priceTier) {
+    const canonical = SUBSCRIPTION_PLANS[session.metadata.priceTier ?? '']?.priceId;
+    if (canonical && canonical === stripePriceId) {
+      return session.metadata.priceTier;
+    }
+  }
+  return plan;
+}
+
 async function handleSubscriptionCompleted(session, admin) {
   const storeId = session?.metadata?.storeId;
   const email = session?.metadata?.email;
-  const plan = planFromPriceId(session?.metadata?.priceId) || session?.metadata?.priceTier || null;
+  const plan = await resolveSubscriptionPlan(session);
 
   const subscription = session.subscription
     ? await stripeGetSubscription(session.subscription)
