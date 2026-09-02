@@ -690,3 +690,47 @@ CREATE POLICY IF NOT EXISTS "Public storage read banners" ON storage.objects
 CREATE POLICY IF NOT EXISTS "Authenticated storage insert banners" ON storage.objects
   FOR INSERT WITH CHECK (auth.uid() IS NOT NULL AND bucket_id = 'banners');
 
+-- ============================================================================
+-- product_skus — VARIANTES / INVENTARIO (migraciones 9 + 15 + 16)
+-- Fuente de verdad del stock. Estructura real verificada contra la BD.
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS product_skus (
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id     UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  sku            TEXT,
+  variant_label  TEXT,          -- ej. "Grande / Extra queso"
+  stock          INTEGER NOT NULL DEFAULT 0,
+  price_override DECIMAL(10,2), -- null => usa products.price
+  active         BOOLEAN NOT NULL DEFAULT true,
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+  -- Integridad (migración 16 — CHECKs verificados en BD real):
+  CONSTRAINT product_skus_stock_nonneg        CHECK (stock >= 0),
+  CONSTRAINT product_skus_price_override_valid
+    CHECK (price_override IS NULL OR (price_override >= 0 AND price_override <= 9999999.99)),
+  CONSTRAINT product_skus_sku_len             CHECK (sku IS NULL OR length(sku) <= 100),
+  CONSTRAINT product_skus_variant_label_len   CHECK (variant_label IS NULL OR length(variant_label) <= 200)
+);
+-- Duplicados de código SKU dentro del mismo producto:
+CREATE UNIQUE INDEX IF NOT EXISTS product_skus_product_id_sku_key ON product_skus (product_id, sku);
+CREATE INDEX IF NOT EXISTS idx_product_skus_active_stock ON product_skus (active, stock);
+
+-- RLS: el dueño gestiona vía ownership del producto; público solo lee
+-- SKUs activos de tiendas publicadas (sin exponer el CRM de otras tiendas).
+ALTER TABLE product_skus ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "owner_manage_product_skus" ON product_skus;
+CREATE POLICY "owner_manage_product_skus" ON product_skus
+  FOR ALL USING (
+    auth.uid() = (SELECT p.store_id FROM products p WHERE p.id = product_skus.product_id)
+  );
+DROP POLICY IF EXISTS "public_read_product_skus_published" ON product_skus;
+CREATE POLICY "public_read_product_skus_published" ON product_skus
+  FOR SELECT USING (
+    active = true
+    AND product_id IN (
+      SELECT p.id FROM products p
+      WHERE p.store_id IN (SELECT s.id FROM profiles s WHERE s.slug IS NOT NULL AND s.slug <> '')
+    )
+  );
+
+

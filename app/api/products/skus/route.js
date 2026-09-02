@@ -13,6 +13,7 @@
 // =============================================================
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service-role';
+import { parseStock, parsePrice, parseText } from '@/lib/sku-validation.mjs';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
@@ -49,6 +50,21 @@ async function getSkuWithStore(admin, id) {
 /** ¿El cliente intenta operar una tienda distinta a la suya? */
 function rejectsForeignStore(user, storeIdFromClient) {
   return Boolean(storeIdFromClient && String(storeIdFromClient) !== String(user.id));
+}
+
+/**
+ * Traduce errores de BD a respuestas seguras (FASE 14): nunca exponer
+ * detalles internos de Postgres al cliente; solo log en servidor.
+ */
+function dbErrorResponse(err, context) {
+  console.error(`[skus] ${context} error:`, err?.message, err?.code || '');
+  if (err?.code === '23505') {
+    return json({ ok: false, error: 'Ya existe un SKU con ese código para este producto' }, 409);
+  }
+  if (err?.code === '23514' || err?.code === '22P02') {
+    return json({ ok: false, error: 'Datos inválidos (verifica stock y precio)' }, 400);
+  }
+  return json({ ok: false, error: 'Error interno al guardar el SKU' }, 500);
 }
 
 export async function GET(req) {
@@ -97,8 +113,7 @@ export async function GET(req) {
     }));
     return json({ ok: true, skus });
   } catch (err) {
-    console.error('[skus] GET error:', err?.message);
-    return json({ ok: false, error: err?.message }, 500);
+    return dbErrorResponse(err, 'GET');
   }
 }
 
@@ -113,6 +128,18 @@ export async function POST(req) {
     if (!productId) return json({ ok: false, error: 'productId requerido' }, 400);
     if (rejectsForeignStore(user, storeId)) {
       return json({ ok: false, error: 'No autorizado para esta tienda' }, 403);
+    }
+
+    // Validación de entrada (rechaza NaN, Infinity, -1, "abc", "10abc", etc.)
+    const vSku = parseText(sku, 100);
+    const vLabel = parseText(variant_label, 200);
+    const vStock = parseStock(stock);
+    const vPrice = parsePrice(price_override);
+    if (vSku === null || vLabel === null || vStock === null || vPrice === null) {
+      return json({
+        ok: false,
+        error: 'Datos inválidos: sku ≤100 caracteres, variante ≤200, stock entero ≥0 y precio ≥0',
+      }, 400);
     }
 
     const admin = createServiceClient();
@@ -131,10 +158,10 @@ export async function POST(req) {
       .from('product_skus')
       .insert({
         product_id: productId,
-        sku: sku || null,
-        variant_label: variant_label || null,
-        stock: Number(stock) || 0,
-        price_override: price_override != null ? Number(price_override) : null,
+        sku: vSku ?? null,
+        variant_label: vLabel ?? null,
+        stock: vStock ?? 0,
+        price_override: vPrice ?? null,
         active: Boolean(active),
       })
       .select()
@@ -142,8 +169,7 @@ export async function POST(req) {
     if (error) throw error;
     return json({ ok: true, sku: data });
   } catch (err) {
-    console.error('[skus] POST error:', err?.message);
-    return json({ ok: false, error: err?.message }, 500);
+    return dbErrorResponse(err, 'POST');
   }
 }
 
@@ -170,18 +196,27 @@ export async function PUT(req) {
     }
 
     const updates = {};
-    if (sku !== undefined) updates.sku = sku;
-    if (variant_label !== undefined) updates.variant_label = variant_label;
-    if (stock !== undefined) updates.stock = Number(stock);
-    if (price_override !== undefined) updates.price_override = price_override != null ? Number(price_override) : null;
+    // Validación de entrada igual que en POST (FASE 3). Un campo inválido
+    // rechaza con 400 en lugar de llegar a la BD con NaN/-1/"abc".
+    if (sku !== undefined) updates.sku = parseText(sku, 100);
+    if (variant_label !== undefined) updates.variant_label = parseText(variant_label, 200);
+    if (stock !== undefined) updates.stock = parseStock(stock);
+    if (price_override !== undefined) updates.price_override = parsePrice(price_override);
     if (active !== undefined) updates.active = Boolean(active);
+
+    const invalidField = Object.entries(updates).find(([, v]) => v === null);
+    if (invalidField) {
+      return json({
+        ok: false,
+        error: `Valor inválido para '${invalidField[0]}': stock entero ≥0, precio ≥0 y longitudes acotadas`,
+      }, 400);
+    }
 
     const { data, error } = await admin.from('product_skus').update(updates).eq('id', id).select().single();
     if (error) throw error;
     return json({ ok: true, sku: data });
   } catch (err) {
-    console.error('[skus] PUT error:', err?.message);
-    return json({ ok: false, error: err?.message }, 500);
+    return dbErrorResponse(err, 'PUT');
   }
 }
 
@@ -211,7 +246,6 @@ export async function DELETE(req) {
     if (error) throw error;
     return json({ ok: true });
   } catch (err) {
-    console.error('[skus] DELETE error:', err?.message);
-    return json({ ok: false, error: err?.message }, 500);
+    return dbErrorResponse(err, 'DELETE');
   }
 }

@@ -37,3 +37,6 @@ build_p*.log
 
 build*.log
 build*.err.log
+
+build-p9.log
+build-p9.err
