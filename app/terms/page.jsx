@@ -13,7 +13,7 @@ export default function TermsPage() {
         <div className="space-y-6 text-sm leading-relaxed">
           <section>
             <h2 className="text-lg font-semibold text-white mb-2">1. Aceptación</h2>
-            <p>Al usar HYUK ("el Servicio") aceptas estos términos. Si no estás de acuerdo, no utilices el Servicio.</p>
+            <p>Al usar HYUK (&quot;el Servicio&quot;) aceptas estos términos. Si no estás de acuerdo, no utilices el Servicio.</p>
           </section>
 
           <section>
@@ -33,7 +33,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-lg font-semibold text-white mb-2">5. Limitación de responsabilidad</h2>
-            <p>El Servicio se ofrece "tal cual". No garantizamos disponibilidad ininterrumpida ni nos hacemos responsables de daños indirectos derivados de su uso.</p>
+            <p>El Servicio se ofrece &quot;tal cual&quot;. No garantizamos disponibilidad ininterrumpida ni nos hacemos responsables de daños indirectos derivados de su uso.</p>
           </section>
 
           <section>

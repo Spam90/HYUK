@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { 
           Palette, Package, ShoppingBag, Settings, ExternalLink, Store,
-  ClipboardList, Eye, TrendingUp, MousePointer, Copy, CheckCircle,
+  ClipboardList, Eye, TrendingUp, MousePointer, Copy, Check, CheckCircle,
   Link as LinkIcon, Megaphone, Users, QrCode, Crown
 } from 'lucide-react';
 import { useState, useEffect } from 'react';

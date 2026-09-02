@@ -263,7 +263,7 @@ function CatalogContent({ store, categories, products, settings }) {
                 <div className="flex items-center gap-2 mb-4">
                   <Search className="w-5 h-5 text-text/40" />
                   <h2 className="text-lg font-bold text-text">
-                    Resultados para "{searchQuery}"
+                    Resultados para &ldquo;{searchQuery}&rdquo;
                   </h2>
                   <span className="text-sm text-text/40">
                     ({searchResults?.length || 0} productos)
