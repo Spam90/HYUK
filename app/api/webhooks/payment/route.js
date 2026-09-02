@@ -1,6 +1,5 @@
 import { constructWebhookEvent } from '@/lib/stripe';
 import { createServiceClient } from '@/lib/supabase/service-role';
-import { decrementOrderStock } from '@/lib/inventory';
 import { planFromPriceId } from '@/lib/payments';
 
 export const dynamic = 'force-dynamic';
@@ -99,59 +98,32 @@ async function handlePaymentCompleted(session, admin) {
     return;
   }
 
-  // Marcar el pago como pagado
-  await admin
-    .from('orders')
-    .update({
-      payment_status: 'paid',
-      status: 'paid',
-      payment_intent_id: session.payment_intent || session.id,
-      stripe_session_id: session.id,
-      payment_provider: 'stripe',
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', orderId);
+  // Transición ATÓMICA vía RPC set_order_status (migración 17):
+  //   - valida ownership (service-role pasa con auth.uid() NULL)
+  //   - descuenta stock (idempotente, migración 15) en la MISMA transacción
+  //   - reconstruye order_items desde la BD (precios reales, snapshots)
+  //   - persiste payment_status='paid', status='paid' y los IDs de Stripe
+  // Si el stock falla, la RPC devuelve ok=false con código legible y el
+  // pedido permanece en su estado previo. Devolvemos error para que Stripe
+  // reintente el webhook más tarde (la idempotencia global de payment_events
+  // evita dobles procesamientos cuando el reintento finalmente funciona).
+  const { data: rpc, error: rpcErr } = await admin.rpc('set_order_status', {
+    p_order_id: orderId,
+    p_new_status: 'paid',
+    p_payment_provider: 'stripe',
+    p_payment_intent_id: session.payment_intent || session.id,
+    p_stripe_session_id: session.id,
+  });
 
-  // Decrementar stock de forma atómica e idempotente (migración 15) vía el
-  // wrapper centralizado de lib/inventory.js. Si el pedido ya fue procesado,
-  // devuelve already_processed y no descuenta dos veces. Un fallo de stock
-  // se registra pero NO revierte el pago (auditable en inventory_movements).
-  const dec = await decrementOrderStock(orderId, admin);
-  if (!dec.ok) {
-    console.error('[webhook] decrement_order_stock falló:', dec.error);
-  } else {
-    console.log('[webhook] stock:', dec.status);
+  if (rpcErr) {
+    console.error('[webhook] set_order_status RPC error:', rpcErr?.message);
+    throw new Error('No se pudo confirmar el pago de la orden.');
   }
-
-  // Normalizar order_items desde el JSON del carrito
-  let items = [];
-  if (order.items) {
-    try {
-      items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
-    } catch {
-      items = [];
-    }
-  }
-  if (Array.isArray(items) && items.length) {
-    const rows = items
-      .map((it) => ({
-        order_id: orderId,
-        product_id: it?.id || it?.product?.id || null,
-        product_name: it?.name || 'Producto',
-        sku: Array.isArray(it?.selectedOptions)
-          ? it.selectedOptions.map((o) => o?.label).filter(Boolean).join(' / ')
-          : null,
-        quantity: Number(it?.quantity || 1),
-        unit_price: Number(it?.price || 0),
-        total_price: Number(it?.price || 0) * Number(it?.quantity || 1),
-      }))
-      .filter((r) => r.quantity > 0);
-
-    if (rows.length) {
-      await admin.from('order_items').insert(rows).catch((insErr) => {
-        console.warn('[webhook] No se pudieron insertar order_items:', insErr?.message);
-      });
-    }
+  if (!rpc?.ok) {
+    // Código de negocio (order_insufficient_stock, invalid_order_transition…)
+    // se registra pero NO se expone en la respuesta al webhook de Stripe.
+    console.error('[webhook] set_order_status rechazado:', rpc?.error);
+    throw new Error('La orden no pudo pasar a estado pagado.');
   }
 
   // Notificar al analytics de forma fire-and-forget (REST) — no bloquea.

@@ -10,6 +10,7 @@ import {
 import { useRouter } from 'next/navigation';
 import { openPrintTicket } from '@/lib/print/thermal-ticket';
 import { getDbStatus } from '@/lib/db-status';
+import { translateOrderError } from '@/lib/orders';
 
 export const dynamic = 'force-dynamic';
 
@@ -156,18 +157,24 @@ export default function OrdersPage() {
     if (!supabase) return;
 
     try {
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: newStatus })
-        .eq('id', orderId);
+      // RPC transaccional: valida ownership + máquina de estados y sincroniza
+      // inventario/order_items. Prohibido UPDATE directo de orders.status.
+      const { data, error } = await supabase.rpc('set_order_status', {
+        p_order_id: orderId,
+        p_new_status: newStatus,
+      });
 
       if (error) throw error;
+      if (!data?.ok) {
+        alert(`No se pudo actualizar el pedido: ${translateOrderError(data?.error)}`);
+        return;
+      }
 
       // Recargar pedidos
       loadOrders();
     } catch (error) {
       console.error('Error updating order:', error);
-      alert('Error al actualizar el pedido');
+      alert(`Error al actualizar el pedido: ${error?.message || 'intenta de nuevo'}`);
     }
   };
 
