@@ -10,6 +10,16 @@
 //    PUT/DELETE verifican propiedad del SKU antes de escribir.
 //  - service_role SOLO tras autenticar+autorizar (nunca como
 //    sustituto de la autorización).
+//
+// POLÍTICA HTTP (especificación de respuestas):
+//   GET    200 {ok,skus} | 401 | 403 | 404 | 400 | 500 | 503
+//   POST   201 {ok,sku}  | 400 | 401 | 403 | 404 | 409 dup | 500 | 503
+//   PUT    200 {ok,sku}  | 400 | 401 | 403 | 404 | 500 | 503
+//   DELETE 200 {ok}      | 400 | 401 | 403 | 404 | 500 | 503
+//   (DELETE mantiene 200+JSON en vez de 204: sin consumidores activos
+//    hoy, pero se conserva el formato {ok} por convención del proyecto.)
+//   Los errores nunca exponen detalles internos de Postgres; solo log
+//   server-side (dbErrorResponse). Formato de error: {ok:false, error}.
 // =============================================================
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service-role';
@@ -167,7 +177,7 @@ export async function POST(req) {
       .select()
       .single();
     if (error) throw error;
-    return json({ ok: true, sku: data });
+    return json({ ok: true, sku: data }, 201);
   } catch (err) {
     return dbErrorResponse(err, 'POST');
   }
