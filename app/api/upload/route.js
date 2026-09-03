@@ -10,6 +10,7 @@
 // =============================================================
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service-role';
+import { RateLimiters, rateLimitResponse } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
@@ -28,6 +29,10 @@ export async function POST(req) {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return json({ ok: false, error: 'No autenticado' }, 401);
+
+    // Rate limit por usuario autenticado (evita llenar Storage con subidas abusivas).
+    const rl = RateLimiters.upload.check(`user:${user.id}`);
+    if (!rl.ok) return rateLimitResponse(rl.retryAfter);
 
     const admin = createServiceClient();
     if (!admin) {
@@ -75,6 +80,7 @@ export async function POST(req) {
     return json({ ok: true, url: publicUrl, path: uploaded?.path || filePath });
   } catch (err) {
     console.error('[upload]', err?.message);
-    return json({ ok: false, error: err?.message || 'Error subiendo la imagen' }, 500);
+    // PROMPT 12: nunca exponer detalles internos de Supabase/Storage al cliente.
+    return json({ ok: false, error: 'Error subiendo la imagen' }, 500);
   }
 }

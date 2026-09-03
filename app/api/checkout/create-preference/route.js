@@ -1,5 +1,6 @@
 import { getStripe, stripeConfigured } from '@/lib/stripe';
 import { detectPaymentProvider, normalizeCurrency, SUBSCRIPTION_PLANS } from '@/lib/payments';
+import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service-role';
 import { RateLimiters, clientIp, rateLimitResponse } from '@/lib/rate-limit';
 import {
@@ -185,6 +186,27 @@ export async function POST(req) {
     const success = successUrl || (orderId ? `${baseUrl}/pedido/${orderId}?paid=1` : `${baseUrl}/`);
     const cancel = cancelUrl || `${baseUrl}/`;
                 if (mode === 'subscription') {
+      // ─────────────────────────────────────────────────────────────────────
+      // PROMPT 12 (PRODUCCIÓN) — Billing SaaS end-to-end:
+      //
+      // ANTES: esta rama NO validaba sesión. Un anónimo podía iniciar un
+      // checkout de suscripción apuntando a `storeId` de cualquier tienda; el
+      // webhook luego activaba el plan de esa tienda usando metadata enviada
+      // desde el navegador (storeId + email), lo que permitía:
+      //   - activar/alterar el billing de una tienda ajena;
+      //   - confundir identidad entre tenants.
+      //
+      // AHORA: `mode === 'subscription'` EXIGE sesión autenticada y el tenant
+      // SIEMPRE se deriva de `auth.uid()` (nunca de `storeId` del body).
+      // El email del customer también viene de la sesión/perfil, no del JSON.
+      // ─────────────────────────────────────────────────────────────────────
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return json({ ok: false, error: 'Debes iniciar sesión para suscribirte.', code: 'auth_required' }, 401);
+      }
+      const forcedStoreId = user.id; // tenant canónico de la sesión
+
       // SEGURIDAD: NUNCA confíes en un priceId arbitrario del cliente.
       // El priceId autorizado debe provenir de SUBSCRIPTION_PLANS (server-side)
       // y coincidir con el priceTier solicitado. Si el cliente envía un priceId
@@ -198,18 +220,42 @@ export async function POST(req) {
       }
       const pid = canonical;
 
-      // Buscar o crear el customer de Stripe vinculado al perfil.
-      let customerId = customer?.stripeCustomerId;
-      if (!customerId && customer?.email) {
-        const existing = await stripe.customers.list({ email: customer.email, limit: 1 });
+      const admin = createServiceClient();
+      if (!admin) {
+        return json(
+          { ok: false, error: 'SUPABASE_SERVICE_ROLE_KEY no configurada', code: 'service_role_missing' },
+          503
+        );
+      }
+
+      // Identidad de pago server-side: perfil del tenant autenticado.
+      const { data: profile } = await admin
+        .from('profiles')
+        .select('email, full_name, stripe_customer_id')
+        .eq('id', forcedStoreId)
+        .maybeSingle();
+      if (!profile) {
+        return json({ ok: false, error: 'Perfil no encontrado.', code: 'profile_not_found' }, 404);
+      }
+      const email = profile.email || user.email;
+
+      // Buscar o crear el customer de Stripe vinculado al perfil (idempotente).
+      let customerId = profile.stripe_customer_id;
+      if (!customerId && email) {
+        const existing = await stripe.customers.list({ email, limit: 1 });
         customerId = existing.data?.[0]?.id;
         if (!customerId) {
           const created = await stripe.customers.create({
-            email: customer.email,
-            name: customer?.name || undefined,
-            phone: customer?.phone || undefined,
+            email,
+            name: profile?.full_name || user.user_metadata?.name || undefined,
           });
           customerId = created.id;
+          // Guardar el customer ID para reutilizarlo y para el portal de billing.
+          await admin
+            .from('profiles')
+            .update({ stripe_customer_id: customerId, updated_at: new Date().toISOString() })
+            .eq('id', forcedStoreId)
+            .catch(() => {});
         }
       }
 
@@ -217,17 +263,17 @@ export async function POST(req) {
         mode: 'subscription',
         payment_method_types: ['card'],
         customer: customerId || undefined,
-        customer_email: customerId ? undefined : customer?.email,
+        customer_email: customerId ? undefined : email,
         line_items: [{ price: pid, quantity: 1 }],
         metadata: {
-          storeId: storeId || '',
-          priceTier: priceTier || '',
-          email: customer?.email || '',
+          storeId: forcedStoreId,     // SIEMPRE el tenant autenticado
+          priceTier: priceTier || '', // tier validado (canonical server-side)
+          email: email || '',
         },
         success_url: `${success}&session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: cancel,
         subscription_data: {
-          trial_period_days: customer?.trialDays || 28,
+          trial_period_days: user.user_metadata?.trialDays || 28,
         },
         allow_promotion_codes: true,
       });
@@ -330,7 +376,7 @@ export async function POST(req) {
   } catch (err) {
     console.error('[checkout] create-preference error:', err?.message);
     return json(
-      { ok: false, error: err?.message || 'Error creando preferencia de pago.', code: 'checkout_error' },
+      { ok: false, error: 'Error creando la preferencia de pago. Intenta de nuevo.', code: 'checkout_error' },
       500
     );
   }

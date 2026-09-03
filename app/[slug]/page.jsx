@@ -172,10 +172,43 @@ export default async function StorePage({ params }) {
     const trialActive = !!store.trial_ends_at && new Date(store.trial_ends_at).getTime() > Date.now();
     const effectivePlan = trialActive && storePlan === 'free' ? 'pro' : storePlan;
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // PROMPT 12 — AUDITORÍA DE PRODUCCIÓN (PII LEAK):
+  // Antes se pasaba `store` (select('*') con service_role) al componente
+  // cliente, lo que serializaba TODO el perfil en el payload RSC del navegador:
+  // email, plan_type, trial_ends_at, stripe_customer_id, subscription_status,
+  // current_plan... a TODOS los visitantes anónimos del catálogo.
+  //
+  // Ahora solo se exponen las columnas públicas que el catálogo necesita
+  // (mismo allowlist del GRANT SELECT para anon de la migración 13 + los
+  // campos usados por los componentes del catálogo).
+  // ─────────────────────────────────────────────────────────────────────────
+  const publicStore = {
+    id: store.id,
+    slug: store.slug,
+    business_name: store.business_name,
+    store_name: store.store_name,
+    full_name: store.full_name,
+    tagline: store.tagline,
+    logo_url: store.logo_url,
+    phone_whatsapp: store.phone_whatsapp,
+    whatsapp_number: store.whatsapp_number,
+    phone: store.phone,
+    social_links: store.social_links,
+    store_currency: store.store_currency,
+    is_open: store.is_open,
+    settings: store.settings,
+    primary_color: store.primary_color,
+    secondary_color: store.secondary_color,
+    layout_type: store.layout_type,
+    created_at: store.created_at,
+    updated_at: store.updated_at,
+  };
+
   return (
     <div>
             <CatalogView
-        store={store}
+        store={publicStore}
         categories={categories || []}
         products={productsWithOptions}
         settings={settings}

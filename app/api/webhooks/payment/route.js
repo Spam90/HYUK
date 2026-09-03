@@ -69,7 +69,8 @@ export async function POST(req) {
   } catch (err) {
     const msg = err?.message || 'Webhook error';
     console.error('[webhook] Error procesando evento:', msg);
-    return new Response(JSON.stringify({ error: msg }), { status: 400 });
+    // PROMPT 12: respuesta genérica; los detalles solo quedan en logs.
+    return new Response(JSON.stringify({ error: 'Invalid Stripe webhook payload' }), { status: 400 });
   }
 }
 // ---------------------------------------------------------------------------

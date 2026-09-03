@@ -117,6 +117,6 @@ export async function GET(req) {
     return json({ ok: false, error: `type inválido: ${type}` }, 400);
   } catch (err) {
     console.error('[store-data]', err?.message);
-    return json({ ok: false, error: err?.message || 'Error interno' }, 500);
+    return json({ ok: false, error: 'Error interno del servidor' }, 500);
   }
 }

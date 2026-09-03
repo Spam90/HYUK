@@ -47,3 +47,9 @@ lint*.err
 build*.log
 build*.err
 dev*.log
+# residuos locales (nunca versionar)
+build_done_*.txt
+nt.log
+nte.log
+commit-msg.txt
+dy
