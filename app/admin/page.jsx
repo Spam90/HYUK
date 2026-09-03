@@ -26,6 +26,8 @@ export default function AdminDashboard() {
   const [togglingOpen, setTogglingOpen] = useState(false);
   const [planType, setPlanType] = useState('free');
   const [trialEndsAt, setTrialEndsAt] = useState(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState('inactive');
+  const [hasStripeCustomer, setHasStripeCustomer] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
@@ -40,23 +42,38 @@ export default function AdminDashboard() {
 
       // Get store URL (solo columnas que existen: evita 400 de plan_type/is_open)
       const db = await getDbStatus();
+      // Campos de billing (existen desde migración 08 / enterprise features).
       const profileCols = [
         'slug',
         ...(db.isOpen ? ['is_open'] : []),
         ...(db.planColumn ? [db.planColumn] : []),
         ...(db.trialEnds ? ['trial_ends_at'] : []),
+        'subscription_status',
+        'stripe_customer_id',
       ].join(', ');
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select(profileCols)
-        .eq('id', user.id)
-        .maybeSingle();
+      // Si alguna columna vieja no existe en esta BD, reintentar sin ellas.
+      let profile = null;
+      let profileErr = null;
+      try {
+        const res = await supabase.from('profiles').select(profileCols).eq('id', user.id).maybeSingle();
+        profile = res.data;
+        profileErr = res.error;
+      } catch {}
+      if (profileErr) {
+        const baseCols = ['slug', ...(db.isOpen ? ['is_open'] : []), ...(db.planColumn ? [db.planColumn] : []), ...(db.trialEnds ? ['trial_ends_at'] : [])].join(', ');
+        try {
+          const res = await supabase.from('profiles').select(baseCols).eq('id', user.id).maybeSingle();
+          profile = res.data;
+        } catch {}
+      }
 
       if (profile?.slug) {
         setStoreUrl(`${profile.slug}.hyuk.app`);
       }
       setIsStoreOpen(profile?.is_open !== false);
       setTrialEndsAt(profile?.trial_ends_at || null);
+      setSubscriptionStatus(String(profile?.subscription_status || 'inactive').toLowerCase());
+      setHasStripeCustomer(Boolean(profile?.stripe_customer_id));
       // Normalizar SIEMPRE a minúscula: la BD tuvo valores legacy como "Pro"
       // (capitalizado) que no coinciden con las claves de PLAN_LIMITS/PLAN_NAME
       // y hacían que la UI tratara una cuenta Pro como Free.
@@ -391,7 +408,7 @@ export default function AdminDashboard() {
                         })}
           </div>
 
-          <PlanUpgradeCard plan={planType} trialEndsAt={trialEndsAt} />
+          <PlanUpgradeCard plan={planType} trialEndsAt={trialEndsAt} subscriptionStatus={subscriptionStatus} hasStripeCustomer={hasStripeCustomer} />
 
           {/* Control Rápido: Estado de la tienda + QR */}
           <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">

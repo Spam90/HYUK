@@ -97,7 +97,8 @@ export default function CategoriesPage() {
 
       if (error) {
         console.error('Error saving category:', error);
-        alert(`Error al guardar: ${error.message || 'Verifica que el schema SQL esté ejecutado correctamente'}`);
+        // PROMPT 13: mensaje seguro (el detalle técnico queda en el log).
+        alert('No se pudo guardar la categoría. Verifica los datos e intenta de nuevo.');
         return;
       }
 
@@ -108,7 +109,7 @@ export default function CategoriesPage() {
       alert('Categoría guardada exitosamente');
     } catch (error) {
       console.error('Error saving category:', error);
-      alert(`Error inesperado: ${error.message}`);
+      alert('Ocurrió un error inesperado al guardar la categoría. Intenta de nuevo.');
     }
   };
 

@@ -143,7 +143,7 @@ export default function HomePage() {
         'Onboarding dedicado'
       ],
       cta: 'Contactar ventas',
-      href: '/signup',
+      href: '/contact',
       popular: false
     },
   ];

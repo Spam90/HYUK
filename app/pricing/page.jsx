@@ -1,9 +1,10 @@
 import Link from 'next/link';
+import SubscribeButton from '@/components/billing/SubscribeButton';
 
 // Página pública de planes. Los CTAs del admin ("Mejorar a Pro", "Ver planes",
-// banners de upgrade) apuntan aquí. En esta versión el checkout de suscripción
-// se procesa manualmente (contacto), pero la página ya deja clara la propuesta
-// de valor y los beneficios de cada plan.
+// banners de upgrade) apuntan aquí. El checkout de suscripción se procesa
+// server-side vía /api/checkout/create-preference (Stripe): el botón "Empezar
+// con Pro" exige sesión y delega el priceId al servidor (nunca al navegador).
 
 const PLANS = [
   {
@@ -32,6 +33,7 @@ const PLANS = [
     highlight: true,
     cta: 'Empezar con Pro',
     href: '/signup',
+    tier: 'pro', // SubscribeButton resuelve el Price ID server-side
     features: [
       'Todo lo del plan Free',
       'Productos ilimitados',
@@ -111,16 +113,20 @@ export default function PricingPage() {
                   </li>
                 ))}
               </ul>
-              <Link
-                href={plan.href}
-                className={`w-full py-3 rounded-xl text-center font-semibold transition-colors ${
-                  plan.highlight
-                    ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
-                    : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-100'
-                }`}
-              >
-                {plan.cta}
-              </Link>
+              {plan.tier ? (
+                <SubscribeButton priceTier={plan.tier} label={plan.cta} />
+              ) : (
+                <Link
+                  href={plan.href}
+                  className={`w-full py-3 rounded-xl text-center font-semibold transition-colors ${
+                    plan.highlight
+                      ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                      : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-100'
+                  }`}
+                >
+                  {plan.cta}
+                </Link>
+              )}
             </div>
           ))}
         </div>

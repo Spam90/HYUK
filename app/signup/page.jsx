@@ -94,8 +94,11 @@ export default function SignupPage() {
         console.warn('Auto-login after signup failed:', signInError.message);
       }
 
-      // Redirigir al onboarding
-      window.location.href = '/onboarding';
+      // Redirigir al onboarding, o a la ruta solicitada (?redirect=...)
+      // p. ej. cuando el usuario llegó desde /pricing para suscribirse.
+      const urlParams = new URLSearchParams(window.location.search);
+      const redirect = urlParams.get('redirect');
+      window.location.href = redirect && redirect.startsWith('/') ? redirect : '/onboarding';
     } catch (err) {
       setError(err.message || 'Error al registrarse');
     } finally {

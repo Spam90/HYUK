@@ -137,7 +137,8 @@ function CustomizePanel() {
 
       if (updateError) {
         console.error('Error saving settings:', updateError);
-        alert(`Error al guardar: ${updateError.message || 'Verifica que el schema SQL esté ejecutado correctamente'}`);
+        // PROMPT 13: mensaje seguro (el detalle técnico queda en el log).
+        alert('No se pudo guardar la personalización. Verifica los datos e intenta de nuevo.');
         return;
       }
 
@@ -146,7 +147,7 @@ function CustomizePanel() {
       console.log('Settings saved successfully:', data);
     } catch (err) {
       console.error('Error saving settings:', err);
-      const errorMessage = err?.message || 'Error al guardar la configuración';
+      const errorMessage = 'No se pudo guardar la configuración. Intenta de nuevo.';
       setError(errorMessage);
       alert(`Error: ${errorMessage}`);
     } finally {

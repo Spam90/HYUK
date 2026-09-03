@@ -156,9 +156,10 @@ export default function MarketingPage() {
       alert('Cupón guardado exitosamente');
     } catch (error) {
       console.error('Error saving coupon:', error);
+      // PROMPT 13: mensaje seguro; el detalle técnico queda en el log.
       alert(error.message?.includes('duplicate') || error.message?.includes('23505')
         ? 'Ya existe un cupón con ese código'
-        : `Error al guardar: ${error.message}`);
+        : 'No se pudo guardar el cupón. Intenta de nuevo.');
     }
   };
 const handleDeleteCoupon = async (id) => {
