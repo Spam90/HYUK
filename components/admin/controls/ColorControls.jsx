@@ -162,7 +162,7 @@ export default function ColorControls({ settings, updateSettings }) {
                                 onClick={() => {
                   updateSettings('theme', { mode: mode.value });
                   // Sincronizar con el tema global (next-themes) -> app + preview en tiempo real
-                  setTheme(mode.value === 'dark' || mode.value === 'neon' ? 'dark' : 'light');
+                  setTheme(mode.value); // 'light' | 'dark' | 'neon' (Prompt 15)
                   // Ajustar colores para modo neón
                   if (mode.value === 'neon') {
                     updateSettings('theme', {

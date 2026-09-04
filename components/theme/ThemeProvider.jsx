@@ -83,18 +83,22 @@ export default function ThemeProvider({ children, initialSettings = DEFAULT_SETT
     const fontFamily = FONT_FAMILY_MAP[theme.fontFamily] || "'Inter', sans-serif";
     root.style.setProperty('--font-family', fontFamily);
 
-              // Modo claro/oscuro: respetar el toggle global de next-themes.
-    // La clase `.dark` en <html> la administra next-themes (global).
+              // Modo claro/oscuro/neón: respetar el toggle global de next-themes.
+    // La clase `.dark` o `.neon` en <html> la administra next-themes (global).
     // Los presets con mode === 'dark' conservan sus colores; los presets claros
-    // reciben valores dark-friendly bajo .dark para evitar secciones "pegajosas".
-    const isDark = typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+    // reciben valores dark-friendly bajo .dark/.neon para evitar secciones "pegajosas".
+    const html = document.documentElement;
+    const isDark = html.classList.contains('dark') || html.classList.contains('neon');
+    const isNeon = html.classList.contains('neon');
     if (isDark) {
-      const isDarkPreset = theme.mode === 'dark';
-      root.style.setProperty('--background', theme.backgroundColor || (isDarkPreset ? '#09090B' : '#0F172A'));
-      root.style.setProperty('--card-bg', theme.cardBackgroundColor || (isDarkPreset ? '#18181B' : '#1E293B'));
-      root.style.setProperty('--text-color', theme.textColor || (isDarkPreset ? '#FAFAFA' : '#F8FAFC'));
-      root.style.setProperty('--secondary', theme.secondaryColor || (isDarkPreset ? '#A855F7' : '#94A3B8'));
-      root.style.setProperty('--accent', theme.accentColor || '#FBBF24');
+      const isDarkPreset = theme.mode === 'dark' || theme.mode === 'neon';
+      const neonBg = '#09090B', neonCard = '#131318', neonText = '#F4F4F5';
+      root.style.setProperty('--background', theme.backgroundColor || (isNeon ? neonBg : (isDarkPreset ? '#09090B' : '#0F172A')));
+      root.style.setProperty('--card-bg', theme.cardBackgroundColor || (isNeon ? neonCard : (isDarkPreset ? '#18181B' : '#1E293B')));
+      root.style.setProperty('--text-color', theme.textColor || (isNeon ? neonText : (isDarkPreset ? '#FAFAFA' : '#F8FAFC')));
+      root.style.setProperty('--secondary', theme.secondaryColor || (isNeon ? '#A855F7' : (isDarkPreset ? '#A855F7' : '#94A3B8')));
+      root.style.setProperty('--accent', theme.accentColor || (isNeon ? '#22D3EE' : (isDarkPreset ? '#F0ABFC' : '#FBBF24')));
+      if (isNeon) root.style.setProperty('--primary', theme.primaryColor || '#22D3EE');
     } else {
       root.style.setProperty('--primary', theme.primaryColor);
       root.style.setProperty('--secondary', theme.secondaryColor);

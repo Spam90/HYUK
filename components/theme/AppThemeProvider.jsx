@@ -3,9 +3,12 @@
 import { ThemeProvider } from 'next-themes';
 
 /**
- * AppThemeProvider - Proveedor global de tema (light/dark) basado en next-themes.
- * Persiste la preferencia en localStorage, aplica la clase `.dark` en <html>
- * y evita el FOUC (flash de contenido sin estilo) en la hidratación.
+ * AppThemeProvider - Proveedor global de tema (light/dark/neón) basado en next-themes.
+ * Persiste la preferencia en localStorage (`hyuk-theme`), aplica la clase del tema
+ * en <html> (`dark` → `.dark`, `neon` → `.neon`) y evita el FOUC (flash de
+ * contenido sin estilo) en la hidratación.
+ *
+ * temas explícitos: 'light' | 'dark' | 'neon'  (Prompt 15)
  */
 export default function AppThemeProvider({ children }) {
   return (
@@ -15,6 +18,7 @@ export default function AppThemeProvider({ children }) {
       enableSystem={false}
       disableTransitionOnChange
       storageKey="hyuk-theme"
+      themes={['light', 'dark', 'neon']}
     >
       {children}
     </ThemeProvider>

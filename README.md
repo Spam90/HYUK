@@ -14,19 +14,21 @@ Cada dueño de negocio puede modificar absolutamente todo el aspecto visual y la
 - **Bordes**: 4 niveles de redondeo (Recto, Suave, Redondeado, Píldora)
 - **Modos**: Claro, Oscuro y Neón. Además de los **modos del tema de la tienda**, el panel dispone de un **toggle global de claro/oscuro** (☀️/🌙) que persiste la preferencia del visitante/administrador en `localStorage` y respeta la clase `.dark` a nivel global.
 
-#### 🌙 Sistema de Temas Global (Light/Dark)
-El modo claro/oscuro global está construido con **`next-themes`** y es independiente del `DesignThemeProvider` (tema visual de la tienda). La división de responsabilidades evita conflictos de hidratación (FOUC):
+#### 🌙 Sistema de Temas Global (Light / Dark / Neón)
+El sistema global de tema está construido con **`next-themes`** y es independiente del `DesignThemeProvider` (tema visual de la tienda). La división de responsabilidades evita conflictos de hidratación (FOUC):
 
 | Capa | Responsabilidad | Archivo |
 |------|------------------|---------|
-| **Próximo tema global** | Única autoridad de la clase `.dark` en `<html>`; persistencia en `localStorage` (`hyuk-theme`); `suppressHydrationWarning` para evitar FOUC. | `components/theme/AppThemeProvider.jsx` |
-| **Toggle** | Botón con animación Framer Motion (Sun/Moon de `lucide-react`) que alterna `light`/`dark`. | `components/theme/ThemeToggle.jsx` |
+| **Tema global** | Única autoridad de la clase del tema (`dark` → `.dark`, `neon` → `.neon`) en `<html>`; persistencia en `localStorage` (`hyuk-theme`); `suppressHydrationWarning` para evitar FOUC. | `components/theme/AppThemeProvider.jsx` |
+| **Toggle** | Botón con animación Framer Motion (Sun/Moon/Zap de `lucide-react`) que rota `light → dark → neon → light`. | `components/theme/ThemeToggle.jsx` |
 | **Presentación** - Admin | Toggle flotante persistente (z-50) en todo `/admin/*`. | `app/admin/layout.jsx` |
 | **Presentación** - Catálogo | `ThemeToggle` integrado en la esquina superior derecha del header. | `components/catalog/HeaderVariant.jsx` |
-| **DesignThemeProvider** (tienda) | Aplica variables CSS del store (`--primary`, `--background`, etc.). **NO** administra la clase `.dark` (se la delega a next-themes) → no compite. | `components/theme/ThemeProvider.jsx` |
+| **DesignThemeProvider** (tienda) | Aplica variables CSS del store (`--primary`, `--background`, etc.). **NO** administra la clase del tema (se la delega a next-themes) → no compite; trata `.dark` y `.neon` como oscuros al inyectar valores fallback. | `components/theme/ThemeProvider.jsx` |
 
-- `tailwind.config.js` usa `darkMode: 'class'` y `globals.css` define variables `--background`, `--card-bg`, `--text-color` bajo `:root` y `.dark`.
-- Los componentes catálogo/admin responden a `dark:` de Tailwind (`bg-white dark:bg-zinc-950`, `text-zinc-900 dark:text-zinc-100`, etc.).
+- `tailwind.config.js` usa `darkMode: ['class', '[class~="neon"]']` → TODAS las variantes `dark:` se activan tanto bajo `.dark` como bajo `.neon` (cobertura global real en todos los componentes).
+- `globals.css` define variables `--background`, `--card-bg`, `--text-color`, `--accent` bajo `:root` (light), `.dark` y `.neon` (este último con paleta cian/violeta fluorescente y `color-scheme: dark`).
+- Los componentes catálogo/admin responden a `dark:` de Tailwind (`bg-white dark:bg-zinc-950`, `text-zinc-900 dark:text-zinc-100`, etc.) — por tanto, en DARK y NEÓN cambia absolutamente toda la app.
+- El presets/modo de visualización de la tienda (`ColorControls`) sincroniza directamente con el tema global (`setTheme(mode)`), de modo que elegir Claro/Oscuro/Neón en personalización también aplica en tiempo real a la app entera.
 - El toggle persiste en `localStorage`; al recargar, se restaura el último modo elegido.
 
 
