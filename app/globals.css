@@ -34,24 +34,6 @@
 }
 
 /* =============================================
-   MODO NEÓN (Prompt 15): tema oscuro con acentos
-   cian/violeta fluorescentes. La clase `.neon` la
-   aplica next-themes como tema global; Tailwind
-   `dark:` se activa también bajo `.neon` (ver
-   tailwind.config.js → darkMode).
-   ============================================= */
-.neon {
-  --background: #09090B;
-  --card-bg: #131318;
-  --text-color: #F4F4F5;
-  --primary: #22D3EE;
-  --secondary: #A855F7;
-  --accent: #8B5CF6;
-  --grid-streak: #22D3EE;
-  color-scheme: dark;
-}
-
-/* =============================================
    BASE STYLES
    ============================================= */
 * {
@@ -84,7 +66,7 @@ body {
   background-size: 20px 20px;
 }
 
-:is(.dark, .neon) .bg-dot-pattern {
+.dark .bg-dot-pattern {
   background-image: radial-gradient(circle, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
 }
 
@@ -96,7 +78,7 @@ body {
   background-size: 40px 40px;
 }
 
-:is(.dark, .neon) .bg-grid-pattern {
+.dark .bg-grid-pattern {
   background-image: 
     linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
@@ -110,7 +92,7 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-:is(.dark, .neon) .glass {
+.dark .glass {
   background: rgba(15, 23, 42, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
@@ -243,11 +225,11 @@ body {
   background: rgba(0, 0, 0, 0.2);
 }
 
-:is(.dark, .neon) .admin-scroll::-webkit-scrollbar-thumb {
+.dark .admin-scroll::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
 }
 
-:is(.dark, .neon) .admin-scroll::-webkit-scrollbar-thumb:hover {
+.dark .admin-scroll::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
 }
 

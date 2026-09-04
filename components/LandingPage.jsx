@@ -32,7 +32,7 @@ export default function HomePage() {
       id: 'cyber-streetwear', 
       name: 'Cyber / Streetwear', 
       colors: ['#22D3EE', '#A855F7', '#09090B'],
-      description: 'Estética urbana con neón'
+      description: 'Estética urbana de alto contraste'
     },
     { 
       id: 'botanica', 

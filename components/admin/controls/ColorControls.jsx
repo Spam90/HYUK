@@ -148,11 +148,10 @@ export default function ColorControls({ settings, updateSettings }) {
           <Zap className="w-4 h-4" />
           Modo de Visualización
         </h4>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           {[
             { value: 'light', label: 'Claro', icon: Sun },
             { value: 'dark', label: 'Oscuro', icon: Moon },
-            { value: 'neon', label: 'Neón', icon: Zap },
           ].map((mode) => {
             const Icon = mode.icon;
             const isActive = theme.mode === mode.value;
@@ -162,18 +161,7 @@ export default function ColorControls({ settings, updateSettings }) {
                                 onClick={() => {
                   updateSettings('theme', { mode: mode.value });
                   // Sincronizar con el tema global (next-themes) -> app + preview en tiempo real
-                  setTheme(mode.value); // 'light' | 'dark' | 'neon' (Prompt 15)
-                  // Ajustar colores para modo neón
-                  if (mode.value === 'neon') {
-                    updateSettings('theme', {
-                      primaryColor: '#8B5CF6',
-                      secondaryColor: '#1E1B4B',
-                      backgroundColor: '#0F172A',
-                      cardBackgroundColor: '#1E293B',
-                      textColor: '#F8FAFC',
-                      accentColor: '#22D3EE',
-                    });
-                  }
+                  setTheme(mode.value); // 'light' | 'dark'
                 }}
                 className={`p-3 rounded-theme-lg border flex flex-col items-center gap-2 transition-all ${
                   isActive
