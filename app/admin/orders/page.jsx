@@ -22,6 +22,7 @@ export default function OrdersPage() {
   const [storeProfile, setStoreProfile] = useState(null);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [newOrderToast, setNewOrderToast] = useState(null);
+  const [updatingId, setUpdatingId] = useState(null); // Prompt 14: bloqueo doble submit
   const router = useRouter();
 
   // Referencias para detección de pedidos nuevos
@@ -118,15 +119,17 @@ export default function OrdersPage() {
         if (profile) setStoreProfile(profile);
       }
 
-      const { data: ordersData, error } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('store_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      const incoming = ordersData || [];
+      // Prompt 14: listado vía API server-side (auth + tenant derivado de la sesión).
+      // El `store_id` se resuelve del usuario autenticado en el servidor; el
+      // cliente nunca lo envía. RLS sigue siendo la barrera final.
+      const res = await fetch('/api/orders', { cache: 'no-store' });
+      if (res.status === 401) {
+        router.push('/login');
+        return;
+      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const payload = await res.json();
+      const incoming = Array.isArray(payload?.orders) ? payload.orders : [];
 
       // Detectar pedidos nuevos en estado pendiente
       if (!isInitialLoadRef.current && knownOrderIdsRef.current.size > 0) {
@@ -154,27 +157,38 @@ export default function OrdersPage() {
   };
 
   const updateOrderStatus = async (orderId, newStatus) => {
-    if (!supabase) return;
+    if (!supabase || updatingId) return; // Prompt 14: double-submit guard
 
     try {
-      // RPC transaccional: valida ownership + máquina de estados y sincroniza
-      // inventario/order_items. Prohibido UPDATE directo de orders.status.
-      const { data, error } = await supabase.rpc('set_order_status', {
-        p_order_id: orderId,
-        p_new_status: newStatus,
+      setUpdatingId(orderId);
+      // Prompt 14: transición vía API server-side → RPC set_order_status
+      // (valida ownership + máquina de estados + inventario en UNA transacción).
+      const res = await fetch(`/api/orders/${orderId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+        cache: 'no-store',
       });
 
-      if (error) throw error;
-      if (!data?.ok) {
-        alert(`No se pudo actualizar el pedido: ${translateOrderError(data?.error)}`);
+      const payload = await res.json().catch(() => ({}));
+
+      if (res.status === 401) {
+        router.push('/login');
         return;
       }
 
-      // Recargar pedidos
+      if (!res.ok || !payload?.ok) {
+        alert(`No se pudo actualizar el pedido: ${translateOrderError(payload?.error)}`);
+        return;
+      }
+
+      // Recargar pedidos tras éxito
       loadOrders();
     } catch (error) {
       console.error('Error updating order:', error);
-      alert(`Error al actualizar el pedido: ${error?.message || 'intenta de nuevo'}`);
+      alert('Error al actualizar el pedido: intenta de nuevo.');
+    } finally {
+      setUpdatingId(null);
     }
   };
 
@@ -456,34 +470,40 @@ export default function OrdersPage() {
                           {/* Quick Actions */}
                           {getNextStatus(order.status) && (
                             <button
+                              disabled={updatingId === order.id}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 updateOrderStatus(order.id, getNextStatus(order.status));
                               }}
-                              className={`w-full mt-3 px-3 py-2 rounded-lg text-white text-xs font-semibold flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity ${
+                              className={`w-full mt-3 px-3 py-2 rounded-lg text-white text-xs font-semibold flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed ${
                                 order.status === 'pending' ? 'bg-blue-500' :
                                 order.status === 'preparing' ? 'bg-purple-500' :
                                 'bg-green-500'
                               }`}
                             >
-                              {getNextStatusIcon(order.status)}
-                              {getNextStatusLabel(order.status)}
-                              <ArrowRight className="w-3.5 h-3.5" />
+                              {updatingId === order.id ? (
+                                <span className="inline-block w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                              ) : (
+                                getNextStatusIcon(order.status)
+                              )}
+                              {updatingId === order.id ? 'Procesando…' : getNextStatusLabel(order.status)}
+                              {updatingId !== order.id && <ArrowRight className="w-3.5 h-3.5" />}
                             </button>
                           )}
 
                           {(order.status === 'pending' || order.status === 'preparing') && (
                             <button
+                              disabled={updatingId === order.id}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 if (confirm('¿Estás seguro de cancelar este pedido?')) {
                                   updateOrderStatus(order.id, 'cancelled');
                                 }
                               }}
-                              className="w-full mt-2 px-3 py-2 rounded-lg bg-red-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 hover:bg-red-600 transition-colors"
+                              className="w-full mt-2 px-3 py-2 rounded-lg bg-red-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               <XCircle className="w-3.5 h-3.5" />
-                              Cancelar
+                              {updatingId === order.id ? 'Procesando…' : 'Cancelar'}
                             </button>
                           )}
                         </motion.div>
@@ -659,29 +679,35 @@ export default function OrdersPage() {
                       </button>
                       {getNextStatus(order.status) && (
                         <button
+                          disabled={updatingId === order.id}
                           onClick={() => updateOrderStatus(order.id, getNextStatus(order.status))}
-                          className={`w-full px-4 py-2 text-white rounded-theme-lg hover:opacity-90 transition-opacity font-medium flex items-center justify-center gap-2 ${
+                          className={`w-full px-4 py-2 text-white rounded-theme-lg hover:opacity-90 transition-opacity font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${
                             order.status === 'pending' ? 'bg-blue-500' :
                             order.status === 'preparing' ? 'bg-purple-500' :
                             'bg-green-500'
                           }`}
                         >
-                          {getNextStatusIcon(order.status)}
-                          {getNextStatusLabel(order.status)}
-                          <ArrowRight className="w-4 h-4" />
+                          {updatingId === order.id ? (
+                            <span className="inline-block w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                          ) : (
+                            getNextStatusIcon(order.status)
+                          )}
+                          {updatingId === order.id ? 'Procesando…' : getNextStatusLabel(order.status)}
+                          {updatingId !== order.id && <ArrowRight className="w-4 h-4" />}
                         </button>
                       )}
                       {(order.status === 'pending' || order.status === 'preparing') && (
                         <button
+                          disabled={updatingId === order.id}
                           onClick={() => {
                             if (confirm('¿Estás seguro de cancelar este pedido?')) {
                               updateOrderStatus(order.id, 'cancelled');
                             }
                           }}
-                          className="w-full px-4 py-2 bg-red-500 text-white rounded-theme-lg hover:bg-red-600 transition-colors font-medium flex items-center justify-center gap-2"
+                          className="w-full px-4 py-2 bg-red-500 text-white rounded-theme-lg hover:bg-red-600 transition-colors font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <XCircle className="w-4 h-4" />
-                          Cancelar Pedido
+                          {updatingId === order.id ? 'Procesando…' : 'Cancelar Pedido'}
                         </button>
                       )}
                     </div>
