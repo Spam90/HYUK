@@ -151,7 +151,7 @@ export default function FlyerMakerPage() {
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Flyer para Stories</h1>
-            <p className="text-sm text-gray-500">1080x1920 · listo para Instagram/WhatsApp</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">1080x1920 · listo para Instagram/WhatsApp</p>
           </div>
         </div>
       </div>

@@ -69,7 +69,7 @@ export const metadata = {
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+    <div className="min-h-screen bg-background text-text">
       <div className="max-w-6xl mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold mb-4">
@@ -78,7 +78,7 @@ export default function PricingPage() {
           <h1 className="text-4xl md:text-5xl font-black mb-4">
             Planes y precios simples
           </h1>
-          <p className="text-zinc-400 text-lg max-w-xl mx-auto">
+          <p className="text-text/60 text-lg max-w-xl mx-auto">
             Arrancá gratis con tu catálogo digital. Cuando tu negocio crezca,
             pasás a Pro y desbloqueás todo.
           </p>
@@ -91,7 +91,7 @@ export default function PricingPage() {
               className={`relative flex flex-col rounded-3xl p-6 border ${
                 plan.highlight
                   ? 'bg-emerald-500/5 border-emerald-500/50 shadow-xl shadow-emerald-500/10'
-                  : 'bg-zinc-900/60 border-zinc-800'
+                  : 'bg-card border-secondary/10'
               }`}
             >
               {plan.highlight && (
@@ -100,14 +100,14 @@ export default function PricingPage() {
                 </span>
               )}
               <h3 className="text-lg font-bold mb-1">{plan.name}</h3>
-              <p className="text-sm text-zinc-400 mb-4">{plan.tagline}</p>
+              <p className="text-sm text-text/60 mb-4">{plan.tagline}</p>
               <div className="mb-6">
                 <span className="text-4xl font-black">{plan.price}</span>
-                <span className="text-sm text-zinc-400"> {plan.period}</span>
+                <span className="text-sm text-text/60"> {plan.period}</span>
               </div>
               <ul className="space-y-2.5 mb-8 flex-1">
                 {plan.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2 text-sm text-zinc-300">
+                  <li key={f} className="flex items-start gap-2 text-sm text-text/80">
                     <span className="text-emerald-400 mt-0.5">✓</span>
                     {f}
                   </li>
@@ -121,7 +121,7 @@ export default function PricingPage() {
                   className={`w-full py-3 rounded-xl text-center font-semibold transition-colors ${
                     plan.highlight
                       ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
-                      : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-100'
+                      : 'bg-secondary/15 hover:bg-secondary/25 text-text'
                   }`}
                 >
                   {plan.cta}
@@ -131,7 +131,7 @@ export default function PricingPage() {
           ))}
         </div>
 
-        <p className="text-center text-zinc-500 text-sm mt-10">
+        <p className="text-center text-text/50 text-sm mt-10">
           Todos los planes incluyen soporte por WhatsApp. Sin permanencia, cancelá cuando quieras.
         </p>
       </div>

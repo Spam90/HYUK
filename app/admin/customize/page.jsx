@@ -323,7 +323,11 @@ export const dynamic = 'force-dynamic';
 
 export default function CustomizePage() {
   return (
-    <ThemeProvider initialSettings={DEFAULT_SETTINGS}>
+    // applyCatalogTheme={false}: el chrome de este panel de administración debe
+    // seguir el tema global Light/Dark de la app. El preview del catálogo
+    // (PhonePreview) pinta con estilos inline desde `settings.theme`, así que no
+    // necesita las variables CSS del catálogo.
+    <ThemeProvider initialSettings={DEFAULT_SETTINGS} applyCatalogTheme={false}>
       <CartProvider>
         <CustomizePanel />
       </CartProvider>

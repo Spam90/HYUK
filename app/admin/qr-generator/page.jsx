@@ -71,7 +71,7 @@ export default function QrGeneratorPage() {
         <div className="max-w-3xl mx-auto px-4 py-4 flex items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Generador de QR</h1>
-            <p className="text-sm text-gray-500">Código QR de tu catálogo</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Código QR de tu catálogo</p>
           </div>
         </div>
       </div>
@@ -79,7 +79,7 @@ export default function QrGeneratorPage() {
       <div className="max-w-3xl mx-auto px-4 py-8">
         <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-gray-200 dark:border-zinc-800 p-6 space-y-6">
           <div className="flex flex-col md:flex-row gap-8 items-center">
-            <div className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm">
+            <div className="bg-white rounded-2xl p-4 border border-gray-200 dark:border-zinc-700 shadow-sm">
               <QRCodeCanvas
                 id="qr-canvas"
                 value={storeUrl}
@@ -109,7 +109,7 @@ export default function QrGeneratorPage() {
                   URL del catálogo
                 </label>
                 <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-gray-50 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700">
-                  <QrCode className="w-4 h-4 text-gray-400 shrink-0" />
+                  <QrCode className="w-4 h-4 text-gray-400 dark:text-gray-500 shrink-0" />
                   <input
                     type="text"
                     value={storeUrl}
@@ -121,7 +121,7 @@ export default function QrGeneratorPage() {
                     title="Restablecer URL"
                     className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-zinc-700 transition-colors"
                   >
-                    <RefreshCcw className="w-4 h-4 text-gray-500" />
+                    <RefreshCcw className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                   </button>
                 </div>
               </div>
@@ -132,7 +132,7 @@ export default function QrGeneratorPage() {
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <span className="text-xs text-gray-500">Frente</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Frente</span>
                     <input
                       type="color"
                       value={fgColor}
@@ -141,7 +141,7 @@ export default function QrGeneratorPage() {
                     />
                   </div>
                   <div>
-                    <span className="text-xs text-gray-500">Fondo</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Fondo</span>
                     <input
                       type="color"
                       value={bgColor}

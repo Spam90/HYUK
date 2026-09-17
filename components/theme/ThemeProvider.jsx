@@ -1,7 +1,8 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { DEFAULT_SETTINGS, BORDER_RADIUS_MAP, FONT_FAMILY_MAP, GOOGLE_FONTS_URL } from '@/lib/theme/defaults';
+import { createContext, useContext, useMemo, useState, useCallback } from 'react';
+import { DEFAULT_SETTINGS, DESIGN_PRESETS } from '@/lib/theme/defaults';
+import ThemeScope from './ThemeScope';
 
 const ThemeContext = createContext({
   settings: DEFAULT_SETTINGS,
@@ -13,17 +14,37 @@ export function useTheme() {
   return useContext(ThemeContext);
 }
 
-export default function ThemeProvider({ children, initialSettings = DEFAULT_SETTINGS }) {
+/**
+ * ThemeProvider - Estado + contexto del CATÁLOGO DEL NEGOCIO (colores, layout,
+ * tipografía). NO escribe variables en <html>: eso lo hace <ThemeScope>, que
+ * envuelve únicamente el subárbol de la tienda/preview, para no secuestrar el
+ * tema global Light/Dark de la app (clase `.dark` administrada por next-themes).
+ *
+ * @param {boolean} applyCatalogTheme - Si es `false` NO aplica el palette del
+ *   catálogo al subárbol. Se usa en /admin/customize, donde el chrome del panel
+ *   debe seguir el tema de la app y el preview (PhonePreview) pinta con estilos
+ *   inline, sin depender de las variables CSS.
+ */
+export default function ThemeProvider({
+  children,
+  initialSettings = DEFAULT_SETTINGS,
+  applyCatalogTheme = true,
+}) {
   const [settings, setSettings] = useState(initialSettings);
 
-  // Merge de settings con defaults para asegurar que todas las keys existan
-  const mergedSettings = {
-    theme: { ...DEFAULT_SETTINGS.theme, ...settings.theme },
-    layout: { ...DEFAULT_SETTINGS.layout, ...settings.layout },
-    banner: { ...DEFAULT_SETTINGS.banner, ...settings.banner },
-    whatsapp_checkout: { ...DEFAULT_SETTINGS.whatsapp_checkout, ...settings.whatsapp_checkout },
-    marketing: { ...DEFAULT_SETTINGS.marketing, ...settings.marketing },
-  };
+  // Merge de settings con defaults para asegurar que todas las keys existan.
+  // useMemo: la identidad se mantiene estable entre renders para que ThemeScope
+  // no re-aplique las variables CSS en cada render.
+  const mergedSettings = useMemo(
+    () => ({
+      theme: { ...DEFAULT_SETTINGS.theme, ...settings.theme },
+      layout: { ...DEFAULT_SETTINGS.layout, ...settings.layout },
+      banner: { ...DEFAULT_SETTINGS.banner, ...settings.banner },
+      whatsapp_checkout: { ...DEFAULT_SETTINGS.whatsapp_checkout, ...settings.whatsapp_checkout },
+      marketing: { ...DEFAULT_SETTINGS.marketing, ...settings.marketing },
+    }),
+    [settings]
+  );
 
   // Función para actualizar secciones específicas de settings
   const updateSettings = useCallback((section, updates) => {
@@ -59,77 +80,20 @@ export default function ThemeProvider({ children, initialSettings = DEFAULT_SETT
     setSettings(DEFAULT_SETTINGS);
   }, []);
 
-  // Inyecta variables CSS dinámicas en el contenedor raíz
-  useEffect(() => {
-    const root = document.documentElement;
-    const theme = mergedSettings.theme;
-
-    // Colores principales
-    root.style.setProperty('--primary', theme.primaryColor);
-    root.style.setProperty('--secondary', theme.secondaryColor);
-    root.style.setProperty('--background', theme.backgroundColor);
-    root.style.setProperty('--card-bg', theme.cardBackgroundColor);
-    root.style.setProperty('--text-color', theme.textColor);
-    root.style.setProperty('--accent', theme.accentColor);
-
-    // Bordes redondeados
-    const radius = BORDER_RADIUS_MAP[theme.borderRadius] || '1rem';
-    root.style.setProperty('--radius-sm', `calc(${radius} * 0.5)`);
-    root.style.setProperty('--radius-md', radius);
-    root.style.setProperty('--radius-lg', `calc(${radius} * 1.25)`);
-    root.style.setProperty('--radius-xl', `calc(${radius} * 1.5)`);
-
-    // Tipografía
-    const fontFamily = FONT_FAMILY_MAP[theme.fontFamily] || "'Inter', sans-serif";
-    root.style.setProperty('--font-family', fontFamily);
-
-              // Modo claro/oscuro/neón: respetar el toggle global de next-themes.
-    // La clase `.dark` o `.neon` en <html> la administra next-themes (global).
-    // Los presets con mode === 'dark' conservan sus colores; los presets claros
-    // reciben valores dark-friendly bajo .dark/.neon para evitar secciones "pegajosas".
-    const html = document.documentElement;
-    const isDark = html.classList.contains('dark') || html.classList.contains('neon');
-    const isNeon = html.classList.contains('neon');
-    if (isDark) {
-      const isDarkPreset = theme.mode === 'dark' || theme.mode === 'neon';
-      const neonBg = '#09090B', neonCard = '#131318', neonText = '#F4F4F5';
-      root.style.setProperty('--background', theme.backgroundColor || (isNeon ? neonBg : (isDarkPreset ? '#09090B' : '#0F172A')));
-      root.style.setProperty('--card-bg', theme.cardBackgroundColor || (isNeon ? neonCard : (isDarkPreset ? '#18181B' : '#1E293B')));
-      root.style.setProperty('--text-color', theme.textColor || (isNeon ? neonText : (isDarkPreset ? '#FAFAFA' : '#F8FAFC')));
-      root.style.setProperty('--secondary', theme.secondaryColor || (isNeon ? '#A855F7' : (isDarkPreset ? '#A855F7' : '#94A3B8')));
-      root.style.setProperty('--accent', theme.accentColor || (isNeon ? '#22D3EE' : (isDarkPreset ? '#F0ABFC' : '#FBBF24')));
-      if (isNeon) root.style.setProperty('--primary', theme.primaryColor || '#22D3EE');
-    } else {
-      root.style.setProperty('--primary', theme.primaryColor);
-      root.style.setProperty('--secondary', theme.secondaryColor);
-      root.style.setProperty('--background', theme.backgroundColor);
-      root.style.setProperty('--card-bg', theme.cardBackgroundColor);
-      root.style.setProperty('--text-color', theme.textColor);
-      root.style.setProperty('--accent', theme.accentColor);
-    }
-
-    // Cargar Google Font según la fuente seleccionada
-    const fontUrl = GOOGLE_FONTS_URL[theme.fontFamily];
-    if (fontUrl) {
-      // Verificar si el link ya existe
-      let linkEl = document.querySelector(`link[data-font="${theme.fontFamily}"]`);
-      if (!linkEl) {
-        linkEl = document.createElement('link');
-        linkEl.rel = 'stylesheet';
-        linkEl.href = fontUrl;
-        linkEl.setAttribute('data-font', theme.fontFamily);
-        document.head.appendChild(linkEl);
-      }
-    }
-
-    // Limpieza: remover variables al desmontar (solo para preview en admin)
-    return () => {
-      // No limpiar en producción, solo en preview
-      if (typeof window !== 'undefined' && window.location.pathname.includes('/customize')) {
-        // Mantener las variables - el preview usa el mismo documento
-      }
-    };
-  }, [mergedSettings, settings.theme.backgroundColor]);
+  // NOTA ARQUITECTÓNICA (tema global Light/Dark)
+  // ------------------------------------------------------------------
+  // Este provider es SOLO contexto + estado del CATÁLOGO DEL NEGOCIO
+  // (colores, radios, tipografía). NO escribe variables CSS en <html>.
+  //
+  // Por qué: el tema Light/Dark de la aplicación lo aplica next-themes con la
+  // clase `.dark` en <html>. Escribir las variables con `style` inline en
+  // <html> gana por especificidad a las reglas `.dark` de app/globals.css, así
+  // que el preset del catálogo secuestraba los colores de TODA la app y el
+  // cambio de tema dejaba de propagarse (superficies "pegadas").
+  //
+  // Ahora las variables del catálogo las aplica <ThemeScope>
+  // (components/theme/ThemeScope.jsx) dentro del subárbol de tienda/preview,
+  // y las limpia al desmontarse. App y catálogo quedan desacoplados.
 
   return (
     <ThemeContext.Provider
@@ -141,7 +105,11 @@ export default function ThemeProvider({ children, initialSettings = DEFAULT_SETT
         applyPreset,
       }}
     >
-      {children}
+      {applyCatalogTheme ? (
+        <ThemeScope settings={mergedSettings}>{children}</ThemeScope>
+      ) : (
+        children
+      )}
     </ThemeContext.Provider>
   );
 }

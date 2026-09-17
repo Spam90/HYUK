@@ -149,7 +149,7 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white">
+    <div className="min-h-screen bg-background text-text">
       {/* Hero Section - Vercel/Linear Style */}
       <section className="relative overflow-hidden">
         {/* Background Effects */}
@@ -163,9 +163,9 @@ export default function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             className="flex justify-center mb-8"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/5 border border-secondary/10 backdrop-blur-sm">
               <Sparkles className="w-4 h-4 text-yellow-500" />
-              <span className="text-sm font-medium text-zinc-300">
+              <span className="text-sm font-medium text-text/80">
                 HYUK 2.0 — El motor de catálogos más rápido para WhatsApp
               </span>
             </div>
@@ -179,7 +179,7 @@ export default function HomePage() {
             className="text-center max-w-4xl mx-auto mb-12"
           >
             <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-              <span className="bg-gradient-to-r from-white via-zinc-200 to-zinc-400 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-text via-text/80 to-text/60 bg-clip-text text-transparent">
                 Crea tu tienda digital en minutos.
               </span>
               <br />
@@ -187,7 +187,7 @@ export default function HomePage() {
                 Vende por WhatsApp sin comisiones.
               </span>
             </h1>
-            <p className="text-xl md:text-2xl text-zinc-400 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-xl md:text-2xl text-text/60 max-w-3xl mx-auto leading-relaxed">
               La plataforma que utilizan +500 negocios para crear catálogos digitales 
               personalizables en minutos. Sin código, sin comisiones, sin límites.
             </p>
@@ -202,7 +202,7 @@ export default function HomePage() {
           >
             <Link
               href="/signup"
-              className="group relative inline-flex items-center gap-2 px-8 py-4 bg-white text-zinc-900 rounded-xl font-semibold shadow-2xl hover:shadow-primary/50 transition-all hover:scale-105"
+              className="group relative inline-flex items-center gap-2 px-8 py-4 bg-text text-background rounded-xl font-semibold shadow-2xl hover:shadow-primary/50 transition-all hover:scale-105"
             >
               <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary to-accent opacity-0 group-hover:opacity-100 transition-opacity" />
               <span className="relative flex items-center gap-2">
@@ -212,7 +212,7 @@ export default function HomePage() {
             </Link>
             <Link
               href="/demo"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-zinc-900 text-white border border-zinc-700 rounded-xl font-semibold hover:border-zinc-600 transition-all"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-card text-text border border-secondary/20 rounded-xl font-semibold hover:border-secondary/30 transition-all"
             >
               <Play className="w-5 h-5" />
               Ver tienda demo en vivo
@@ -274,14 +274,14 @@ export default function HomePage() {
                 initial={{ opacity: 0, y: 20, x: 20 }}
                 animate={{ opacity: 1, y: 0, x: 0 }}
                 transition={{ delay: 1 }}
-                className="absolute -right-4 top-20 bg-white dark:bg-zinc-800 rounded-xl p-3 shadow-2xl border border-gray-200 dark:border-zinc-700 max-w-[200px]"
+                className="absolute -right-4 top-20 bg-white dark:bg-secondary/15 rounded-xl p-3 shadow-2xl border border-gray-200 dark:border-secondary/20 max-w-[200px]"
               >
                 <div className="flex items-start gap-2">
                   <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center shrink-0">
                     <CheckCircle className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <p className="text-xs font-semibold text-gray-900 dark:text-white">¡Nuevo pedido!</p>
+                    <p className="text-xs font-semibold text-gray-900 dark:text-text">¡Nuevo pedido!</p>
                     <p className="text-[10px] text-gray-600 dark:text-gray-400">$1,200 recibido por WhatsApp</p>
                   </div>
                 </div>
@@ -292,17 +292,17 @@ export default function HomePage() {
       </section>
 
       {/* Bento Grid - Benefits */}
-      <section className="py-16 md:py-24 bg-zinc-950">
+      <section className="py-16 md:py-24 bg-background">
         <div className="max-w-7xl mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-text mb-4">
               ¿Por qué elegir HYUK?
             </h2>
-            <p className="text-lg text-zinc-400">
+            <p className="text-lg text-text/60">
               Todo lo que necesitas para vender online
             </p>
           </motion.div>
@@ -316,7 +316,7 @@ export default function HomePage() {
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  className={`relative group bg-zinc-900/50 backdrop-blur-xl rounded-2xl p-6 md:p-8 border border-white/10 hover:border-white/20 transition-all ${
+                  className={`relative group bg-muted backdrop-blur-xl rounded-2xl p-6 md:p-8 border border-secondary/10 hover:border-primary/40 transition-all ${
                     benefit.size === 'large' ? 'md:col-span-2 md:row-span-2' : 
                     benefit.size === 'medium' ? 'md:col-span-1' : 
                     'md:col-span-1'
@@ -325,15 +325,15 @@ export default function HomePage() {
                   <div className={`w-12 h-12 rounded-xl ${benefit.bgColor} flex items-center justify-center mb-4`}>
                     <Icon className={`w-6 h-6 ${benefit.color}`} />
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-2">
+                  <h3 className="text-xl font-bold text-text mb-2">
                     {benefit.title}
                   </h3>
-                  <p className="text-zinc-400 mb-4">
+                  <p className="text-text/60 mb-4">
                     {benefit.description}
                   </p>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-bold text-white">{benefit.metric}</span>
-                    <span className="text-sm text-zinc-500">{benefit.metricLabel}</span>
+                    <span className="text-3xl font-bold text-text">{benefit.metric}</span>
+                    <span className="text-sm text-text/50">{benefit.metricLabel}</span>
                   </div>
                 </motion.div>
               );
@@ -343,17 +343,17 @@ export default function HomePage() {
       </section>
 
       {/* Presets Showcase */}
-      <section className="py-16 md:py-24 bg-zinc-900/50">
+      <section className="py-16 md:py-24 bg-muted">
         <div className="max-w-7xl mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-text mb-4">
               Una plataforma, infinitas identidades
             </h2>
-            <p className="text-lg text-zinc-400">
+            <p className="text-lg text-text/60">
               Elige entre 5 presets profesionales y personaliza cada detalle
             </p>
           </motion.div>
@@ -365,7 +365,7 @@ export default function HomePage() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="group relative bg-zinc-800/50 backdrop-blur-xl rounded-2xl overflow-hidden border border-white/10 hover:border-white/20 transition-all cursor-pointer"
+                className="group relative bg-muted backdrop-blur-xl rounded-2xl overflow-hidden border border-secondary/10 hover:border-primary/40 transition-all cursor-pointer"
               >
                 {/* Preview */}
                 <div 
@@ -375,19 +375,19 @@ export default function HomePage() {
                   }}
                 >
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm" />
+                    <div className="w-16 h-16 rounded-2xl bg-secondary/20 backdrop-blur-sm" />
                   </div>
                 </div>
 
                 {/* Info */}
                 <div className="p-4">
-                  <h3 className="font-semibold text-white mb-1">
+                  <h3 className="font-semibold text-text mb-1">
                     {preset.name}
                   </h3>
-                  <p className="text-xs text-zinc-400 mb-3">
+                  <p className="text-xs text-text/60 mb-3">
                     {preset.description}
                   </p>
-                  <button className="w-full py-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm font-medium hover:bg-white/10 transition-colors">
+                  <button className="w-full py-2 rounded-lg bg-secondary/5 border border-secondary/10 text-text text-sm font-medium hover:bg-secondary/10 transition-colors">
                     Explorar este estilo
                   </button>
                 </div>
@@ -398,17 +398,17 @@ export default function HomePage() {
       </section>
 
       {/* Pricing Section */}
-      <section className="py-16 md:py-24 bg-zinc-950">
+      <section className="py-16 md:py-24 bg-background">
         <div className="max-w-7xl mx-auto px-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             className="text-center mb-12"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-text mb-4">
               Planes simples y transparentes
             </h2>
-            <p className="text-lg text-zinc-400">
+            <p className="text-lg text-text/60">
               Sin sorpresas. Sin comisiones ocultas.
             </p>
           </motion.div>
@@ -420,10 +420,10 @@ export default function HomePage() {
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className={`relative bg-zinc-900/50 backdrop-blur-xl rounded-2xl p-6 md:p-8 border ${
+                className={`relative bg-muted backdrop-blur-xl rounded-2xl p-6 md:p-8 border ${
                   plan.popular 
                     ? 'border-primary/50 shadow-2xl shadow-primary/20' 
-                    : 'border-white/10'
+                    : 'border-secondary/10'
                 }`}
               >
                 {plan.popular && (
@@ -433,14 +433,14 @@ export default function HomePage() {
                 )}
 
                 <div className="text-center mb-6">
-                  <h3 className="text-xl font-bold text-white mb-2">
+                  <h3 className="text-xl font-bold text-text mb-2">
                     {plan.name}
                   </h3>
                   <div className="flex items-baseline justify-center gap-1 mb-2">
-                    <span className="text-4xl font-bold text-white">{plan.price}</span>
-                    <span className="text-zinc-400">{plan.period}</span>
+                    <span className="text-4xl font-bold text-text">{plan.price}</span>
+                    <span className="text-text/60">{plan.period}</span>
                   </div>
-                  <p className="text-sm text-zinc-400">
+                  <p className="text-sm text-text/60">
                     {plan.description}
                   </p>
                 </div>
@@ -449,7 +449,7 @@ export default function HomePage() {
                   {plan.features.map((feature, idx) => (
                     <li key={idx} className="flex items-start gap-2">
                       <CheckCircle className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
-                      <span className="text-sm text-zinc-300">{feature}</span>
+                      <span className="text-sm text-text/80">{feature}</span>
                     </li>
                   ))}
                 </ul>
@@ -458,8 +458,8 @@ export default function HomePage() {
                   href={plan.href}
                   className={`block w-full py-3 rounded-xl font-semibold text-center transition-all ${
                     plan.popular
-                      ? 'bg-white text-zinc-900 hover:bg-zinc-100'
-                      : 'bg-zinc-800 text-white hover:bg-zinc-700 border border-zinc-700'
+                      ? 'bg-text text-background hover:bg-muted'
+                      : 'bg-secondary/15 text-text hover:bg-secondary/25 border border-secondary/20'
                   }`}
                 >
                   {plan.cta}
@@ -471,21 +471,21 @@ export default function HomePage() {
       </section>
 
       {/* CTA Final */}
-      <section className="py-16 md:py-24 bg-gradient-to-b from-zinc-900 to-zinc-950">
+      <section className="py-16 md:py-24 bg-gradient-to-b from-muted to-background">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-text mb-4">
               ¿Listo para comenzar?
             </h2>
-            <p className="text-xl text-zinc-400 mb-8">
+            <p className="text-xl text-text/60 mb-8">
               Crea tu catálogo digital en menos de 5 minutos
             </p>
             <Link
               href="/signup"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-zinc-900 rounded-xl font-semibold shadow-2xl hover:shadow-primary/50 transition-all hover:scale-105"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-text text-background rounded-xl font-semibold shadow-2xl hover:shadow-primary/50 transition-all hover:scale-105"
             >
               Crear mi tienda gratis
               <ArrowRight className="w-5 h-5" />
@@ -495,13 +495,13 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-zinc-950 border-t border-zinc-800 py-8">
-        <div className="max-w-7xl mx-auto px-4 text-center text-sm text-zinc-500 space-y-2">
+      <footer className="bg-background border-t border-secondary/10 py-8">
+        <div className="max-w-7xl mx-auto px-4 text-center text-sm text-text/50 space-y-2">
           <p>© {new Date().getFullYear()} HYUK. Todos los derechos reservados.</p>
           <div className="flex items-center justify-center gap-4">
-            <a href="/terms" className="hover:text-zinc-300 transition-colors">Términos de servicio</a>
+            <a href="/terms" className="hover:text-text/80 transition-colors">Términos de servicio</a>
             <span>·</span>
-            <a href="/privacy" className="hover:text-zinc-300 transition-colors">Política de privacidad</a>
+            <a href="/privacy" className="hover:text-text/80 transition-colors">Política de privacidad</a>
           </div>
         </div>
       </footer>

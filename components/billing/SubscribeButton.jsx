@@ -70,7 +70,7 @@ export default function SubscribeButton({
 
   const base =
     variant === 'ghost'
-      ? 'border border-zinc-700 text-zinc-200 hover:bg-zinc-800/60'
+      ? 'border border-secondary/20 text-text/90 hover:bg-secondary/10'
       : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30';
   const disabledCls = loading ? 'opacity-60 cursor-not-allowed' : '';
 

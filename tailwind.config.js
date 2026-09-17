@@ -1,19 +1,55 @@
+/**
+ * HYUK - Configuración de Tailwind
+ *
+ * NOTA IMPORTANTE sobre los tokens semánticos:
+ * Los colores de la app son variables CSS (`var(--token)`) definidas en
+ * app/globals.css y reescritas bajo `.dark`. Declararlos como string plano
+ * (`'var(--card-bg)'`) hace que Tailwind DESCARTE cualquier modificador de
+ * opacidad (`bg-card/60`, `border-secondary/10`, `text-text/60`): la clase se
+ * emite vacía y el elemento queda sin fondo/borde. Se declaran como función
+ * para que la opacidad funcione de verdad.
+ *
+ * @param {string} name - Nombre de la variable CSS (p. ej. '--card-bg').
+ */
+const token = (name) => ({ opacityValue }) => {
+  // Caso base (sin modificador): Tailwind entrega el sistema legacy
+  // `var(--tw-bg-opacity, 1)`. En HYUK no se usan las utilidades `bg-opacity-*`,
+  // así que la clase base siempre es opaca.
+  if (opacityValue === undefined || opacityValue === null) return `var(${name})`;
+  if (typeof opacityValue === 'string' && opacityValue.startsWith('var(')) return `var(${name})`;
+
+  const n = Number(opacityValue);
+  if (!Number.isFinite(n)) return `var(${name})`;
+  // Tailwind entrega '/10' como '10' y '/[0.07]' como '0.07'.
+  const alpha = n > 1 ? n / 100 : n;
+  return `color-mix(in srgb, var(${name}) ${alpha * 100}%, transparent)`;
+};
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
     './app/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
   ],
-  darkMode: ['class', '[class~="neon"]'],
+  // Light/Dark ÚNICAMENTE. next-themes aplica `.dark` en <html> y todas las
+  // variantes `dark:` de la app reaccionan. No existe un tercer modo.
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        primary: 'var(--primary)',
-        secondary: 'var(--secondary)',
-        background: 'var(--background)',
-        card: 'var(--card-bg)',
-        text: 'var(--text-color)',
-        accent: 'var(--accent)',
+        primary: token('--primary'),
+        secondary: token('--secondary'),
+        background: token('--background'),
+        card: token('--card-bg'),
+        text: token('--text-color'),
+        accent: token('--accent'),
+        // Tokens semánticos de superficie: cambian solos bajo `.dark`
+        // (definidos en app/globals.css). Evitan colores fijos por página.
+        border: token('--border'),
+        surface: token('--surface'),
+        input: token('--input'),
+        muted: token('--muted'),
+        'muted-foreground': token('--muted-foreground'),
       },
       fontFamily: {
         sans: ['var(--font-family)', 'system-ui', 'sans-serif'],

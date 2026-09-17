@@ -86,24 +86,24 @@ export default function CustomersPage() {
             <Calendar className="w-6 h-6 text-primary" />
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Librito de Clientes</h1>
-              <p className="text-sm text-gray-500">Clientes agrupados por WhatsApp · ordenados por mayor gasto</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Clientes agrupados por WhatsApp · ordenados por mayor gasto</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-sm text-gray-500"><Trophy className="w-5 h-5 text-yellow-400" /><span>{filtered.slice(0, 3).length} destacados</span></div>
+          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400"><Trophy className="w-5 h-5 text-yellow-400" /><span>{filtered.slice(0, 3).length} destacados</span></div>
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-6">
         <div className="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-gray-200 dark:border-zinc-800 p-4 mb-4 flex items-center justify-between gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
             <input value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Buscar por nombre o WhatsApp..." className="w-full pl-10 pr-3 py-2 rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary/50" />
           </div>
           <button onClick={loadOrders} disabled={loading} className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50" title="Recargar"><RefreshCw className={`w-4 h-4 text-gray-500 ${loading ? 'animate-spin' : ''}`} /></button>
         </div>
 
                 {loading ? (
-          <div className="flex items-center justify-center py-12 text-gray-500">
+          <div className="flex items-center justify-center py-12 text-gray-500 dark:text-gray-400">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
           </div>
         ) : filtered.length === 0 ? (
@@ -124,11 +124,11 @@ export default function CustomersPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-100 dark:bg-zinc-800/60 text-left">
-                  <th className="px-4 py-2.5 text-gray-500">#</th>
-                  <th className="px-4 py-2.5 text-gray-500">Cliente</th>
-                  <th className="px-4 py-2.5 text-gray-500">WhatsApp</th>
-                  <th className="px-4 py-2.5 text-gray-500 text-center">Total Pedidos</th>
-                  <th className="px-4 py-2.5 text-gray-500 text-right">Dinero Total Gastado</th>
+                  <th className="px-4 py-2.5 text-gray-500 dark:text-gray-400">#</th>
+                  <th className="px-4 py-2.5 text-gray-500 dark:text-gray-400">Cliente</th>
+                  <th className="px-4 py-2.5 text-gray-500 dark:text-gray-400">WhatsApp</th>
+                  <th className="px-4 py-2.5 text-gray-500 dark:text-gray-400 text-center">Total Pedidos</th>
+                  <th className="px-4 py-2.5 text-gray-500 dark:text-gray-400 text-right">Dinero Total Gastado</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-zinc-800">
@@ -147,7 +147,7 @@ export default function CustomersPage() {
                       </td>
                       <td className="px-4 py-2.5">
                         <div className="flex items-center gap-2">
-                          <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-white shrink-0 ${isTop3 ? 'bg-gradient-to-r from-yellow-400 to-yellow-300 text-black' : 'bg-gray-300'}`}>
+                          <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-white shrink-0 ${isTop3 ? 'bg-gradient-to-r from-yellow-400 to-yellow-300 text-black' : 'bg-gray-300 dark:bg-zinc-700'}`}>
                             {c.name?.charAt(0)?.toUpperCase() || '—'}
                           </span>
                           <span className="font-medium text-gray-900 dark:text-white truncate">{c.name}</span>
@@ -196,23 +196,23 @@ export default function CustomersPage() {
             <div className="px-5 py-4 border-b border-gray-200 dark:border-zinc-800 flex items-center justify-between">
               <div>
                 <h3 className="font-bold text-gray-900 dark:text-white">{selectedPhone.name}</h3>
-                <p className="text-sm text-gray-500">{selectedPhone.phone}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{selectedPhone.phone}</p>
               </div>
               <button
                 onClick={() => setSelectedPhone(null)}
                 className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
               >
-                <X className="w-5 h-5 text-gray-500" />
+                <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
               </button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-4">
               <div className="flex items-center justify-between mb-4">
                 <h4 className="font-bold text-gray-900 dark:text-white">Historial de pedidos</h4>
-                <span className="text-xs text-gray-500">{selectedPhone.orders} pedido(s)</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">{selectedPhone.orders} pedido(s)</span>
               </div>
               {customerOrders(selectedPhone.pc).length === 0 ? (
-                <p className="text-sm text-gray-500">No hay pedidos registrados.</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">No hay pedidos registrados.</p>
               ) : (
                 <div className="space-y-3">
                   {customerOrders(selectedPhone.pc).map((o) => (
@@ -221,8 +221,8 @@ export default function CustomersPage() {
                       className="p-3 rounded-xl bg-gray-50 dark:bg-zinc-800/60 border border-gray-200 dark:border-zinc-800"
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="font-mono text-xs text-gray-500">#{String(o.id).slice(0, 8)}</span>
-                        <span className="text-xs text-gray-500">
+                        <span className="font-mono text-xs text-gray-500 dark:text-gray-400">#{String(o.id).slice(0, 8)}</span>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
                           {new Date(o.created_at).toLocaleDateString('es-DO', {
                             day: '2-digit',
                             month: 'short',
@@ -231,7 +231,7 @@ export default function CustomersPage() {
                         </span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5 text-sm text-gray-500">
+                        <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400">
                           <ShoppingBag className="w-3.5 h-3.5" />
                           {Array.isArray(o.items) ? o.items.length : 0} productos ·{' '}
                           {o.status === 'completed'

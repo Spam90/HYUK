@@ -16,7 +16,7 @@ export default function DemoPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-zinc-950">
+    <div className="min-h-screen bg-background">
       {/* Floating Demo Banner - Tiendanube Style */}
       <AnimatePresence>
         {showBanner && (

@@ -107,7 +107,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-950 relative overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden">
       {/* Decoración de fondo */}
       <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-transparent to-emerald-500/5" />
       <div className="absolute top-20 left-20 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl" />
@@ -119,14 +119,14 @@ export default function SignupPage() {
         transition={{ duration: 0.5 }}
         className="relative w-full max-w-md mx-4"
       >
-        <div className="bg-zinc-900/60 backdrop-blur-xl rounded-theme-xl shadow-2xl p-8 border border-zinc-800">
+        <div className="bg-card backdrop-blur-xl rounded-theme-xl shadow-2xl p-8 border border-secondary/10">
           {/* Logo */}
           <div className="flex flex-col items-center mb-8">
             <div className="w-16 h-16 rounded-theme-xl bg-emerald-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/30 mb-4">
               <Store className="w-8 h-8" />
             </div>
-            <h1 className="text-2xl font-bold text-zinc-100">Crea tu cuenta</h1>
-            <p className="text-sm text-zinc-400 mt-1">Comienza a personalizar tu catálogo</p>
+            <h1 className="text-2xl font-bold text-text">Crea tu cuenta</h1>
+            <p className="text-sm text-text/60 mt-1">Comienza a personalizar tu catálogo</p>
           </div>
 
           {/* Formulario */}
@@ -134,14 +134,14 @@ export default function SignupPage() {
             <div>
               <label className="block text-sm font-medium text-text mb-1.5">Nombre del negocio</label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text/50" />
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Mi Restaurante"
                   required
-                  className="w-full pl-10 pr-4 py-3 rounded-theme-lg border border-zinc-800 bg-zinc-950 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                  className="w-full pl-10 pr-4 py-3 rounded-theme-lg border border-secondary/20 bg-muted text-sm text-text placeholder:text-text/50 focus:outline-none focus:border-emerald-500/50 transition-colors"
                 />
               </div>
             </div>
@@ -149,14 +149,14 @@ export default function SignupPage() {
             <div>
               <label className="block text-sm font-medium text-text mb-1.5">Email</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text/50" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="tu@email.com"
                   required
-                  className="w-full pl-10 pr-4 py-3 rounded-theme-lg border border-zinc-800 bg-zinc-950 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                  className="w-full pl-10 pr-4 py-3 rounded-theme-lg border border-secondary/20 bg-muted text-sm text-text placeholder:text-text/50 focus:outline-none focus:border-emerald-500/50 transition-colors"
                 />
               </div>
             </div>
@@ -164,7 +164,7 @@ export default function SignupPage() {
             <div>
               <label className="block text-sm font-medium text-text mb-1.5">Contraseña</label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text/50" />
                 <input
                   type="password"
                   value={password}
@@ -172,7 +172,7 @@ export default function SignupPage() {
                   placeholder="Mínimo 6 caracteres"
                   required
                   minLength={6}
-                  className="w-full pl-10 pr-4 py-3 rounded-theme-lg border border-zinc-800 bg-zinc-950 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-emerald-500/50 transition-colors"
+                  className="w-full pl-10 pr-4 py-3 rounded-theme-lg border border-secondary/20 bg-muted text-sm text-text placeholder:text-text/50 focus:outline-none focus:border-emerald-500/50 transition-colors"
                 />
               </div>
             </div>
@@ -204,7 +204,7 @@ export default function SignupPage() {
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-text/50">
               ¿Ya tienes cuenta?{' '}
               <a href="/login" className="text-emerald-400 font-medium hover:underline">
                 Inicia sesión

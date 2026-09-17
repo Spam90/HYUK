@@ -4,7 +4,7 @@
    fallback a red y actualización en background.
    ============================================= */
 
-const CACHE_NAME = 'hyuk-catalog-v4';
+const CACHE_NAME = 'hyuk-catalog-v5';
 // '/' NO se precachea. Las rutas de autenticación y admin (/, /login, /signup,
 // /admin) y las de API (/api/*) usan estrategia NetworkOnly: NUNCA se sirven
 // páginas de sesión/login/admin antiguas desde el caché del Service Worker.
@@ -59,11 +59,16 @@ self.addEventListener('fetch', (event) => {
   // Evita el fallo CORS cuando Vercel lo redirige al SSO en previews protegidos.
   if (url.pathname === '/manifest.json') return;
 
-  // No cachear API, Supabase o rutas de autenticación
+  // No cachear API, Supabase ni rutas de autenticación.
+  //
+  // `_next/` COMPLETO (no solo `_next/static`): static, image, data y
+  // webpack-hmr. El build de Next lo sirve el servidor/Vercel con sus propias
+  // cabeceras inmutables; interceptarlo solo puede degradarlo o devolver una
+  // respuesta con el Content-Type equivocado.
   if (url.pathname.startsWith('/api/') ||
       url.hostname.includes('supabase') ||
       url.pathname.startsWith('/auth/') ||
-      url.pathname.startsWith('/_next/static')) {
+      url.pathname.startsWith('/_next/')) {
     return;
   }
 
@@ -119,8 +124,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Estáticos: cache-first con actualización en background.
-  // El fallback siempre es una Response válida (nunca undefined).
+  // Estáticos (imágenes, fuentes, SVG...): cache-first con actualización en
+  // background (stale-while-revalidate).
+  //
+  // IMPORTANTE — aquí NUNCA se devuelve un HTML de respaldo.
+  // Antes, el catch hacía `new Response('<!doctype html>...', { status: 200,
+  // 'Content-Type': 'text/html' })`. Consecuencia: si fallaba la descarga de un
+  // `.css`, `.js` o una fuente, el navegador recibía **HTML 200 en su lugar** y
+  // lo rechazaba con el error MIME reportado:
+  //   "Refused to apply style ... MIME type ('text/html') is not a supported
+  //    stylesheet MIME type, and strict MIME checking is enabled."
+  // Un fallo de red debe seguir siendo un fallo de red -> `Response.error()`.
   event.respondWith(
     caches.match(request).then((cached) => {
       const network = fetch(request)
@@ -131,13 +145,8 @@ self.addEventListener('fetch', (event) => {
           }
           return response;
         })
-        .catch(() =>
-          cached ||
-          new Response(
-            '<!doctype html><html><meta charset="utf-8"><title>HYUK</title><p style="font-family:sans-serif;padding:20px">Sin conexión</p></html>',
-            { status: 200, headers: { 'Content-Type': 'text/html' } }
-          )
-        );
+        // Sin caché y sin red -> error de red real (nunca HTML falseado).
+        .catch(() => Response.error());
 
       return cached || network;
     })

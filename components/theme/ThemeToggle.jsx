@@ -3,18 +3,17 @@
 import { useTheme } from 'next-themes';
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sun, Moon, Zap } from 'lucide-react';
+import { Sun, Moon } from 'lucide-react';
 
 /**
- * ThemeToggle - Botón de alternancia entre los 3 temas globales:
- * ☀️ LIGHT  →  🌙 DARK  →  ⚡ NEÓN  →  ☀️ LIGHT
+ * ThemeToggle - Botón de alternancia entre los 2 temas globales de HYUK:
+ * ☀️ LIGHT  ↔  🌙 DARK
  *
- * next-themes aplica la clase del tema en <html> (`dark` → `.dark`,
- * `neon` → `.neon`) y persiste en localStorage (`hyuk-theme`).
- * Con `darkMode: ['class','[class~="neon"]']` en tailwind.config.js,
- * TODAS las variantes `dark:` de la app se activan también bajo `.neon`.
+ * next-themes aplica la clase del tema en <html> (`dark` → `.dark`) y persiste
+ * en localStorage (`hyuk-theme`). Con `darkMode: 'class'` en tailwind.config.js,
+ * TODAS las variantes `dark:` de la app reaccionan al cambio.
  */
-const THEME_ORDER = ['light', 'dark', 'neon'];
+const THEME_ORDER = ['light', 'dark'];
 
 function nextTheme(current) {
   const idx = THEME_ORDER.indexOf(current);
@@ -24,7 +23,6 @@ function nextTheme(current) {
 const THEME_META = {
   light: { Icon: Sun, className: 'text-amber-400' },
   dark: { Icon: Moon, className: 'text-indigo-400' },
-  neon: { Icon: Zap, className: 'text-fuchsia-400' },
 };
 
 export default function ThemeToggle({ size = 'md', variant = 'ghost' }) {
@@ -39,10 +37,7 @@ export default function ThemeToggle({ size = 'md', variant = 'ghost' }) {
   if (!mounted) return null;
 
   // Normalizar el tema actual (resolvedTheme puede ser 'system' o indefinido).
-  const current =
-    resolvedTheme === 'dark' || resolvedTheme === 'neon' || resolvedTheme === 'light'
-      ? resolvedTheme
-      : 'light';
+  const current = resolvedTheme === 'dark' ? 'dark' : 'light';
   const next = nextTheme(current);
   const { Icon, className } = THEME_META[next];
 
@@ -67,7 +62,7 @@ export default function ThemeToggle({ size = 'md', variant = 'ghost' }) {
   return (
     <motion.button
       type="button"
-      aria-label={`Cambiar tema: activar ${next === 'dark' ? 'oscuro' : next === 'neon' ? 'neón' : 'claro'}`}
+      aria-label={`Cambiar tema: activar ${next === 'dark' ? 'oscuro' : 'claro'}`}
       whileTap={{ scale: 0.85 }}
       whileHover={{ scale: 1.05 }}
       onClick={toggleTheme}

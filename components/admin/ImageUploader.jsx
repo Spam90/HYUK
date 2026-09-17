@@ -114,7 +114,7 @@ export default function ImageUploader({
             <div className="absolute bottom-2 right-2 flex items-center gap-2">
               <label
                 htmlFor={`image-gallery-${uid}`}
-                className="cursor-pointer px-3 py-2 rounded-lg bg-white text-sm font-medium hover:bg-gray-100 transition-colors shadow"
+                className="cursor-pointer px-3 py-2 rounded-lg bg-white text-sm font-medium hoverbg-gray-100 dark:hoverbg-zinc-800 transition-colors shadow"
               >
                 Cambiar
               </label>

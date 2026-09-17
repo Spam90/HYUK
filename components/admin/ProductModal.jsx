@@ -73,7 +73,7 @@ export default function ProductModal({
             onClick={onClose}
             className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
           </button>
         </div>
 
@@ -217,7 +217,7 @@ export default function ProductModal({
                 type="checkbox"
                 checked={formData.is_available}
                 onChange={(e) => setFormData({ ...formData, is_available: e.target.checked })}
-                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                className="w-4 h-4 rounded border-gray-300 dark:border-zinc-600 text-primary focus:ring-primary"
               />
               <span className="text-sm text-gray-700 dark:text-gray-300">Disponible</span>
             </label>
@@ -226,7 +226,7 @@ export default function ProductModal({
                 type="checkbox"
                 checked={formData.is_featured}
                 onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
-                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
+                className="w-4 h-4 rounded border-gray-300 dark:border-zinc-600 text-primary focus:ring-primary"
               />
               <span className="text-sm text-gray-700 dark:text-gray-300">Destacado</span>
             </label>

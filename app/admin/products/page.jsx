@@ -221,7 +221,7 @@ export default function ProductsPage() {
           <div className="flex items-center gap-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Productos</h1>
-              <p className="text-sm text-gray-500">Gestiona tu catÃ¡logo</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Gestiona tu catÃ¡logo</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -268,7 +268,7 @@ export default function ProductsPage() {
         {/* Search and Filter - Tiendanube Style */}
         <div className="mb-6 space-y-3">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
             <input
               type="text"
               value={searchTerm}
@@ -323,7 +323,7 @@ export default function ProductsPage() {
         {/* Products List - Mobile First Cards */}
         {filteredProducts.length === 0 ? (
           <div className="text-center py-12 bg-white dark:bg-zinc-900 rounded-2xl border border-gray-200 dark:border-zinc-800">
-            <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+            <Package className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
             <p className="text-gray-600 dark:text-gray-400">No hay productos aÃºn</p>
             <button
               onClick={() => setShowModal(true)}
@@ -366,7 +366,7 @@ export default function ProductsPage() {
                             ${parseFloat(product.price).toFixed(2)}
                           </span>
                           {product.original_price && (
-                            <span className="text-xs text-gray-400 line-through">
+                            <span className="text-xs text-gray-400 dark:text-gray-500 line-through">
                               ${parseFloat(product.original_price).toFixed(2)}
                             </span>
                           )}
@@ -384,7 +384,7 @@ export default function ProductsPage() {
                               {stockLevels.get(product.id).total}
                             </span>
                           ) : (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-500">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-gray-400">
                               Sin SKU
                             </span>
                           )}

@@ -165,10 +165,26 @@ export async function middleware(request) {
 export const config = {
   matcher: [
     /*
-     * Aplicar middleware a todas las rutas excepto:
-     * - Archivos estáticos (_next/static, _next/image, favicon.ico, iconos PWA, manifest, SW)
-     * - API routes (api/*)
+     * Excluir del middleware TODO lo que no sea una página navegable.
+     *
+     * Por qué importa: este middleware crea un cliente Supabase y ejecuta
+     * `auth.getUser()` en cada request al que se aplica. Si se aplica a un
+     * asset (CSS/JS/imagen/fuente) y el entorno de Supabase falla o no está
+     * configurado, la excepción produce un **500 con `Content-Type: text/html`**
+     * para una URL `.css`/`.js`. El navegador lo rechaza con el error:
+     *   "Refused to apply style/execute script ... MIME type ('text/html')
+     *    is not a supported stylesheet/script MIME type".
+     *
+     * Exclusiones:
+     *  - `_next/`                  build de Next: static, image, data, webpack-hmr
+     *  - `api/`                    route handlers (tienen su propia auth)
+     *  - assets de `public/`       sw.js, manifest.json, robots.txt, sitemap.xml,
+     *                              favicon.ico/svg/png, icon-N.png
+     *
+     * NO se relaja ninguna protección: /admin, /onboarding, /pedido/*, /[slug],
+     * /auth/*, /pricing, /contact y el resto de páginas SIGUEN pasando por el
+     * middleware y conservan exactamente el mismo flujo de sesión.
      */
-    '/((?!_next/static|_next/image|favicon.ico|icon-\\d+\\.png|manifest\\.json|sw\\.js|api/).*)',
+    '/((?!_next/|api/|sw\\.js|manifest\\.json|robots\\.txt|sitemap\\.xml|favicon\\.(?:ico|svg|png)|icon-\\d+\\.png).*)',
   ],
 };

@@ -12,17 +12,17 @@ const SUPPORT_EMAIL = 'soporte@hyuk.app';
 
 export default function ContactPage() {
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
-      <header className="border-b border-zinc-800/60">
+    <div className="min-h-screen bg-background text-text">
+      <header className="border-b border-secondary/10">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="text-lg font-black tracking-tight">
             HYUK<span className="text-emerald-400">.</span>
           </Link>
           <nav className="flex items-center gap-4 text-sm">
-            <Link href="/pricing" className="text-zinc-400 hover:text-zinc-100 transition-colors">
+            <Link href="/pricing" className="text-text/60 hover:text-text transition-colors">
               Planes
             </Link>
-            <Link href="/" className="text-zinc-400 hover:text-zinc-100 transition-colors">
+            <Link href="/" className="text-text/60 hover:text-text transition-colors">
               Inicio
             </Link>
           </nav>
@@ -35,7 +35,7 @@ export default function ContactPage() {
             Soporte &amp; ventas
           </span>
           <h1 className="text-3xl md:text-5xl font-black">¿En qué podemos ayudarte?</h1>
-          <p className="text-zinc-400 text-lg max-w-2xl">
+          <p className="text-text/60 text-lg max-w-2xl">
             Consultas sobre planes, facturación, dominios personalizados (Enterprise) o soporte
             técnico: escribinos por email.
           </p>
@@ -45,13 +45,13 @@ export default function ContactPage() {
           {/* Email (canal real documentado) */}
           <a
             href={`mailto:${SUPPORT_EMAIL}?subject=Consulta%20HYUK`}
-            className="group bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 md:p-8 hover:border-emerald-500/40 hover:bg-zinc-900/80 transition-colors"
+            className="group bg-card border border-secondary/10 rounded-2xl p-6 md:p-8 hover:border-emerald-500/40 hover:bg-card transition-colors"
           >
             <div className="w-12 h-12 rounded-xl bg-emerald-500/15 flex items-center justify-center mb-4">
               <Mail className="w-6 h-6 text-emerald-400" />
             </div>
             <h2 className="text-lg font-bold mb-1">Escríbenos un email</h2>
-            <p className="text-sm text-zinc-400 mb-4">
+            <p className="text-sm text-text/60 mb-4">
               Para consultas de planes, facturación y soporte. Respondemos en horario laboral.
             </p>
             <code className="text-emerald-400 font-mono text-sm">{SUPPORT_EMAIL}</code>
@@ -60,25 +60,25 @@ export default function ContactPage() {
           {/* Planes y precios (ruta real) */}
           <Link
             href="/pricing"
-            className="group bg-zinc-900/60 border border-zinc-800 rounded-2xl p-6 md:p-8 hover:border-emerald-500/40 hover:bg-zinc-900/80 transition-colors"
+            className="group bg-card border border-secondary/10 rounded-2xl p-6 md:p-8 hover:border-emerald-500/40 hover:bg-card transition-colors"
           >
             <div className="w-12 h-12 rounded-xl bg-emerald-500/15 flex items-center justify-center mb-4">
               <Crown className="w-6 h-6 text-emerald-400" />
             </div>
             <h2 className="text-lg font-bold mb-1">Planes y precios</h2>
-            <p className="text-sm text-zinc-400 mb-4">
+            <p className="text-sm text-text/60 mb-4">
               Compará Free, Pro y Enterprise, o iniciá una suscripción online.
             </p>
             <span className="text-emerald-400 text-sm font-medium">Ver planes →</span>
           </Link>
         </div>
 
-        <div className="mt-10 bg-zinc-900/40 border border-zinc-800 rounded-2xl p-6 md:p-8">
+        <div className="mt-10 bg-card border border-secondary/10 rounded-2xl p-6 md:p-8">
           <h2 className="flex items-center gap-2 font-bold text-lg mb-3">
             <CheckCircle2 className="w-5 h-5 text-emerald-400" />
             Qué esperar
           </h2>
-          <ul className="space-y-2 text-sm text-zinc-400">
+          <ul className="space-y-2 text-sm text-text/60">
             <li>• Respuesta en menos de 24 h hábiles por email.</li>
             <li>• Para activación de Enterprise o dominios personalizados, indicá tu correo de registro.</li>
             <li>• Si ya sos usuario, incluí el email con el que te registraste para agilizar la ayuda.</li>
@@ -94,7 +94,7 @@ export default function ContactPage() {
           </Link>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-zinc-700 text-zinc-200 hover:bg-zinc-800/60 font-medium transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-secondary/20 text-text/90 hover:bg-secondary/10 font-medium transition-colors"
           >
             <Home className="w-4 h-4" /> Volver al inicio
           </Link>

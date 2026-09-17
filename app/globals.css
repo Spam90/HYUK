@@ -17,19 +17,62 @@
   --radius-lg: 1rem;
   --radius-xl: 1.5rem;
   --font-family: 'Inter', sans-serif;
+
+  /* ---- Tokens semánticos de superficie (Light) ----
+     Son la base global que usan sidebar, header, cards, tablas, inputs y
+     modales. `.dark` los sobreescribe y con eso TODA la interfaz cambia. */
+  --surface: #FFFFFF;
+  --muted: #F4F4F5;
+  --muted-foreground: #52525B;
+  --border: rgba(15, 23, 42, 0.12);
+  --input: #FFFFFF;
+
+  /* Lienzo de la vista previa del telÃ©fono (PhonePreview en /admin/customize).
+     Tokens propios para NO alterar el modo claro: en :root conservan sus
+     valores originales (#F8F9FA / #D1D5DB) y `.dark` los vuelve carbÃ³n neutro. */
+  --preview-canvas: #F8F9FA;
+  --preview-dot: #D1D5DB;
+
+  /* Controles nativos (select, date, checkbox, scrollbar) en modo claro */
+  color-scheme: light;
 }
 
 .dark {
-  --background: #0F172A;
-  --card-bg: #1E293B;
-  --text-color: #F8FAFC;
-  --primary: #10B981;
-  --secondary: #94A3B8;
-  --accent: #FBBF24;
+  /* ---- Paleta Dark: negro / gris CARBÓN NEUTRO (estilo Gemini) ----
+     Los valores son deliberadamente neutros (R ≈ G ≈ B, sin dominante azul).
+
+     Antes se usaba la escala "slate", cuyo canal azul es muy superior al
+     rojo y al verde (#0F172A = R15 G23 B42; #1E293B = R30 G41 B59;
+     #94A3B8 = R148 G163 B184). Eso teñía de azul TODO el modo oscuro,
+     agravado porque --secondary se usa como tinte en cientos de sitios
+     (`bg-secondary/5|10|20`, `border-secondary/10|20`) en inputs, hovers
+     y divisores.
+
+     El modo claro (:root) no se toca. */
+  --background: #131314; /* lienzo casi negro (Gemini background) */
+  --card-bg: #1E1F20; /* superficie de card (Gemini surface) */
+  --text-color: #E3E3E3; /* texto principal (Gemini on-surface) */
+  --primary: #10B981; /* color de marca: se conserva */
+  --secondary: #9AA0A6; /* gris neutro para bordes/tintes/hovers */
+  --accent: #FBBF24; /* se conserva */
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
   --radius-lg: 1rem;
   --radius-xl: 1.5rem;
+
+  /* ---- Tokens semánticos de superficie (Dark) ---- */
+  --surface: #1E1F20; /* superficie elevada (Gemini surface) */
+  --muted: #282A2C; /* campo/superficie alta (Gemini container-high) */
+  --muted-foreground: #A1A1AA; /* ya era neutro (zinc-400): se conserva */
+  --border: rgba(227, 227, 227, 0.14); /* antes slate-50 (azulado) */
+  --input: #282A2C; /* = --muted, para que todo input se vea igual */
+
+  /* Lienzo del preview: superficie carbÃ³n neutra (R â‰ˆ G â‰ˆ B) un poco mÃ¡s
+     clara que --background, para que el bisel casi negro del telÃ©fono siga
+     contrastando. Los puntos del patrÃ³n pasan de gris claro a gris medio. */
+  --preview-canvas: #1E1F20;
+  --preview-dot: #3C3C3C;
+
   color-scheme: dark;
 }
 
@@ -54,6 +97,9 @@ body {
   color: var(--text-color);
   line-height: 1.6;
   overflow-x: hidden;
+  /* Transición limpia Light <-> Dark (next-themes la desactiva durante el swap
+     con `disableTransitionOnChange`, así que no hay parpadeo). */
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
 }
 
 /* =============================================
@@ -93,7 +139,8 @@ body {
 }
 
 .dark .glass {
-  background: rgba(15, 23, 42, 0.7);
+  /* Fondo neutro (antes rgba(15, 23, 42, .7) = slate-900, azulado). */
+  background: rgba(19, 19, 20, 0.72);
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -103,6 +150,22 @@ body {
     0 4px 6px -1px rgba(0, 0, 0, 0.05),
     0 10px 20px -5px rgba(0, 0, 0, 0.08),
     0 0 0 1px rgba(0, 0, 0, 0.02);
+}
+
+/* En Dark las sombras claras no se perciben: se refuerzan para conservar
+   la jerarquía de profundidad de cards y modales. */
+.dark .shadow-premium {
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.4),
+    0 10px 20px -5px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.dark .shadow-premium-lg {
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.5),
+    0 20px 40px -10px rgba(0, 0, 0, 0.6),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 .shadow-premium-lg {
@@ -194,11 +257,15 @@ body {
   width: 100%;
   padding: 0.75rem 1rem;
   border-radius: 0.5rem;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background-color: var(--background);
+  border: 1px solid var(--border);
+  background-color: var(--input);
   color: var(--text-color);
   outline: none;
   transition: all 0.2s ease;
+}
+
+.input-premium::placeholder {
+  color: var(--muted-foreground);
 }
 
 .input-premium:focus {

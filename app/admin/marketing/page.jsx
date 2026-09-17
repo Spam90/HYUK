@@ -227,7 +227,7 @@ const handleDeleteCoupon = async (id) => {
   };
 
   const getCouponStatus = (coupon) => {
-    if (!coupon.is_active) return { label: 'Inactivo', cls: 'bg-gray-100 text-gray-600' };
+    if (!coupon.is_active) return { label: 'Inactivo', cls: 'bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-300' };
     if (coupon.expires_at && new Date(coupon.expires_at) < new Date()) {
       return { label: 'Expirado', cls: 'bg-red-100 text-red-600' };
     }
@@ -387,7 +387,7 @@ const handleDeleteCoupon = async (id) => {
                           className={`flex items-center gap-1.5 px-3 py-2 rounded-theme-lg text-xs font-semibold transition-colors ${
                             coupon.is_active
                               ? 'bg-green-500 text-white'
-                              : 'bg-gray-200 text-gray-600'
+                              : 'bg-gray-200 dark:bg-zinc-700 text-gray-600 dark:text-gray-300'
                           }`}
                         >
                           {coupon.is_active ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
@@ -436,7 +436,7 @@ const handleDeleteCoupon = async (id) => {
                   type="button"
                   onClick={() => setMarketing({ ...marketing, showAnnouncementBar: !marketing.showAnnouncementBar })}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                    marketing.showAnnouncementBar ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600'
+                    marketing.showAnnouncementBar ? 'bg-green-500 text-white' : 'bg-gray-200 dark:bg-zinc-700 text-gray-600 dark:text-gray-300'
                   }`}
                 >
                   {marketing.showAnnouncementBar ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
@@ -483,7 +483,7 @@ const handleDeleteCoupon = async (id) => {
                   type="button"
                   onClick={() => setMarketing({ ...marketing, showPopup: !marketing.showPopup })}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-                    marketing.showPopup ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-600'
+                    marketing.showPopup ? 'bg-green-500 text-white' : 'bg-gray-200 dark:bg-zinc-700 text-gray-600 dark:text-gray-300'
                   }`}
                 >
                   {marketing.showPopup ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
@@ -673,7 +673,7 @@ const handleDeleteCoupon = async (id) => {
                       type="checkbox"
                       checked={formData.is_active}
                       onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                      className="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary"
+                      className="w-5 h-5 rounded border-gray-300 dark:border-zinc-600 text-primary focus:ring-primary"
                     />
                     <span className="text-sm font-medium text-text">Cupón activo</span>
                   </label>

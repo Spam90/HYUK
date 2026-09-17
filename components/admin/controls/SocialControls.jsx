@@ -42,7 +42,7 @@ export default function SocialControls({ social = {}, onChange }) {
       <div>
         <label className="block text-xs font-semibold text-text/70 mb-1.5">TikTok</label>
         <div className="flex items-center gap-2 px-3 py-2.5 rounded-theme-lg bg-secondary/5 border border-secondary/10 focus-within:border-primary/50 transition-colors">
-          <Music2 className="w-4 h-4 text-zinc-400 shrink-0" />
+          <Music2 className="w-4 h-4 text-text/60 shrink-0" />
           <input
             type="text"
             value={s.tiktok}

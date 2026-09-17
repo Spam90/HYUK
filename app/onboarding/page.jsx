@@ -172,31 +172,31 @@ const storeUrl = slug ? `${slug}.hyuk.app` : 'tu-slug.hyuk.app';
       return (
         <div className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-1.5">Nombre del negocio</label>
+            <label className="block text-sm font-medium text-text/80 mb-1.5">Nombre del negocio</label>
             <div className="relative">
-              <Store className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-              <input value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="Ej: Cafetería El Árbol" className="w-full pl-10 pr-4 py-3 rounded-xl border border-zinc-800 bg-zinc-950 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-emerald-500/50" />
+              <Store className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text/50" />
+              <input value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="Ej: Cafetería El Árbol" className="w-full pl-10 pr-4 py-3 rounded-xl border border-secondary/20 bg-muted text-sm text-text placeholder:text-text/50 focus:outline-none focus:border-emerald-500/50" />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-1.5">Tu enlace (slug)</label>
+            <label className="block text-sm font-medium text-text/80 mb-1.5">Tu enlace (slug)</label>
             <div className="relative">
-              <input value={slug} onChange={(e) => { setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, '-')); setSlugAvailable(null); }} placeholder="mi-tienda" className="w-full pl-4 pr-4 py-3 rounded-xl border border-zinc-800 bg-zinc-950 text-sm text-zinc-100 focus:outline-none focus:border-emerald-500/50" />
-              {checkingSlug && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-zinc-500" />}
+              <input value={slug} onChange={(e) => { setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, '-')); setSlugAvailable(null); }} placeholder="mi-tienda" className="w-full pl-4 pr-4 py-3 rounded-xl border border-secondary/20 bg-muted text-sm text-text focus:outline-none focus:border-emerald-500/50" />
+              {checkingSlug && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-text/50" />}
               {!checkingSlug && slugAvailable === true && <CheckCircle className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-green-500" />}
               {!checkingSlug && slugAvailable === false && <div className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-red-500 flex items-center justify-center"><span className="text-white text-xs font-bold">✕</span></div>}
             </div>
             {slugAvailable === false && <p className="text-xs text-red-400 mt-1">Este slug ya está en uso</p>}
             {slugAvailable === true && <p className="text-xs text-green-400 mt-1">✓ Slug disponible</p>}
-            <p className="text-xs text-zinc-500 mt-1">Tu tienda estará en: {slug || 'tu-slug'}.hyuk.app</p>
+            <p className="text-xs text-text/50 mt-1">Tu tienda estará en: {slug || 'tu-slug'}.hyuk.app</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-1.5">WhatsApp del negocio</label>
+            <label className="block text-sm font-medium text-text/80 mb-1.5">WhatsApp del negocio</label>
             <div className="relative">
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
-              <input type="tel" value={whatsappNumber} onChange={(e) => setWhatsappNumber(e.target.value)} placeholder="+1 809 123 4567" className="w-full pl-10 pr-4 py-3 rounded-xl border border-zinc-800 bg-zinc-950 text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none focus:border-emerald-500/50" />
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text/50" />
+              <input type="tel" value={whatsappNumber} onChange={(e) => setWhatsappNumber(e.target.value)} placeholder="+1 809 123 4567" className="w-full pl-10 pr-4 py-3 rounded-xl border border-secondary/20 bg-muted text-sm text-text placeholder:text-text/50 focus:outline-none focus:border-emerald-500/50" />
             </div>
-            <p className="text-xs text-zinc-500 mt-1">Recibirás los pedidos en este número</p>
+            <p className="text-xs text-text/50 mt-1">Recibirás los pedidos en este número</p>
           </div>
         </div>
       );
@@ -204,23 +204,23 @@ const storeUrl = slug ? `${slug}.hyuk.app` : 'tu-slug.hyuk.app';
 if (step === 1) {
       return (
         <div className="space-y-4">
-          <div className="flex items-center justify-between rounded-xl bg-zinc-900 border border-zinc-800 p-3">
-            <div className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-violet-400" /><span className="text-sm text-zinc-300">Llenar con IA (probaría tu catálogo)</span></div>
-            <button onClick={() => setUseAi((v) => !v)} className={`w-11 h-6 rounded-full transition-colors ${useAi ? 'bg-violet-500' : 'bg-zinc-800'}`} />
+          <div className="flex items-center justify-between rounded-xl bg-muted border border-secondary/10 p-3">
+            <div className="flex items-center gap-2"><Sparkles className="w-4 h-4 text-violet-400" /><span className="text-sm text-text/80">Llenar con IA (probaría tu catálogo)</span></div>
+            <button onClick={() => setUseAi((v) => !v)} className={`w-11 h-6 rounded-full transition-colors ${useAi ? 'bg-violet-500' : 'bg-secondary/25'}`} />
           </div>
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-1.5">Nombre del producto</label>
-            <input value={productName} onChange={(e) => setProductName(e.target.value)} placeholder="Ej: Empanadas de queso" className="w-full px-4 py-3 rounded-xl border border-zinc-800 bg-zinc-950 text-sm text-zinc-100 focus:outline-none focus:border-emerald-500/50" />
+            <label className="block text-sm font-medium text-text/80 mb-1.5">Nombre del producto</label>
+            <input value={productName} onChange={(e) => setProductName(e.target.value)} placeholder="Ej: Empanadas de queso" className="w-full px-4 py-3 rounded-xl border border-secondary/20 bg-muted text-sm text-text focus:outline-none focus:border-emerald-500/50" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-1.5">Precio</label>
-            <input type="number" min="0" step="0.01" value={productPrice} onChange={(e) => setProductPrice(e.target.value)} placeholder="0.00" className="w-full px-4 py-2.5 rounded-xl border border-zinc-800 bg-zinc-950 text-sm text-zinc-100 focus:outline-none focus:border-emerald-500/50" />
+            <label className="block text-sm font-medium text-text/80 mb-1.5">Precio</label>
+            <input type="number" min="0" step="0.01" value={productPrice} onChange={(e) => setProductPrice(e.target.value)} placeholder="0.00" className="w-full px-4 py-2.5 rounded-xl border border-secondary/20 bg-muted text-sm text-text focus:outline-none focus:border-emerald-500/50" />
           </div>
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-1.5">Descripción (opcional)</label>
-            <textarea value={productDesc} onChange={(e) => setProductDesc(e.target.value)} rows="2" placeholder="Descripción breve, ej: recién hechas cada mañana" className="w-full px-4 py-2.5 rounded-xl border border-zinc-800 bg-zinc-950 text-sm text-zinc-100 focus:outline-none focus:border-emerald-500/50 resize-none" />
+            <label className="block text-sm font-medium text-text/80 mb-1.5">Descripción (opcional)</label>
+            <textarea value={productDesc} onChange={(e) => setProductDesc(e.target.value)} rows="2" placeholder="Descripción breve, ej: recién hechas cada mañana" className="w-full px-4 py-2.5 rounded-xl border border-secondary/20 bg-muted text-sm text-text focus:outline-none focus:border-emerald-500/50 resize-none" />
           </div>
-          <button onClick={() => setSkipProduct(true)} className="text-xs text-zinc-500 hover:text-zinc-300 underline">Añadir más tarde</button>
+          <button onClick={() => setSkipProduct(true)} className="text-xs text-text/50 hover:text-text/80 underline">Añadir más tarde</button>
         </div>
       );
     }
@@ -230,18 +230,18 @@ if (step === 1) {
         <div className="w-20 h-20 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
           <Rocket className="w-10 h-10 text-emerald-400" />
         </div>
-        <h3 className="text-xl font-bold text-zinc-100">¡Tu tienda está lista! 🎉</h3>
-        <p className="text-sm text-zinc-400">{businessName || 'Tu negocio'} ya tiene su enlace público. Compártelo con tus clientes:</p>
-        <div className="flex items-center gap-2 rounded-xl bg-zinc-900 border border-zinc-800 p-3">
+        <h3 className="text-xl font-bold text-text">¡Tu tienda está lista! 🎉</h3>
+        <p className="text-sm text-text/60">{businessName || 'Tu negocio'} ya tiene su enlace público. Compártelo con tus clientes:</p>
+        <div className="flex items-center gap-2 rounded-xl bg-muted border border-secondary/10 p-3">
           <Link2 className="w-5 h-5 text-emerald-400 shrink-0" /><code className="text-sm text-emerald-300 flex-1 truncate">{storeUrl}</code>
         </div>
         <div className="flex flex-wrap gap-2 text-xs">
-          <span className="px-2 py-1 rounded-full bg-zinc-900 text-zinc-400">Pedidos a WhatsApp</span>
-          <span className="px-2 py-1 rounded-full bg-zinc-900 text-zinc-400">Catálogo visible</span>
+          <span className="px-2 py-1 rounded-full bg-muted text-text/60">Pedidos a WhatsApp</span>
+          <span className="px-2 py-1 rounded-full bg-muted text-text/60">Catálogo visible</span>
         </div>
         <button
           onClick={() => window.open(`https://wa.me/${String(whatsappNumber).replace(/\D/g, '')}?text=${encodeURIComponent('¡Creamos tu catálogo! Aquí está tu tienda: https://' + (slug || '') + '.hyuk.app')}`, '_blank')}
-          className="text-xs text-zinc-500 underline"
+          className="text-xs text-text/50 underline"
         >
           Enviarme el enlace por WhatsApp
         </button>
@@ -250,21 +250,21 @@ if (step === 1) {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-lg rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6">
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-lg rounded-2xl border border-secondary/10 bg-card p-6">
         <div className="flex items-center gap-2 mb-5">
-          <div className="rounded-xl bg-zinc-800 p-2"><Store className="w-5 h-5 text-emerald-400" /></div>
-          <div className="flex-1 text-lg font-bold text-zinc-100">Crea tu tienda</div>
+          <div className="rounded-xl bg-secondary/25 p-2"><Store className="w-5 h-5 text-emerald-400" /></div>
+          <div className="flex-1 text-lg font-bold text-text">Crea tu tienda</div>
         </div>
 
         <div className="flex items-center gap-2 mb-6">
           {STEPS.map((s, i) => (
             <div key={s.title} className="flex-1">
-              <div className={`h-1.5 rounded-full ${i <= step ? 'bg-emerald-500' : 'bg-zinc-800'} transition-colors`} />
+              <div className={`h-1.5 rounded-full ${i <= step ? 'bg-emerald-500' : 'bg-secondary/25'} transition-colors`} />
             </div>
           ))}
         </div>
-        <div className="flex items-center justify-between text-xs text-zinc-500 mb-6">
+        <div className="flex items-center justify-between text-xs text-text/50 mb-6">
           {STEPS.map((s, i) => (
             <span key={s.title} className={i <= step ? 'text-emerald-400 font-semibold' : ''}>{i + 1}. {s.title}</span>
           ))}
@@ -280,7 +280,7 @@ if (step === 1) {
 
         {step < 2 && (
           <div className="flex gap-2 mt-6">
-            <button onClick={goBack} disabled={step === 0} className="px-4 py-3 rounded-xl border border-zinc-700 text-sm text-zinc-300 disabled:opacity-40"><ArrowLeft className="w-4 h-4" /></button>
+            <button onClick={goBack} disabled={step === 0} className="px-4 py-3 rounded-xl border border-secondary/20 text-sm text-text/80 disabled:opacity-40"><ArrowLeft className="w-4 h-4" /></button>
             <motion.button whileTap={{ scale: 0.98 }} onClick={goNext} disabled={isLoading} className="flex-1 py-3 rounded-xl bg-emerald-500 text-white font-semibold shadow-lg hover:bg-emerald-600 transition-all disabled:opacity-60">
               {step === 1 ? 'Siguiente' : 'Continuar'}
             </motion.button>

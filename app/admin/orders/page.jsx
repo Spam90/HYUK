@@ -227,7 +227,7 @@ export default function OrdersPage() {
       case 'ready': return 'bg-purple-100 text-purple-800 border-purple-200';
       case 'completed': return 'bg-green-100 text-green-800 border-green-200';
       case 'cancelled': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      default: return 'bg-gray-100 dark:bg-zinc-800 text-gray-800 border-gray-200 dark:border-zinc-700';
     }
   };
 

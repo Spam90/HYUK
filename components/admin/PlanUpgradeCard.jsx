@@ -44,7 +44,7 @@ export default function PlanUpgradeCard({
     statusNorm === 'active' || statusNorm === 'trialing' ? 'text-emerald-400'
     : statusNorm === 'past_due' ? 'text-amber-400'
     : statusNorm === 'canceled' || statusNorm === 'unpaid' ? 'text-red-400'
-    : 'text-zinc-500';
+    : 'text-text/50';
 
   const openPortal = async () => {
     if (portalLoading) return;
@@ -71,9 +71,9 @@ export default function PlanUpgradeCard({
   };
 
   return (
-    <div className="mb-6 flex flex-wrap items-center justify-between bg-zinc-900/60 backdrop-blur-xl rounded-2xl p-5 border border-zinc-800 shadow-sm">
+    <div className="mb-6 flex flex-wrap items-center justify-between bg-card backdrop-blur-xl rounded-2xl p-5 border border-secondary/10 shadow-sm">
       <div className="min-w-0">
-        <h3 className="font-semibold text-zinc-100 mb-1">Plan actual</h3>
+        <h3 className="font-semibold text-text mb-1">Plan actual</h3>
         {trialActive ? (
           <p className="text-sm text-emerald-400 capitalize flex items-center gap-1.5">
             <Sparkles className="w-4 h-4" />
@@ -82,7 +82,7 @@ export default function PlanUpgradeCard({
               : `Prueba Pro — quedan ${trialDays} ${trialDays === 1 ? 'día' : 'días'}`}
           </p>
         ) : (
-          <p className="text-sm text-zinc-400 capitalize">{planName}</p>
+          <p className="text-sm text-text/60 capitalize">{planName}</p>
         )}
         {!trialActive && statusNorm !== 'inactive' && (
           <p className={`text-xs mt-0.5 ${subTone}`}>{subLabel}</p>
@@ -104,7 +104,7 @@ export default function PlanUpgradeCard({
             type="button"
             onClick={openPortal}
             disabled={portalLoading}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-700 hover:bg-zinc-600 text-white text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-zinc-400"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-secondary/20 hover:bg-secondary/30 text-text text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-secondary/40"
           >
             <CreditCard className="w-4 h-4" />
             {portalLoading ? (

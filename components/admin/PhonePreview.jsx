@@ -93,12 +93,15 @@ export default function PhonePreview({ settings }) {
     <div className="w-full max-w-[380px]">
       {/* Canvas Container with Dot Pattern */}
       <div className="relative p-8 rounded-3xl" style={{ 
-        backgroundColor: '#f8f9fa',
-        backgroundImage: 'radial-gradient(circle, #d1d5db 1px, transparent 1px)',
+        // Tokens de app/globals.css: se aclaran/oscurecen solos bajo `.dark`,
+        // así el área que rodea al teléfono respeta el tema global (en oscuro
+        // deja de ser blanca y pasa a carbón neutro, estilo Gemini).
+        backgroundColor: 'var(--preview-canvas)',
+        backgroundImage: 'radial-gradient(circle, var(--preview-dot) 1px, transparent 1px)',
         backgroundSize: '20px 20px'
       }}>
         {/* Canvas Label */}
-        <div className="absolute top-4 left-4 px-3 py-1 bg-white/80 backdrop-blur-sm rounded-full text-xs font-medium text-gray-600 border border-gray-200">
+        <div className="absolute top-4 left-4 px-3 py-1 bg-white/80 dark:bg-white/10 backdrop-blur-sm rounded-full text-xs font-medium text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-white/10">
           Canvas de Diseño
         </div>
 
@@ -259,7 +262,7 @@ export default function PhonePreview({ settings }) {
 
         {/* Floating Toolbar */}
         <div className="absolute -bottom-16 left-1/2 -translate-x-1/2">
-          <div className="flex items-center gap-1 px-3 py-2 bg-white/90 dark:bg-zinc-800/90 backdrop-blur-xl rounded-2xl shadow-premium-lg border border-gray-200">
+          <div className="flex items-center gap-1 px-3 py-2 bg-white/90 dark:bg-zinc-800/90 backdrop-blur-xl rounded-2xl shadow-premium-lg border border-gray-200 dark:border-white/10">
             <button className="p-2 hover:bg-gray-100 dark:hover:bg-zinc-700 rounded-lg transition-colors" title="Vista móvil">
               <Smartphone className="w-4 h-4 text-gray-600 dark:text-gray-300" />
             </button>

@@ -191,44 +191,44 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950">
+    <div className="min-h-screen bg-background">
       {/* Sidebar */}
-      <div className="fixed left-0 top-0 bottom-0 w-64 bg-zinc-900/60 backdrop-blur-xl border-r border-zinc-800 p-4 hidden md:flex flex-col">
+      <div className="fixed left-0 top-0 bottom-0 w-64 bg-card backdrop-blur-xl border-r border-secondary/10 p-4 hidden md:flex flex-col">
         <div className="flex items-center gap-2 mb-8">
           <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/30">
             <Store className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="font-bold text-zinc-100">HYUK Admin</h1>
-            <p className="text-xs text-zinc-400">Panel de control</p>
+            <h1 className="font-bold text-text">HYUK Admin</h1>
+            <p className="text-xs text-text/60">Panel de control</p>
           </div>
         </div>
 
         <nav className="flex-1 space-y-1">
           <a
             href="/admin/customize"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100 transition-colors"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-text/60 hover:bg-secondary/10 hover:text-text transition-colors"
           >
             <Palette className="w-4 h-4" />
             Personalizar
           </a>
           <a
             href="/admin/categories"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100 transition-colors"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-text/60 hover:bg-secondary/10 hover:text-text transition-colors"
           >
             <ClipboardList className="w-4 h-4" />
             Categorías
           </a>
           <a
             href="/admin/products"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100 transition-colors"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-text/60 hover:bg-secondary/10 hover:text-text transition-colors"
           >
             <ShoppingBag className="w-4 h-4" />
             Productos
           </a>
           <a
             href="/admin/orders"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100 transition-colors"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-text/60 hover:bg-secondary/10 hover:text-text transition-colors"
           >
             <div className="relative">
               <Package className="w-4 h-4" />
@@ -245,35 +245,35 @@ export default function AdminDashboard() {
           </a>
           <a
             href="/admin/analytics"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100 transition-colors"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-text/60 hover:bg-secondary/10 hover:text-text transition-colors"
           >
             <TrendingUp className="w-4 h-4" />
             Analíticas
           </a>
           <a
             href="/admin/customers"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100 transition-colors"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-text/60 hover:bg-secondary/10 hover:text-text transition-colors"
           >
             <Users className="w-4 h-4" />
             Clientes
           </a>
           <a
             href="/admin/marketing"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100 transition-colors"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-text/60 hover:bg-secondary/10 hover:text-text transition-colors"
           >
             <Megaphone className="w-4 h-4" />
             Marketing
           </a>
           <a
             href="/admin/settings"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-100 transition-colors"
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-text/60 hover:bg-secondary/10 hover:text-text transition-colors"
           >
             <Settings className="w-4 h-4" />
             Configuración
           </a>
                 </nav>
 
-        <div className="pt-2 text-xs text-zinc-500">
+        <div className="pt-2 text-xs text-text/50">
           <p>© {new Date().getFullYear()} HYUK Admin</p>
         </div>
       </div>
@@ -283,7 +283,7 @@ export default function AdminDashboard() {
         <div className="max-w-7xl mx-auto">
           {/* Mobile Header */}
           <div className="md:hidden mb-6 flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-zinc-100">Dashboard</h1>
+            <h1 className="text-2xl font-bold text-text">Dashboard</h1>
           </div>
 
           {/* Store Status Banner */}
@@ -291,7 +291,7 @@ export default function AdminDashboard() {
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-6 bg-zinc-900/60 backdrop-blur-xl rounded-2xl p-4 md:p-6 border border-zinc-800 shadow-sm"
+              className="mb-6 bg-card backdrop-blur-xl rounded-2xl p-4 md:p-6 border border-secondary/10 shadow-sm"
             >
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-start gap-3">
@@ -299,10 +299,10 @@ export default function AdminDashboard() {
                     <CheckCircle className="w-5 h-5 text-emerald-400" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-zinc-100 mb-1">
+                    <h3 className="font-semibold text-text mb-1">
                       Tienda Activa
                     </h3>
-                    <div className="flex items-center gap-2 text-sm text-zinc-400">
+                    <div className="flex items-center gap-2 text-sm text-text/60">
                       <LinkIcon className="w-3.5 h-3.5 shrink-0" />
                       <span className="truncate">https://{storeUrl}</span>
                     </div>
@@ -333,29 +333,29 @@ export default function AdminDashboard() {
             <motion.div
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-8 rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/40 p-6 md:p-8 text-center"
+              className="mb-8 rounded-2xl border border-dashed border-secondary/20 bg-card p-6 md:p-8 text-center"
             >
               <div className="text-5xl mb-4">👋</div>
-              <h2 className="text-xl font-bold text-zinc-100 mb-2">¡Bienvenido a tu panel!</h2>
-              <p className="text-sm text-zinc-400 mb-6 max-w-md mx-auto">
+              <h2 className="text-xl font-bold text-text mb-2">¡Bienvenido a tu panel!</h2>
+              <p className="text-sm text-text/60 mb-6 max-w-md mx-auto">
                 Todavía no hay productos ni pedidos. Seguí estos pasos para poner tu catálogo
                 en línea y empezar a recibir pedidos por WhatsApp.
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-2xl mx-auto text-left mb-6">
-                <div className="rounded-xl bg-zinc-800/60 p-4">
+                <div className="rounded-xl bg-secondary/10 p-4">
                   <span className="text-2xl">1️⃣</span>
-                  <h3 className="font-semibold text-white mt-2 text-sm">Crea productos</h3>
-                  <p className="text-xs text-zinc-400 mt-1">Agrega foto, precio y descripción.</p>
+                  <h3 className="font-semibold text-text mt-2 text-sm">Crea productos</h3>
+                  <p className="text-xs text-text/60 mt-1">Agrega foto, precio y descripción.</p>
                 </div>
-                <div className="rounded-xl bg-zinc-800/60 p-4">
+                <div className="rounded-xl bg-secondary/10 p-4">
                   <span className="text-2xl">2️⃣</span>
-                  <h3 className="font-semibold text-white mt-2 text-sm">Personaliza</h3>
-                  <p className="text-xs text-zinc-400 mt-1">Colores, logo y banner (con o sin IA).</p>
+                  <h3 className="font-semibold text-text mt-2 text-sm">Personaliza</h3>
+                  <p className="text-xs text-text/60 mt-1">Colores, logo y banner (con o sin IA).</p>
                 </div>
-                <div className="rounded-xl bg-zinc-800/60 p-4">
+                <div className="rounded-xl bg-secondary/10 p-4">
                   <span className="text-2xl">3️⃣</span>
-                  <h3 className="font-semibold text-white mt-2 text-sm">Comparte</h3>
-                  <p className="text-xs text-zinc-400 mt-1">Envía tu enlace y recibe pedidos.</p>
+                  <h3 className="font-semibold text-text mt-2 text-sm">Comparte</h3>
+                  <p className="text-xs text-text/60 mt-1">Envía tu enlace y recibe pedidos.</p>
                 </div>
               </div>
               <div className="flex flex-wrap items-center justify-center gap-3">
@@ -367,7 +367,7 @@ export default function AdminDashboard() {
                 </a>
                 <a
                   href="/admin/ai-importer"
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-zinc-800 text-zinc-100 text-sm font-semibold hover:bg-zinc-700 transition-colors"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-secondary/15 text-text text-sm font-semibold hover:bg-secondary/20 transition-colors"
                 >
                   Importar menú con IA
                 </a>
@@ -385,7 +385,7 @@ export default function AdminDashboard() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="bg-zinc-900/60 backdrop-blur-xl rounded-2xl p-4 md:p-6 border border-zinc-800 shadow-sm hover:border-zinc-700 transition-all"
+                  className="bg-card backdrop-blur-xl rounded-2xl p-4 md:p-6 border border-secondary/10 shadow-sm hover:border-primary/40 transition-all"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className={`w-10 h-10 rounded-xl ${kpi.bgColor} flex items-center justify-center`}>
@@ -397,10 +397,10 @@ export default function AdminDashboard() {
                       </span>
                     )}
                   </div>
-                  <p className="text-2xl md:text-3xl font-bold text-zinc-100 mb-1">
+                  <p className="text-2xl md:text-3xl font-bold text-text mb-1">
                     {kpi.value}
                   </p>
-                  <p className="text-xs md:text-sm text-zinc-400">
+                  <p className="text-xs md:text-sm text-text/60">
                     {kpi.label}
                   </p>
                 </motion.div>
@@ -412,18 +412,18 @@ export default function AdminDashboard() {
 
           {/* Control Rápido: Estado de la tienda + QR */}
           <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-zinc-900/60 backdrop-blur-xl rounded-2xl p-6 border border-zinc-800 shadow-sm">
+            <div className="bg-card backdrop-blur-xl rounded-2xl p-6 border border-secondary/10 shadow-sm">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h3 className="font-semibold text-zinc-100 mb-1">Estado de la tienda</h3>
-                  <p className="text-sm text-zinc-400 mb-3">
+                  <h3 className="font-semibold text-text mb-1">Estado de la tienda</h3>
+                  <p className="text-sm text-text/60 mb-3">
                     {isStoreOpen ? 'Abierta: los clientes pueden hacer pedidos' : 'Cerrada: se bloquea el checkout'}
                   </p>
                 </div>
                 <button
                   onClick={toggleStoreOpen}
                   disabled={togglingOpen}
-                  className={`relative w-14 h-8 rounded-full transition-colors shrink-0 disabled:opacity-50 ${isStoreOpen ? 'bg-emerald-500' : 'bg-zinc-700'}`}
+                  className={`relative w-14 h-8 rounded-full transition-colors shrink-0 disabled:opacity-50 ${isStoreOpen ? 'bg-emerald-500' : 'bg-secondary/30'}`}
                   title={isStoreOpen ? 'Cerrar tienda' : 'Abrir tienda'}
                   aria-label="Alternar estado de la tienda"
                 >
@@ -437,14 +437,14 @@ export default function AdminDashboard() {
 
             <a
               href="/admin/qr-generator"
-              className="group bg-zinc-900/60 backdrop-blur-xl rounded-2xl p-6 border border-zinc-800 shadow-sm hover:border-zinc-700 transition-all flex items-center justify-between"
+              className="group bg-card backdrop-blur-xl rounded-2xl p-6 border border-secondary/10 shadow-sm hover:border-primary/40 transition-all flex items-center justify-between"
             >
               <div>
-                <h3 className="font-semibold text-zinc-100 mb-1">Código QR de tu tienda</h3>
-                <p className="text-sm text-zinc-400 mb-3">Descárgalo en PNG para imprimir en tu local</p>
+                <h3 className="font-semibold text-text mb-1">Código QR de tu tienda</h3>
+                <p className="text-sm text-text/60 mb-3">Descárgalo en PNG para imprimir en tu local</p>
                 <span className="inline-flex items-center gap-1.5 text-sm font-medium text-emerald-400">Generar QR →</span>
               </div>
-              <QrCode className="w-10 h-10 text-zinc-500 group-hover:text-emerald-400 transition-colors" />
+              <QrCode className="w-10 h-10 text-text/50 group-hover:text-emerald-400 transition-colors" />
             </a>
           </div>
 
@@ -455,17 +455,17 @@ export default function AdminDashboard() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="group bg-zinc-900/60 backdrop-blur-xl rounded-2xl p-6 border border-zinc-800 shadow-sm hover:border-zinc-700 transition-all"
+              className="group bg-card backdrop-blur-xl rounded-2xl p-6 border border-secondary/10 shadow-sm hover:border-primary/40 transition-all"
             >
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                   <Palette className="w-6 h-6 text-emerald-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-zinc-100 mb-1">
+                  <h3 className="font-semibold text-text mb-1">
                     Personalizar Catálogo
                   </h3>
-                  <p className="text-sm text-zinc-400 mb-3">
+                  <p className="text-sm text-text/60 mb-3">
                     Colores, layouts y estilos
                   </p>
                   <span className="inline-flex items-center gap-1 text-sm font-medium text-emerald-400 group-hover:gap-2 transition-all">
@@ -481,17 +481,17 @@ export default function AdminDashboard() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="group bg-zinc-900/60 backdrop-blur-xl rounded-2xl p-6 border border-zinc-800 shadow-sm hover:border-zinc-700 transition-all"
+              className="group bg-card backdrop-blur-xl rounded-2xl p-6 border border-secondary/10 shadow-sm hover:border-primary/40 transition-all"
             >
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                   <ShoppingBag className="w-6 h-6 text-emerald-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-zinc-100 mb-1">
+                  <h3 className="font-semibold text-text mb-1">
                     Gestionar Productos
                   </h3>
-                  <p className="text-sm text-zinc-400 mb-3">
+                  <p className="text-sm text-text/60 mb-3">
                     Agrega y edita productos
                   </p>
                   <span className="inline-flex items-center gap-1 text-sm font-medium text-emerald-400 group-hover:gap-2 transition-all">
