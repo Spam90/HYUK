@@ -42,6 +42,8 @@ npm run build        # build de producción
 npm run start        # servidor de producción (next start)
 npm run lint         # next lint  (max-warnings 20)
 npm run check:env    # valida variables de entorno
+npm test             # tests unitarios (node --test, sin deps)
+npm run test:ci      # runner CI (node --test, mismas suites)
 ```
 
 ---
@@ -194,6 +196,12 @@ Flujo:
 - [x] `/_next/static` CSS/JS servidos con MIME correcto (`200 text/css` / `200 application/javascript`); assets inexistentes → 404 real.
 - [x] Middleware auth: 307 → `/login`; matchers excluyen `_next/`, `api/`, assets de `public/`.
 - [x] Catálogo dentro del teléfono usa `settings.theme` — **no modificado**.
+- [x] Skeleton loaders dark-aware (`Skeleton.jsx`) en los boundaries `loading.jsx` (ya no usan `zinc-800`/`gray-200` hardcodeados).
+- [x] `EmptyState.jsx` reutilizable (dark-aware) usado en `ProductGrid` (catálogo) y `/admin/analytics` (sin datos todavía).
+- [x] Tests (`npm test` / `npm run test:ci`, runner nativo `node:test`, sin deps): **6 suites → 77/77 PASS** (`checkout`, `checkout-core`, `coupons`, `plans`, `domains`, `sku-validation`).
+- [x] Integridad de datos en `/admin/analytics`: eliminados los badges de tendencia **falsos** (`+12%`, `+8%`, `+5%`) que inventaban crecimiento; se muestran solo métricas reales.
+- [x] Lint: 15 → **14 warnings** (0 errores) tras estabilizar `demoProducts` con `useMemo` en `CatalogView` (evita recálculo por render).
+- [x] CI local (`.github/workflows/ci.yml`): `lint` + `test` + `build` (sin push; requiere secrets de Supabase para el build).
 - [ ] Tests e2e (por añadir en CI) · [ ] Notificaciones email/SMS de pedidos · [ ] Multi‑idioma · [ ] Límites por plan.
 
 ---

@@ -10,6 +10,7 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 import { getDbStatus } from '@/lib/db-status';
+import EmptyState from '@/components/ui/EmptyState';
 
 export const dynamic = 'force-dynamic';
 
@@ -157,6 +158,26 @@ export default function AnalyticsPage() {
     );
   }
 
+  // Estado vacío: sin pedidos ni visitas todavía no hay métricas que mostrar.
+  if (analytics.totalOrders === 0 && analytics.totalVisits === 0) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-text mb-2">Analíticas de Ventas</h1>
+            <p className="text-text/60">Métricas y rendimiento de tu tienda</p>
+          </div>
+          <EmptyState
+            icon="📊"
+            title="Aún no hay datos de rendimiento"
+            description="Cuando recibas visitas y pedidos, verás aquí tus ventas, el producto más vendido y el embudo de conversión."
+            className="py-24"
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -177,10 +198,7 @@ export default function AnalyticsPage() {
               <div className="w-12 h-12 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
                 <DollarSign className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
-              <span className="flex items-center gap-1 text-xs font-medium text-green-600 bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded-lg">
-                <ArrowUpRight className="w-3 h-3" />
-                +12%
-              </span>
+              {/* Tendencia real pendiente de cálculo histórico: se omite para no mostrar datos falsos */}
             </div>
             <p className="text-sm text-text/60 mb-1">Ventas Totales</p>
             <p className="text-3xl font-bold text-text">${analytics.totalSales.toFixed(2)}</p>
@@ -196,10 +214,7 @@ export default function AnalyticsPage() {
               <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
                 <ShoppingBag className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
-              <span className="flex items-center gap-1 text-xs font-medium text-blue-600 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded-lg">
-                <ArrowUpRight className="w-3 h-3" />
-                +8%
-              </span>
+              {/* Tendencia real pendiente de cálculo histórico: se omite para no mostrar datos falsos */}
             </div>
             <p className="text-sm text-text/60 mb-1">Pedidos Totales</p>
             <p className="text-3xl font-bold text-text">{analytics.totalOrders}</p>
@@ -215,10 +230,7 @@ export default function AnalyticsPage() {
               <div className="w-12 h-12 rounded-xl bg-purple-50 dark:bg-purple-900/20 flex items-center justify-center">
                 <TrendingUp className="w-6 h-6 text-purple-600 dark:text-purple-400" />
               </div>
-              <span className="flex items-center gap-1 text-xs font-medium text-purple-600 bg-purple-50 dark:bg-purple-900/20 px-2 py-1 rounded-lg">
-                <ArrowUpRight className="w-3 h-3" />
-                +5%
-              </span>
+              {/* Tendencia real pendiente de cálculo histórico: se omite para no mostrar datos falsos */}
             </div>
             <p className="text-sm text-text/60 mb-1">Ticket Promedio</p>
             <p className="text-3xl font-bold text-text">${analytics.averageTicket.toFixed(2)}</p>

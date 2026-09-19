@@ -53,4 +53,7 @@ const res = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/qu
 const body = await res.text();
 console.log(`HTTP ${res.status}`);
 console.log(body);
-process.exit(res.ok ? 0 : 1);
+// NOTA: se usa process.exitCode (no process.exit) porque en Windows
+// process.exit() mientras un handle async (fetch) se cierra dispara
+// "Assertion failed: ... UV_HANDLE_CLOSING" y devuelve un exit code erróneo.
+process.exitCode = res.ok ? 0 : 1;

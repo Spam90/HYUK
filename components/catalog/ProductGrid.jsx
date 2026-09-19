@@ -2,20 +2,19 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import ProductCardVariant from './ProductCardVariant';
+import EmptyState from '@/components/ui/EmptyState';
 
 export default function ProductGrid({ products, settings, categories, onProductClick }) {
   const { layout } = settings;
   const { productGrid, productCardStyle, layoutType } = layout;
 
-  if (!products || products.length === 0) {
+    if (!products || products.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <div className="text-6xl mb-4">🍽️</div>
-        <h3 className="text-lg font-semibold text-text/80">Sin productos disponibles</h3>
-        <p className="text-sm text-text/50 mt-1">
-          Pronto tendremos nuevos productos para ti
-        </p>
-      </div>
+      <EmptyState
+        icon="🍽️"
+        title="Sin productos disponibles"
+        description="Pronto tendremos nuevos productos para ti"
+      />
     );
   }
 

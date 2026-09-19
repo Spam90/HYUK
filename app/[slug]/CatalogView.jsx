@@ -47,7 +47,7 @@ function CatalogContent({ store, categories, products, settings }) {
     { id: '3', name: 'Bebidas', icon: '🥤', is_active: true },
   ];
 
-  const demoProducts = products || [
+  const demoProducts = useMemo(() => products || [
     {
       id: '1',
       name: 'Producto Demo 1',
@@ -84,7 +84,7 @@ function CatalogContent({ store, categories, products, settings }) {
       badge: null,
       options: []
     },
-  ];
+  ], [products]);
 
   const demoSettings = settings || {
     theme: {
