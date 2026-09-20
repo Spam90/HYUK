@@ -1,4 +1,5 @@
 import AdminHeader from '@/components/admin/AdminHeader';
+import AdminNav from '@/components/admin/AdminNav';
 import ThemeToggle from '@/components/theme/ThemeToggle';
 
 export const metadata = {
@@ -8,8 +9,11 @@ export const metadata = {
 export default function AdminLayout({ children }) {
   return (
     <>
-      <AdminHeader />
-      {children}
+      <AdminNav />
+      <div className="min-h-screen md:pl-64">
+        <AdminHeader />
+        {children}
+      </div>
       {/* Toggle de tema flotante persistente en todo el panel admin */}
       <div className="fixed bottom-6 right-6 z-50 pointer-events-none">
         <div className="pointer-events-auto">

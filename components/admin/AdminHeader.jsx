@@ -184,15 +184,18 @@ export default function AdminHeader() {
           <div className="relative">
             <button
               onClick={() => setMenuOpen((v) => !v)}
+              aria-expanded={menuOpen}
+              aria-haspopup="menu"
               title="Menú de usuario"
               className="w-9 h-9 rounded-full bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-200 text-xs font-bold flex items-center justify-center hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-colors"
             >
               {userInitials}
             </button>
             {menuOpen && (
-              <div className="absolute right-0 top-11 z-50 w-44 rounded-xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 shadow-xl p-1.5">
+              <div role="menu" className="absolute right-0 top-11 z-50 w-44 rounded-xl bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 shadow-xl p-1.5">
                 <a
                   href="/admin/settings"
+                  role="menuitem"
                   onClick={() => setMenuOpen(false)}
                   className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
                 >
@@ -200,6 +203,8 @@ export default function AdminHeader() {
                 </a>
                 <button
                   onClick={() => { setMenuOpen(false); handleLogout(); }}
+                  type="button"
+                  role="menuitem"
                   className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-red-500 hover:bg-red-500/10 transition-colors"
                 >
                   <LogOut className="w-4 h-4" /> Cerrar sesión

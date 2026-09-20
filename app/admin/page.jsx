@@ -1,15 +1,15 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { 
-          Palette, Package, ShoppingBag, Settings, ExternalLink, Store,
-  ClipboardList, Eye, TrendingUp, MousePointer, Copy, Check, CheckCircle,
-  Link as LinkIcon, Megaphone, Users, QrCode, Crown
+import {
+  Palette, Package, ShoppingBag, ExternalLink, ClipboardList, Eye,
+  MousePointer, Copy, Check, CheckCircle, Link as LinkIcon, QrCode,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import PlanUpgradeCard from '@/components/admin/PlanUpgradeCard';
 import { getDbStatus } from '@/lib/db-status';
+import Skeleton from '@/components/ui/Skeleton';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -22,6 +22,7 @@ export default function AdminDashboard() {
   const [storeUrl, setStoreUrl] = useState('');
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
     const [isStoreOpen, setIsStoreOpen] = useState(true);
   const [togglingOpen, setTogglingOpen] = useState(false);
   const [planType, setPlanType] = useState('free');
@@ -34,11 +35,16 @@ export default function AdminDashboard() {
   }, []);
 
   const loadDashboardData = async () => {
+    setError('');
+    setLoading(true);
     try {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       
-      if (!user) return;
+      if (!user) {
+        setError('No pudimos verificar tu sesión. Recarga la página para intentarlo de nuevo.');
+        return;
+      }
 
       // Get store URL (solo columnas que existen: evita 400 de plan_type/is_open)
       const db = await getDbStatus();
@@ -88,9 +94,10 @@ export default function AdminDashboard() {
 
       // Stats vía /api/store-data (service_role server-side) — evita las
       // políticas RLS rotas (request.store_slug) del rol autenticado.
-      const statsRes = await fetch('/api/store-data?type=stats')
-        .then((r) => r.json())
-        .catch(() => ({}));
+      const statsResponse = await fetch('/api/store-data?type=stats', { cache: 'no-store' });
+      if (!statsResponse.ok) throw new Error('stats_request_failed');
+      const statsRes = await statsResponse.json();
+      if (statsRes?.error) throw new Error('stats_request_failed');
       const s = statsRes.data || {};
 
       setStats({
@@ -105,6 +112,7 @@ export default function AdminDashboard() {
       });
     } catch (error) {
       console.error('Error loading dashboard:', error);
+      setError('No pudimos cargar los datos del panel. Revisa tu conexión e inténtalo de nuevo.');
     } finally {
       setLoading(false);
     }
@@ -184,107 +192,53 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="min-h-screen bg-background px-4 py-6 md:px-8 md:py-8">
+        <div className="mx-auto max-w-7xl space-y-6">
+          <div className="space-y-2">
+            <Skeleton className="h-8 w-48" />
+            <Skeleton className="h-4 w-80 max-w-full" />
+          </div>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <Skeleton key={index} className="h-32 w-full" />
+            ))}
+          </div>
+          <Skeleton className="h-44 w-full" />
+          <div className="grid gap-4 md:grid-cols-2">
+            <Skeleton className="h-36 w-full" />
+            <Skeleton className="h-36 w-full" />
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Sidebar */}
-      <div className="fixed left-0 top-0 bottom-0 w-64 bg-card backdrop-blur-xl border-r border-secondary/10 p-4 hidden md:flex flex-col">
-        <div className="flex items-center gap-2 mb-8">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/30">
-            <Store className="w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="font-bold text-text">HYUK Admin</h1>
-            <p className="text-xs text-text/60">Panel de control</p>
-          </div>
-        </div>
-
-        <nav className="flex-1 space-y-1">
-          <a
-            href="/admin/customize"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-text/60 hover:bg-secondary/10 hover:text-text transition-colors"
-          >
-            <Palette className="w-4 h-4" />
-            Personalizar
-          </a>
-          <a
-            href="/admin/categories"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-text/60 hover:bg-secondary/10 hover:text-text transition-colors"
-          >
-            <ClipboardList className="w-4 h-4" />
-            Categorías
-          </a>
-          <a
-            href="/admin/products"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-text/60 hover:bg-secondary/10 hover:text-text transition-colors"
-          >
-            <ShoppingBag className="w-4 h-4" />
-            Productos
-          </a>
-          <a
-            href="/admin/orders"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-text/60 hover:bg-secondary/10 hover:text-text transition-colors"
-          >
-            <div className="relative">
-              <Package className="w-4 h-4" />
-              {stats.pendingOrders > 0 && (
-                <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-              )}
-            </div>
-            Pedidos
-            {stats.pendingOrders > 0 && (
-              <span className="ml-auto px-2 py-0.5 bg-red-500/20 text-red-400 text-xs font-bold rounded-full">
-                {stats.pendingOrders}
-              </span>
-            )}
-          </a>
-          <a
-            href="/admin/analytics"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-text/60 hover:bg-secondary/10 hover:text-text transition-colors"
-          >
-            <TrendingUp className="w-4 h-4" />
-            Analíticas
-          </a>
-          <a
-            href="/admin/customers"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-text/60 hover:bg-secondary/10 hover:text-text transition-colors"
-          >
-            <Users className="w-4 h-4" />
-            Clientes
-          </a>
-          <a
-            href="/admin/marketing"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-text/60 hover:bg-secondary/10 hover:text-text transition-colors"
-          >
-            <Megaphone className="w-4 h-4" />
-            Marketing
-          </a>
-          <a
-            href="/admin/settings"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-text/60 hover:bg-secondary/10 hover:text-text transition-colors"
-          >
-            <Settings className="w-4 h-4" />
-            Configuración
-          </a>
-                </nav>
-
-        <div className="pt-2 text-xs text-text/50">
-          <p>© {new Date().getFullYear()} HYUK Admin</p>
-        </div>
-      </div>
-
       {/* Main Content */}
-      <div className="md:ml-64 p-4 md:p-8">
+      <div className="px-4 py-6 md:px-8 md:py-8">
         <div className="max-w-7xl mx-auto">
           {/* Mobile Header */}
-          <div className="md:hidden mb-6 flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-text">Dashboard</h1>
+          <div className="mb-6 flex items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-primary">Resumen</p>
+              <h1 className="mt-1 text-2xl font-bold tracking-tight text-text md:text-3xl">Tu operación, en un vistazo</h1>
+              <p className="mt-1 text-sm text-text/60">Gestiona tu tienda y revisa lo importante del día.</p>
+            </div>
           </div>
+
+          {error && (
+            <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-700 dark:text-red-300 sm:flex-row sm:items-center sm:justify-between" role="alert">
+              <p>{error}</p>
+              <button
+                type="button"
+                onClick={loadDashboardData}
+                className="inline-flex min-h-10 items-center justify-center rounded-xl bg-red-600 px-4 font-semibold text-white transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500/40"
+              >
+                Reintentar
+              </button>
+            </div>
+          )}
 
           {/* Store Status Banner */}
           {storeUrl && (
