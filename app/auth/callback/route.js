@@ -9,21 +9,13 @@ export async function GET(request) {
   if (code) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
-    
+
     if (!error) {
-      // Redirigir a la URL de Vercel, no a localhost
-      const vercelUrl = process.env.NEXT_PUBLIC_VERCEL_URL || 
-                        process.env.VERCEL_URL || 
-                        requestUrl.origin;
-      
-      return NextResponse.redirect(`${vercelUrl}${next}`);
+      const safeNext = next.startsWith('/') && !next.startsWith('//') ? next : '/admin/customize';
+      return NextResponse.redirect(new URL(safeNext, requestUrl.origin));
     }
   }
 
   // Si hay error o no hay código, redirigir al login
-  const vercelUrl = process.env.NEXT_PUBLIC_VERCEL_URL || 
-                    process.env.VERCEL_URL || 
-                    requestUrl.origin;
-  
-  return NextResponse.redirect(`${vercelUrl}/login?error=auth_failed`);
+  return NextResponse.redirect(new URL('/login?error=auth_failed', requestUrl.origin));
 }

@@ -17,7 +17,7 @@ export default function LoginPage() {
     setError('');
 
     try {
-      // Login vía Server Action: las cookies se escriben con maxAge de 1 año
+      // Login vía Server Action: @supabase/ssr escribe las cookies oficiales
       // usando cookies() de next/headers en el momento exacto del login.
       const result = await login(email, password);
 

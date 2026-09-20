@@ -3,14 +3,9 @@
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 
-// Duración de la cookie de sesión: 1 año (en segundos)
-const MAX_AGE = 60 * 60 * 24 * 365; // 31536000
-
 /**
- * Login a través de Server Action.
- * Las cookies de sesión se escriben aquí mismo con `cookies()` de next/headers
- * y `maxAge: 1 año`, garantizando que la sesión sea persistente desde el momento
- * exacto en que el usuario inicia sesión (no solo en el middleware).
+ * Login a través de Server Action usando las opciones de cookie emitidas por
+ * @supabase/ssr. La duración efectiva sigue las reglas de Supabase Auth.
  */
 export async function login(email, password) {
   const cookieStore = cookies();
@@ -25,7 +20,7 @@ export async function login(email, password) {
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, { ...options, maxAge: MAX_AGE })
+          cookieStore.set(name, value, options)
           );
         },
       },

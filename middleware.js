@@ -24,6 +24,13 @@ function noStoreResponse(response) {
   return response;
 }
 
+function copyCookies(source, target) {
+  source.cookies.getAll().forEach(({ name, value, ...options }) => {
+    target.cookies.set(name, value, options);
+  });
+  return target;
+}
+
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
   const host = request.headers.get('host') || '';
@@ -44,10 +51,8 @@ export async function middleware(request) {
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           supabaseResponse = NextResponse.next({ request });
-          // Sesión persistente: cookies de larga duración (1 año)
-          const MAX_AGE = 60 * 60 * 24 * 365;
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, { ...options, maxAge: MAX_AGE })
+            supabaseResponse.cookies.set(name, value, options)
           );
         },
       },
@@ -70,7 +75,7 @@ export async function middleware(request) {
       if (storeId) {
         const url = request.nextUrl.clone();
         url.pathname = `/${subdomain}`;
-        return NextResponse.rewrite(url);
+        return copyCookies(supabaseResponse, NextResponse.rewrite(url));
       }
     } catch (error) {
       console.error('Error en middleware de subdominio:', error);
@@ -86,7 +91,7 @@ export async function middleware(request) {
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       console.log(`[Middleware] Sesión activa en ${pathname || '/'}, redirigiendo a /admin`);
-      return NextResponse.redirect(new URL('/admin', request.url));
+      return copyCookies(supabaseResponse, NextResponse.redirect(new URL('/admin', request.url)));
     }
   }
 
@@ -123,7 +128,7 @@ export async function middleware(request) {
     if (!user) {
       const loginUrl = new URL('/login', request.url);
       loginUrl.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(loginUrl);
+      return copyCookies(supabaseResponse, NextResponse.redirect(loginUrl));
     }
 
     const { data: profile } = await supabase
@@ -133,7 +138,7 @@ export async function middleware(request) {
       .maybeSingle();
 
     if (profile?.slug && profile?.business_name) {
-      return NextResponse.redirect(new URL('/admin', request.url));
+      return copyCookies(supabaseResponse, NextResponse.redirect(new URL('/admin', request.url)));
     }
 
     return supabaseResponse;
@@ -154,7 +159,7 @@ export async function middleware(request) {
     console.log(`[Middleware] Sin sesión, redirigiendo a /login desde ${pathname}`);
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(loginUrl);
+    return copyCookies(supabaseResponse, NextResponse.redirect(loginUrl));
   }
 
   // Admin autenticado: NUNCA cachear (debe reflejar la sesión real en cada
