@@ -31,9 +31,43 @@ function copyCookies(source, target) {
   return target;
 }
 
+function canonicalAuthRedirect(request) {
+  const canonicalUrl = process.env.NEXT_PUBLIC_APP_URL
+    || process.env.VERCEL_PROJECT_PRODUCTION_URL
+    || (process.env.NEXT_PUBLIC_ROOT_DOMAIN
+      ? `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}`
+      : '');
+  const host = request.nextUrl.hostname;
+  const isDeploymentHost = host.endsWith('.vercel.app');
+  const subdomain = extractSubdomain(host);
+  const isStoreHost = subdomain && !isSystemSubdomain(subdomain);
+  const isAuthSurface = [
+    '/',
+    '/login',
+    '/signup',
+    '/admin',
+    '/onboarding',
+  ].some((path) => request.nextUrl.pathname === path || request.nextUrl.pathname.startsWith(`${path}/`));
+
+  if (!canonicalUrl || !isDeploymentHost || isStoreHost || !isAuthSurface) return null;
+
+  try {
+    const target = new URL(canonicalUrl.startsWith('http') ? canonicalUrl : `https://${canonicalUrl}`);
+    if (target.origin === request.nextUrl.origin) return null;
+    target.pathname = request.nextUrl.pathname;
+    target.search = request.nextUrl.search;
+    return NextResponse.redirect(target, 308);
+  } catch {
+    return null;
+  }
+}
+
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
   const host = request.headers.get('host') || '';
+
+  const canonicalRedirect = canonicalAuthRedirect(request);
+  if (canonicalRedirect) return canonicalRedirect;
 
   // Cliente Supabase con cookies request/response (patrón oficial @supabase/ssr).
   // Esto permite refrescar la cookie de sesión en CADA request, evitando que el

@@ -4,7 +4,7 @@
    fallback a red y actualización en background.
    ============================================= */
 
-const CACHE_NAME = 'hyuk-catalog-v5';
+const CACHE_NAME = 'hyuk-catalog-v6';
 // '/' NO se precachea. Las rutas de autenticación y admin (/, /login, /signup,
 // /admin) y las de API (/api/*) usan estrategia NetworkOnly: NUNCA se sirven
 // páginas de sesión/login/admin antiguas desde el caché del Service Worker.
@@ -55,6 +55,15 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
 
+  // A service worker must never proxy another origin. In particular, auth
+  // cookies belong to the current app origin and Supabase handles its own
+  // network requests.
+  if (url.origin !== self.location.origin) return;
+
+  // Let the browser handle font preloads directly. A failed font request
+  // should not become a Service Worker FetchEvent network error.
+  if (request.destination === 'font') return;
+
   // No interceptar el manifest: el navegador lo gestiona directamente.
   // Evita el fallo CORS cuando Vercel lo redirige al SSO en previews protegidos.
   if (url.pathname === '/manifest.json') return;
@@ -77,8 +86,8 @@ self.addEventListener('fetch', (event) => {
     const path = url.pathname;
 
     // Rutas de autenticación, admin y API: NetworkOnly.
-    // Se fuerza la red SIEMPRE para reflejar la sesión/carga real del servidor
-    // y evitar servir HTML de login obsoleto (problema 408/"No cache").
+    // Si no hay red, devolver un error de red real evita presentar HTML
+    // offline como si fuera una respuesta autenticada o un login actualizado.
     const isAuthOrApi =
       path === '/' ||
       path.startsWith('/login') ||
@@ -88,12 +97,7 @@ self.addEventListener('fetch', (event) => {
 
     if (isAuthOrApi) {
       event.respondWith(
-        fetch(request).catch(() =>
-          new Response(
-            '<!doctype html><html><meta charset="utf-8"><title>HYUK</title><div style="font-family:sans-serif;text-align:center;padding:40px;color:#666">Sin conexión</div></html>',
-            { status: 200, headers: { 'Content-Type': 'text/html' } }
-          )
-        )
+        fetch(request).catch(() => Response.error())
       );
       return;
     }
