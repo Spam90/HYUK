@@ -154,10 +154,12 @@ de `.env.local` y no imprimen secretos.
 
 ## Tests y CI
 
-- 6 suites / 77 casos, runner nativo `node:test` sin dependencias: `checkout`,
-  `checkout-core`, `coupons`, `plans`, `domains`, `sku-validation`. Todos PASS.
+- 11 suites / 127 casos, runner nativo `node:test` sin dependencias: `checkout`,
+  `checkout-core`, `checkout-security`, `coupons`, `domains`, `orders`,
+  `payments`, `plans`, `rate-limit`, `sku-validation`, `tenant`. Todos PASS.
 - CI (`.github/workflows/ci.yml`): `lint` + `test` + `build`, sin push. El `build`
-  requiere las vars pÃºblicas de Supabase como secrets.
+  no necesita secretos: si el repo no define las vars públicas de Supabase, el
+  workflow usa valores dummy seguros solo para CI (el build no consulta la BD en build-time).
 
 ## Herramientas de base de datos
 
@@ -215,7 +217,7 @@ hyuk/
   menÃº, temas). Onboarding + trial 28 dÃ­as + planes/lÃ­mites + pricing + contacto.
 - SEO (metadata dinÃ¡mico, sitemap, robots, OG), PWA (sw, manifest), tema Light/Dark
   neutral + personalizaciÃ³n por tienda.
-- Tests (6 suites / 77 casos PASS) + CI (lint + test + build).
+- Tests (11 suites / 127 casos PASS) + CI (lint + test + build).
 
 **En desarrollo / pendiente**
 - Tests e2e en CI (hoy solo unitarios `node:test`).

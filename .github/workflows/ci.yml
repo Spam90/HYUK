@@ -1,12 +1,16 @@
 # CI de HYUK — lint + tests + build en cada push/PR a main.
 #
-# - `lint` y `test` NO necesitan secretos (runner nativo node:test, sin deps).
-# - `build` sí requiere las variables públicas de Supabase; configúralas como
-#   secrets del repositorio (Settings → Secrets and variables → Actions):
-#     NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY,
-#     NEXT_PUBLIC_ROOT_DOMAIN, NEXT_PUBLIC_APP_URL
+# - `lint` y `test` NO necesitan secretos: los tests usan el runner nativo
+#   node:test sobre módulos puros (sin red ni base de datos).
+# - `build`: Next.js no consulta la BD en build-time (sitemap.xml y /[slug] son
+#   dinámicas con manejo de errores), por lo que puede compilar con valores
+#   dummy. Las 4 variables son públicas (NEXT_PUBLIC_*): si el repositorio
+#   define esos secrets se usan los valores reales; si no existen, se usan
+#   valores dummy seguros solo para CI. Nunca se usan secretos privados
+#   (service role, Stripe, tokens, etc.).
 #
-# IMPORTANTE: este archivo se creó en local. No se ha hecho push.
+# Fail-fast: un fallo en lint, tests o build corta el workflow. Los pasos usan
+# `npm run ...` (exit code != 0 en fallo), sin `|| true` ni `continue-on-error`.
 name: CI
 
 on:
@@ -18,6 +22,8 @@ jobs:
   verify:
     name: lint + test + build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
@@ -27,19 +33,19 @@ jobs:
           node-version: '20'
           cache: npm
 
-      - name: Install
+      - name: Install (reproducible)
         run: npm ci
 
       - name: Lint
         run: npm run lint
 
-      - name: Unit tests
+      - name: Unit + integration tests
         run: npm test
 
       - name: Build
         run: npm run build
         env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          NEXT_PUBLIC_ROOT_DOMAIN: ${{ secrets.NEXT_PUBLIC_ROOT_DOMAIN }}
-          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://ci-check.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'ci-anon-key-not-real' }}
+          NEXT_PUBLIC_ROOT_DOMAIN: ${{ secrets.NEXT_PUBLIC_ROOT_DOMAIN || 'hyuk.app' }}
+          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL || 'http://localhost:3000' }}
