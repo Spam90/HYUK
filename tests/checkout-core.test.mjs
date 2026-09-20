@@ -116,6 +116,10 @@ describe('couponDiscountFor', () => {
   it('sin cupón → 0', () => {
     assert.equal(couponDiscountFor(null, 100), 0);
   });
+
+  it('no aplica cupón bajo el mínimo de compra', () => {
+    assert.equal(couponDiscountFor({ discount_type: 'percent', discount_value: 10, min_purchase: 200 }, 100), 0);
+  });
 });
 
 describe('isCouponValidToday', () => {

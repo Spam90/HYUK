@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { X, Plus, Minus, Trash2, MessageCircle, MapPin, User, Phone, CreditCard, Bike, Store, ShoppingBag, Percent, CheckCircle } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useTheme } from '@/components/theme/ThemeProvider';
-import { formatPrice, generateWhatsAppUrl } from '@/lib/whatsapp/checkout';
+import { formatPrice, generateWhatsAppUrl, calculateCartTotal } from '@/lib/whatsapp/checkout';
 import { fetchCouponByCode, calculateDiscount } from '@/lib/coupons';
 import { track } from '@/lib/analytics';
 
@@ -19,6 +19,7 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
     removeItem, 
     clearCart,
     cartTotal,
+    cartCount,
   } = useCart();
   const { settings: themeSettings } = useTheme();
   const { theme, whatsapp_checkout: checkoutConfig } = settings;
@@ -67,7 +68,7 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
     }
   }, [isCartOpen]);
 
-  const storeName = store?.store_name || store?.full_name || 'Mi Tienda';
+  const storeName = store?.business_name || store?.store_name || store?.full_name || 'Mi Tienda';
   const storePhone = store?.whatsapp_number || store?.phone_whatsapp || store?.phone || '';
   const storeCurrency = store?.store_currency || settings?.store_currency || 'USD';
 
@@ -117,9 +118,14 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
   };
 
   // Generar URL de WhatsApp y guardar pedido
-  const handleWhatsAppCheckout = async () => {
+  const handleWhatsAppCheckout = async (existingOrder = null) => {
+    if (isSubmitting) return;
     if (!isOpen) {
       alert('La tienda está cerrada en este momento. Vuelve en el horario de atención 🕓');
+      return;
+    }
+    if (!String(storePhone).replace(/\D/g, '')) {
+      alert('La tienda no tiene un número de WhatsApp configurado.');
       return;
     }
     setIsSubmitting(true);
@@ -153,34 +159,43 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
         track(store.id, 'whatsappClick', { total: totalWithDelivery, coupon: activeCoupon?.code || null });
       }
 
-      // Guardar pedido en la base de datos
-      const { createOrder } = await import('@/lib/orders');
-      const orderResult = await createOrder({
-        storeId: store?.id,
-        customerName: customerName,
-        customerPhone: customerPhone.trim(),
-        deliveryAddress: customerAddress,
-        deliveryMethod: deliveryMethod,
-        paymentMethod: paymentMethod,
-        items: cartItems,
-        total: totalWithDelivery,
-        notes: '',
-        couponCode: activeCoupon?.code || null,
-        discountAmount: couponDiscount,
-        deliveryZone: isHomeDelivery ? (deliveryZone?.label || '') : '',
-        deliveryFee: isHomeDelivery ? deliveryFee : 0,
-      });
-
-      const orderId = orderResult.success ? orderResult.order?.id : null;
+      const orderResult = existingOrder
+        ? { success: true, order: existingOrder }
+        : await (async () => {
+          const { createOrder } = await import('@/lib/orders');
+          return createOrder({
+            storeId: store?.id,
+            customerName,
+            customerPhone: customerPhone.trim(),
+            deliveryAddress: customerAddress,
+            deliveryMethod,
+            paymentMethod,
+            items: cartItems,
+            total: totalWithDelivery,
+            notes: notes.trim(),
+            couponCode: activeCoupon?.code || null,
+            discountAmount: couponDiscount,
+            deliveryZone: isHomeDelivery ? (deliveryZone?.label || '') : '',
+            deliveryFee: isHomeDelivery ? deliveryFee : 0,
+            currency: storeCurrency,
+          });
+        })();
 
       if (!orderResult.success) {
         console.error('Error guardando pedido:', orderResult.error);
-        // Continuar de todas formas para enviar por WhatsApp
-      } else {
-        console.log('Pedido guardado exitosamente:', orderId);
-        // Registrar conversión (analytics) — no bloquea.
-        if (store?.id) track(store.id, 'purchase', { orderId, total: totalWithDelivery });
+        alert(orderResult.error || 'No se pudo crear el pedido. Revisa tu carrito e intenta de nuevo.');
+        return;
       }
+      const orderId = orderResult.order?.id;
+      const authoritativeItems = orderResult.order?.items || cartItems;
+      const authoritativeTotal = Number(orderResult.order?.total_amount);
+      const authoritativeDiscount = Number(orderResult.order?.discount_amount) || 0;
+      if (!Number.isFinite(authoritativeTotal)) {
+        alert('No se pudo confirmar el total del pedido. Intenta de nuevo.');
+        return;
+      }
+      const authoritativeSubtotal = calculateCartTotal(authoritativeItems);
+      if (store?.id) track(store.id, 'purchase', { orderId, total: authoritativeTotal });
 
       // Link de seguimiento del pedido (aparece en el mensaje de WhatsApp).
       // FASE 0: incluye el token anti-enumeración cuando existe (migración 11).
@@ -193,7 +208,7 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
       const whatsappUrl = generateWhatsAppUrl({
         storeName,
         storePhone,
-        cartItems,
+        cartItems: authoritativeItems,
         checkoutConfig,
         customerInfo: {
           name: customerName,
@@ -205,10 +220,11 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
           paymentMethod,
           notes: notes.trim() + trackingLink,
         },
-        total: totalWithDelivery,
+        total: authoritativeTotal,
+        subtotal: authoritativeSubtotal,
         coupon: activeCoupon,
-        couponDiscount,
-        currency: storeCurrency,
+        couponDiscount: authoritativeDiscount,
+        currency: orderResult.order?.currency || storeCurrency,
       });
       
       // Abrir WhatsApp
@@ -229,6 +245,7 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
   // Pagar con Stripe (checkout real). Si no hay pasarela configurada,
   // el endpoint devuelve 402 y hacemos fallback graceful al WhatsApp.
   const handleStripeCheckout = async () => {
+    if (isStripeLoading || isSubmitting) return;
     if (!isOpen) {
       alert('La tienda está cerrada en este momento. Vuelve en el horario de atención 🕓');
       return;
@@ -248,6 +265,7 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
 
     setIsStripeLoading(true);
     let orderId = null;
+    let createdOrder = null;
 
     try {
       if (store?.id) {
@@ -270,14 +288,17 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
         discountAmount: couponDiscount,
         deliveryZone: isHomeDelivery ? deliveryZone?.label || '' : '',
         deliveryFee: isHomeDelivery ? deliveryFee : 0,
+        currency: storeCurrency,
         payment_provider: 'stripe',
         payment_status: 'pending',
       });
 
       orderId = orderResult.success ? orderResult.order?.id : null;
       if (!orderResult.success) {
-        console.warn('No se pudo guardar la orden (continuamos):', orderResult.error);
+        alert(orderResult.error || 'No se pudo crear el pedido. Revisa tu carrito e intenta de nuevo.');
+        return;
       }
+      createdOrder = orderResult.order;
 
       // 2) Crear preferencia / checkout de Stripe
       const res = await fetch('/api/checkout/create-preference', {
@@ -314,13 +335,13 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
       const msg = json?.error || res.statusText || 'Pasarela no disponible';
       console.warn('[checkout] Stripe no disponible:', msg);
       alert('El pago online no está disponible en este momento. Se abrirá WhatsApp. 🛒');
-      closeCart(); // el handler de WhatsApp crea su propia orden
-      handleWhatsAppCheckout();
+      handleWhatsAppCheckout(createdOrder);
     } catch (err) {
       console.error('[checkout] Error en pago Stripe:', err);
-      alert('Error iniciando el pago. Se abrirá WhatsApp. 🙏');
-      closeCart();
-      handleWhatsAppCheckout();
+      alert(createdOrder
+        ? 'Error iniciando el pago. Se abrirá WhatsApp. 🙏'
+        : 'No se pudo iniciar el pago. Revisa el estado de tu pedido antes de intentarlo otra vez.');
+      if (createdOrder) handleWhatsAppCheckout(createdOrder);
     } finally {
       setIsStripeLoading(false);
     }
@@ -369,12 +390,13 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
                     Mi carrito
                   </h3>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {cartItems.length} {cartItems.length === 1 ? 'producto' : 'productos'}
+                    {cartCount} {cartCount === 1 ? 'producto' : 'productos'}
                   </p>
                 </div>
               </div>
               <button
                 onClick={closeCart}
+                aria-label="Cerrar carrito"
                 className="w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 transition-colors"
               >
                 <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
@@ -451,6 +473,7 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
                           </div>
                           <button
                             onClick={() => removeItem(item.key)}
+                            aria-label={`Eliminar ${item.name}`}
                             className="text-gray-400 hover:text-red-500 transition-colors p-1"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -463,6 +486,7 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
                             <motion.button
                               whileTap={{ scale: 0.85 }}
                               onClick={() => updateQuantity(item.key, item.quantity - 1)}
+                              aria-label={`Disminuir cantidad de ${item.name}`}
                               className="w-7 h-7 rounded-md flex items-center justify-center hover:bg-gray-100 dark:hover:bg-zinc-600 transition-colors"
                             >
                               <Minus className="w-3.5 h-3.5 text-gray-600 dark:text-gray-300" />
@@ -473,6 +497,7 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
                             <motion.button
                               whileTap={{ scale: 0.85 }}
                               onClick={() => updateQuantity(item.key, item.quantity + 1)}
+                              aria-label={`Aumentar cantidad de ${item.name}`}
                               className="w-7 h-7 rounded-md flex items-center justify-center text-white"
                               style={{ 
                                 backgroundColor: theme.primaryColor,
@@ -551,7 +576,7 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm text-gray-600 dark:text-gray-400">Subtotal</span>
                     <span className="text-lg font-bold text-gray-900 dark:text-white">
-                      {formatPrice(cartTotal)}
+                      {formatPrice(cartTotal, storeCurrency)}
                     </span>
                   </div>
 
@@ -563,7 +588,7 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
                         Cupón {activeCoupon.code}
                       </span>
                       <span className="text-sm font-semibold text-green-600 dark:text-green-400">
-                        -{formatPrice(couponDiscount)}
+                        -{formatPrice(couponDiscount, storeCurrency)}
                       </span>
                     </div>
                   )}
@@ -574,7 +599,7 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
                   >
                     <span className="text-base font-bold text-gray-900 dark:text-white">Total a pagar</span>
                     <span className="text-xl font-extrabold" style={{ color: theme.primaryColor }}>
-                      {formatPrice(totalWithDelivery)}
+                      {formatPrice(totalWithDelivery, storeCurrency)}
                     </span>
                   </div>
 

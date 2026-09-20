@@ -67,10 +67,9 @@ describe('translateOrderError (mensajes seguros para UI)', () => {
     assert.equal(translateOrderError('order_items_empty'), 'El pedido no tiene productos.');
   });
 
-  it('código desconocido -> mensaje genérico con el código (no stack interno)', () => {
+  it('código desconocido -> mensaje genérico sin filtrar el código interno', () => {
     const msg = translateOrderError('err_interno_451');
-    assert.match(msg, /Error al procesar el pedido/);
-    assert.match(msg, /err_interno_451/);
+    assert.equal(msg, 'No se pudo procesar el pedido.');
   });
 
   it('null/undefined -> mensaje genérico', () => {
@@ -91,7 +90,7 @@ describe('orderRpcError', () => {
     const err = orderRpcError({ message: 'algo' });
     assert.equal(err.code, null);
     assert.equal(err.status, null);
-    assert.match(err.message, /Error al procesar el pedido/);
+    assert.equal(err.message, 'No se pudo procesar el pedido.');
   });
 
   it('status explícito se respeta', () => {

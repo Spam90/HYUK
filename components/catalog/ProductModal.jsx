@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Minus, ShoppingBag, StickyNote } from 'lucide-react';
 import { formatPrice } from '@/lib/whatsapp/checkout';
+import { effectiveProductPrice } from '@/lib/checkout-core';
 
 /**
  * ProductModal / Bottom-Sheet de producto.
@@ -21,6 +22,7 @@ export default function ProductModal({
   const theme = settings?.theme || {};
   const [quantity, setQuantity] = useState(1);
   const [selected, setSelected] = useState({}); // { índiceGrupo: índiceValor }
+  const [selectedSku, setSelectedSku] = useState(null);
   const [notes, setNotes] = useState('');
 
   // Reset al cambiar de producto
@@ -29,6 +31,7 @@ export default function ProductModal({
       setQuantity(1);
       setNotes('');
       setSelected({});
+      setSelectedSku(null);
     }
   }, [product?.id, isOpen]);
 
@@ -40,6 +43,9 @@ export default function ProductModal({
     return raw.map((group, gi) => {
       if (Array.isArray(group.values) && group.values.length > 0) {
         return { key: gi, label: group.name || group.label || `Opción ${gi + 1}`, values: group.values };
+      }
+      if (Array.isArray(group.choices) && group.choices.length > 0) {
+        return { key: gi, label: group.name || group.label || `Opción ${gi + 1}`, values: group.choices };
       }
       return { key: gi, label: group.name || `Opción ${gi + 1}`, values: [group] };
     });
@@ -56,8 +62,11 @@ export default function ProductModal({
     return total;
   }, [optionGroups, selected]);
 
-  const unitPrice = (Number(product?.price) || 0) + priceDelta;
-  const lineTotal = unitPrice * quantity;
+  const unitPrice = effectiveProductPrice(product || {}) + priceDelta;
+  const resolvedUnitPrice = selectedSku?.price_override != null
+    ? Number(selectedSku.price_override) + priceDelta
+    : unitPrice;
+  const lineTotal = resolvedUnitPrice * quantity;
 
   if (!product) return null;
 
@@ -74,7 +83,7 @@ export default function ProductModal({
       })
       .filter(Boolean);
 
-    onAdd(product, quantity, selectedOptions, notes.trim());
+    onAdd(product, quantity, selectedOptions, notes.trim(), selectedSku);
     onClose();
   };
 
@@ -105,6 +114,7 @@ export default function ProductModal({
                 <span className="text-sm font-semibold text-gray-900 dark:text-white">Personaliza tu pedido</span>
                 <button
                   onClick={onClose}
+                  aria-label="Cerrar personalización del producto"
                   className="w-9 h-9 rounded-full flex items-center justify-center bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 transition-colors"
                 >
                   <X className="w-5 h-5 text-gray-600 dark:text-gray-300" />
@@ -118,9 +128,40 @@ export default function ProductModal({
                     <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{product.description}</p>
                   )}
                   <p className="text-xl font-black mt-2" style={{ color: theme.primaryColor || '#10B981' }}>
-                    {formatPrice(unitPrice, currency)}
+                    {formatPrice(resolvedUnitPrice, currency)}
                   </p>
                 </div>
+
+                {product.skus?.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                      Variante
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {product.skus.map((sku) => {
+                        const available = Number(sku.stock) > 0;
+                        const active = selectedSku?.id === sku.id;
+                        return (
+                          <button
+                            key={sku.id}
+                            type="button"
+                            disabled={!available}
+                            onClick={() => {
+                              setSelectedSku(sku);
+                              setQuantity((current) => Math.min(current, Number(sku.stock)));
+                            }}
+                            className={`px-3 py-2 rounded-xl text-sm font-medium border transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${active ? 'text-white' : 'bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-gray-300'}`}
+                            style={active ? { backgroundColor: theme.primaryColor || '#10B981', borderColor: theme.primaryColor || '#10B981' } : {}}
+                          >
+                            {sku.variant_label || sku.sku || 'Variante'}
+                            {sku.price_override != null && ` · ${formatPrice(sku.price_override, currency)}`}
+                            {!available && ' · Agotado'}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 {/* Variantes: hasta 2 grupos */}
                 {optionGroups.length > 0 && (
@@ -176,6 +217,7 @@ export default function ProductModal({
                     <motion.button
                       whileTap={{ scale: 0.85 }}
                       onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                      aria-label="Disminuir cantidad"
                       className="w-9 h-9 rounded-xl bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-zinc-700 transition-colors"
                     >
                       <Minus className="w-4 h-4" />
@@ -183,7 +225,8 @@ export default function ProductModal({
                     <span className="text-lg font-bold text-gray-900 dark:text-white w-6 text-center">{quantity}</span>
                     <motion.button
                       whileTap={{ scale: 0.85 }}
-                      onClick={() => setQuantity((q) => Math.min(99, q + 1))}
+                      onClick={() => setQuantity((q) => Math.min(99, selectedSku ? Number(selectedSku.stock) : 99, q + 1))}
+                      aria-label="Aumentar cantidad"
                       className="w-9 h-9 rounded-xl flex items-center justify-center text-white hover:opacity-90 transition-opacity"
                       style={{ backgroundColor: theme.primaryColor || '#10B981' }}
                     >
@@ -196,6 +239,7 @@ export default function ProductModal({
                 <motion.button
                   whileTap={{ scale: 0.97 }}
                   onClick={handleAdd}
+                  disabled={product.skus?.length > 0 && (!selectedSku || Number(selectedSku.stock) < 1)}
                   className="w-full py-4 rounded-2xl text-white text-base font-bold shadow-xl flex items-center justify-center gap-2 hover:scale-[1.02] transition-all"
                   style={{
                     backgroundColor: theme.primaryColor || '#10B981',

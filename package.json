@@ -9,6 +9,8 @@
     "build:clean": "npm run clean && next build",
     "start": "next start",
     "lint": "next lint --max-warnings 20",
+    "e2e": "playwright test",
+    "e2e:ui": "playwright test --ui",
     "check:env": "node scripts/check-env.mjs",
     "test": "node --test tests/checkout.test.mjs tests/checkout-core.test.mjs tests/checkout-security.test.mjs tests/coupons.test.mjs tests/domains.test.mjs tests/orders.test.mjs tests/payments.test.mjs tests/plans.test.mjs tests/rate-limit.test.mjs tests/sku-validation.test.mjs tests/tenant.test.mjs",
     "test:ci": "npm test"
@@ -32,6 +34,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "autoprefixer": "^10.4.20",
     "eslint": "^8.57.1",
     "eslint-config-next": "14.2.35",

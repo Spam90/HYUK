@@ -42,6 +42,10 @@ const MIGRATIONS = [
   'supabase/migrations/20240101000012_phase05_stability.sql',
   'supabase/migrations/20240101000013_security_hardening.sql',
   'supabase/migrations/20240101000014_checkout_integrity.sql',
+  'supabase/migrations/20240101000015_inventory_idempotency.sql',
+  'supabase/migrations/20240101000016_sku_integrity.sql',
+  'supabase/migrations/20240101000017_orders_transitions.sql',
+  'supabase/migrations/20240101000018_purchase_flow_integrity.sql',
 ];
 
 let failures = 0;

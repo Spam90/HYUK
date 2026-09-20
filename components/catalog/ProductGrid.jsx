@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ProductCardVariant from './ProductCardVariant';
 import EmptyState from '@/components/ui/EmptyState';
 
-export default function ProductGrid({ products, settings, categories, onProductClick }) {
+export default function ProductGrid({ products, settings, categories, onProductClick, currency = 'USD' }) {
   const { layout } = settings;
   const { productGrid, productCardStyle, layoutType } = layout;
 
@@ -75,6 +75,7 @@ export default function ProductGrid({ products, settings, categories, onProductC
               product={product}
               categoryName={getCategoryName(product.category_id)}
               settings={settings}
+              currency={currency}
               cardStyle={productCardStyle}
               onProductClick={onProductClick}
             />

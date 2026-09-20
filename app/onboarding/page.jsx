@@ -102,6 +102,11 @@ const goBack = () => setStep((s) => Math.max(0, s - 1));
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { router.push('/signup'); return; }
+      const currentSettings = await getCurrentSettings(user.id);
+      if (currentSettings.onboarded) {
+        router.push('/admin?welcome=1');
+        return;
+      }
       if (!slugAvailable) {
         setError('Este slug ya está en uso. Por favor elige otro.');
         setIsLoading(false);
@@ -151,10 +156,9 @@ const goBack = () => setStep((s) => Math.max(0, s - 1));
         if (prodError) throw prodError;
       }
       // 4) Marcar onboarding como completado (middleware)
-      const current = await getCurrentSettings(user.id);
       const { error: markError } = await supabase
         .from('profiles')
-        .update({ settings: { ...current, onboarded: true } })
+        .update({ settings: { ...currentSettings, onboarded: true } })
         .eq('id', user.id);
       if (markError) throw markError;
       router.push('/admin?welcome=1');

@@ -14,8 +14,9 @@ export default function CategoryNav({
   const buttonRefs = useRef({});
 
   useEffect(() => {
-    if (activeCategory && buttonRefs.current[activeCategory]) {
-      const button = buttonRefs.current[activeCategory];
+    const activeKey = activeCategory || 'all';
+    if (buttonRefs.current[activeKey]) {
+      const button = buttonRefs.current[activeKey];
       if (button && navRef.current) {
         const navRect = navRef.current.getBoundingClientRect();
         const buttonRect = button.getBoundingClientRect();
@@ -59,15 +60,15 @@ export default function CategoryNav({
           ref={(el) => {
             if (el) buttonRefs.current['all'] = el;
           }}
-          onClick={() => onSelectCategory('all')}
+          onClick={() => onSelectCategory(null)}
           className={`
             relative z-10 flex items-center gap-2 px-4 py-2 rounded-full
             text-sm font-medium whitespace-nowrap
             transition-all duration-200
           `}
           style={{
-            backgroundColor: activeCategory === 'all' ? settings.theme.primaryColor : 'transparent',
-            color: activeCategory === 'all' ? 'white' : settings.theme.textColor,
+            backgroundColor: !activeCategory ? settings.theme.primaryColor : 'transparent',
+            color: !activeCategory ? 'white' : settings.theme.textColor,
           }}
         >
           <span className="relative z-10">Todos</span>

@@ -54,8 +54,8 @@ describe('getItemUnitPrice', () => {
     assert.equal(getItemUnitPrice({ price: 100, selectedOptions: [] }), 100);
   });
 
-  it('suma priceDelta de opciones seleccionadas', () => {
-    const item = { price: 100, selectedOptions: [{ label: 'Extra', priceDelta: 25 }] };
+  it('usa el precio unitario ya resuelto por el carrito', () => {
+    const item = { price: 125, selectedOptions: [{ label: 'Extra', priceDelta: 25 }] };
     assert.equal(getItemUnitPrice(item), 125);
   });
 
@@ -131,4 +131,16 @@ describe('generateWhatsAppMessage', () => {
     const msg = decodeURIComponent(generateWhatsAppMessage(base));
     assert.match(msg, /💰 \*TOTAL:\* [^ ]*200/);
   });
+
+    it('incluye subtotal y no vuelve a sumar priceDelta', () => {
+      const msg = decodeURIComponent(generateWhatsAppMessage({
+        ...base,
+        cartItems: [{ name: 'Pizza', quantity: 1, price: 125, selectedOptions: [{ label: 'Extra', priceDelta: 25 }] }],
+        subtotal: 125,
+        total: 125,
+      }));
+      assert.match(msg, /SUBTOTAL/);
+      assert.match(msg, /TOTAL.*125/);
+      assert.doesNotMatch(msg, /150/);
+    });
 });

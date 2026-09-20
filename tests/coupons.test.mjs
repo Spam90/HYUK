@@ -31,6 +31,10 @@ describe('calculateDiscount', () => {
   it('sin cupón → 0', () => {
     assert.equal(calculateDiscount(null, 100), 0);
   });
+
+  it('no aplica el cupón si no alcanza la compra mínima', () => {
+    assert.equal(calculateDiscount({ discount_type: 'percent', discount_value: 20, min_purchase: 200 }, 100), 0);
+  });
 });
 
 describe('formatDiscountLabel', () => {

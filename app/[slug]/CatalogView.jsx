@@ -28,8 +28,8 @@ function CatalogContent({ store, categories, products, settings }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store?.id]);
 
-  const handleAddItem = (product, quantity = 1, selectedOptions = [], notes = '') => {
-    addItem(product, quantity, selectedOptions, notes);
+  const handleAddItem = (product, quantity = 1, selectedOptions = [], notes = '', selectedSku = null) => {
+    addItem(product, quantity, selectedOptions, notes, selectedSku);
     if (store?.id) track(store.id, 'addToCart', { productId: product.id, name: product.name, quantity });
   };
 
@@ -164,9 +164,7 @@ function CatalogContent({ store, categories, products, settings }) {
   }, [searchQuery, demoProducts]);
 
   return (
-    <ThemeProvider initialSettings={demoSettings}>
-      <CartProvider>
-        <div className="min-h-screen bg-background text-text">
+    <div className="min-h-screen bg-background text-text">
           {/* Announcement Bar + Popup Promocional */}
           <PromoBanner settings={demoSettings} storeId={demoStore.id} />
 
@@ -246,6 +244,7 @@ function CatalogContent({ store, categories, products, settings }) {
                         products={filteredProducts}
                         settings={demoSettings}
                         categories={demoCategories}
+                        currency={storeCurrency}
                         onProductClick={setSelectedProduct}
                       />
                     </>
@@ -275,6 +274,7 @@ function CatalogContent({ store, categories, products, settings }) {
                     products={searchResults}
                     settings={demoSettings}
                     categories={demoCategories}
+                    currency={storeCurrency}
                     onProductClick={setSelectedProduct}
                   />
                 ) : (
@@ -320,6 +320,7 @@ function CatalogContent({ store, categories, products, settings }) {
                       products={group.products}
                       settings={demoSettings}
                       categories={demoCategories}
+                      currency={storeCurrency}
                       onProductClick={setSelectedProduct}
                     />
                   </motion.section>
@@ -333,6 +334,7 @@ function CatalogContent({ store, categories, products, settings }) {
                 products={filteredProducts}
                 settings={demoSettings}
                 categories={demoCategories}
+                currency={storeCurrency}
                 onProductClick={setSelectedProduct}
               />
             )}
@@ -420,9 +422,7 @@ function CatalogContent({ store, categories, products, settings }) {
             settings={demoSettings}
             currency={storeCurrency}
           />
-        </div>
-      </CartProvider>
-    </ThemeProvider>
+    </div>
   );
 }
 
@@ -430,7 +430,7 @@ function CatalogContent({ store, categories, products, settings }) {
 export default function CatalogViewWrapper(props) {
   return (
     <ThemeProvider initialSettings={props.settings}>
-      <CartProvider>
+      <CartProvider storageKey={`hyuk-cart-${props.store?.id || props.store?.slug || 'demo'}`}>
         <CatalogContent {...props} />
       </CartProvider>
     </ThemeProvider>

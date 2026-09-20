@@ -4,13 +4,15 @@ import { motion } from 'framer-motion';
 import { Star, Flame, Tag, ShoppingBag } from 'lucide-react';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
+import { formatPrice } from '@/lib/whatsapp/checkout';
 
 export default function ProductCardVariant({ 
   product, 
   style = 'modern-shadow', 
   onAddToCart,
   onProductClick,
-  settings 
+  settings,
+  currency = 'USD',
 }) {
   const { theme } = settings;
   const layoutType = settings.layout?.layoutType || 'grid_modern';
@@ -72,8 +74,10 @@ export default function ProductCardVariant({
 
   // Calculate discount price (for demo, assume 20% discount if badge is "descuento")
   const hasDiscount = product.badge?.toLowerCase() === 'descuento' || product.badge?.toLowerCase() === 'oferta';
-  const originalPrice = hasDiscount ? parseFloat(product.price) * 1.2 : null;
   const finalPrice = parseFloat(product.price);
+  const originalPrice = Number(product.original_price) > finalPrice
+    ? Number(product.original_price)
+    : hasDiscount ? finalPrice * 1.2 : null;
 
   // Oferta relámpago con cuenta regresiva en tiempo real
   const [flashRemaining, setFlashRemaining] = useState(null);
@@ -178,7 +182,7 @@ export default function ProductCardVariant({
           <div className={`flex shrink-0 ${isListCompact ? 'flex-col items-end' : isMenuCard ? 'flex-col items-end gap-0.5' : 'items-baseline gap-2'}`}>
             {isFlashActive && (
               <span className="text-xs text-zinc-400 line-through">
-                ${finalPrice.toFixed(2)}
+                {formatPrice(finalPrice, currency)}
               </span>
             )}
             {!isFlashActive && originalPrice && (
@@ -190,7 +194,7 @@ export default function ProductCardVariant({
               className={`font-bold ${isListCompact ? 'text-sm' : 'text-base'}`}
               style={{ color: isFlashActive ? '#dc2626' : theme.primaryColor }}
             >
-              ${displayPrice.toFixed(2)}
+              {formatPrice(displayPrice, currency)}
             </span>
           </div>
 

@@ -130,34 +130,53 @@ export default async function StorePage({ params }) {
   // Obtener opciones de productos (solo si hay productos)
   const productIds = products.map((p) => p.id) || [];
   let productOptions = [];
+  let productSkus = [];
   if (productIds.length > 0) {
-    try {
-      const { data, error } = await db
+    const [optionsResult, skusResult] = await Promise.all([
+      db
         .from('product_options')
         .select('*')
         .in('product_id', productIds)
-        .order('sort_order');
-      productOptions = data || [];
-      if (error) throw error;
-    } catch (e) {
-      console.warn('[Catalog] Error cargando opciones de producto:', e?.message);
-      productOptions = [];
+        .order('sort_order'),
+      db
+        .from('product_skus')
+        .select('id, product_id, sku, variant_label, stock, price_override, active')
+        .in('product_id', productIds)
+        .eq('active', true)
+        .order('created_at'),
+    ]);
+    if (optionsResult.error) {
+      console.warn('[Catalog] Error cargando opciones de producto:', optionsResult.error?.message);
     }
+    if (skusResult.error) {
+      console.warn('[Catalog] Error cargando variantes:', skusResult.error?.message);
+    }
+    productOptions = optionsResult.data || [];
+    productSkus = skusResult.data || [];
   }
 
   // Agrupar opciones por producto
   const optionsByProduct = {};
+  const skusByProduct = {};
   (productOptions || []).forEach(opt => {
     if (!optionsByProduct[opt.product_id]) {
       optionsByProduct[opt.product_id] = [];
     }
     optionsByProduct[opt.product_id].push(opt);
   });
+  (productSkus || []).forEach(sku => {
+    if (!skusByProduct[sku.product_id]) skusByProduct[sku.product_id] = [];
+    skusByProduct[sku.product_id].push(sku);
+  });
 
   // Adjuntar opciones a los productos
   const productsWithOptions = (products || []).map(product => ({
     ...product,
     options: optionsByProduct[product.id] || [],
+    skus: skusByProduct[product.id] || [],
+    is_available: product.is_available !== false && (
+      !skusByProduct[product.id]?.length || skusByProduct[product.id].some(sku => Number(sku.stock) > 0)
+    ),
   }));
 
   // Configuración de la tienda
