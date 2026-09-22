@@ -46,6 +46,7 @@ const MIGRATIONS = [
   'supabase/migrations/20240101000016_sku_integrity.sql',
   'supabase/migrations/20240101000017_orders_transitions.sql',
   'supabase/migrations/20240101000018_purchase_flow_integrity.sql',
+  'supabase/migrations/20240101000019_order_intake_hardening.sql',
 ];
 
 let failures = 0;

@@ -10,9 +10,21 @@ import {
   couponDiscountFor,
   isCouponValidToday,
 } from '@/lib/checkout-core';
+import {
+  isPaymentEligibleStatus,
+  resolveAllowedReturnUrl,
+  appendTrackingToken,
+} from '@/lib/order-intake.mjs';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 30;
+
+// Proyección del pedido necesaria para cobrar (con y sin tracking_token,
+// que puede no existir en esquemas antiguos).
+const PAY_ORDER_FIELDS =
+  'id, store_id, status, payment_status, tracking_token, items, total_amount, currency, coupon_code, delivery_method, delivery_zone, delivery_fee';
+const PAY_ORDER_FIELDS_MIN =
+  'id, store_id, status, payment_status, items, total_amount, currency, coupon_code, delivery_method, delivery_zone, delivery_fee';
 
 function json(obj, status = 200) {
   return new Response(JSON.stringify(obj), {
@@ -178,13 +190,22 @@ export async function POST(req) {
       return json({ ok: false, error: 'Error inicializando Stripe.', code: 'stripe_init_error' }, 500);
     }
 
+    // ── URLs de retorno con ALLOWLIST (Prompt 19) ───────────────────────────
+    // El cliente no puede redirigir a dominios externos. Solo se aceptan:
+    // el origen canónico configurado (NEXT_PUBLIC_APP_URL / VERCEL_URL),
+    // subdominios de tienda de NEXT_PUBLIC_ROOT_DOMAIN y localhost (dev).
+    // Si la URL enviada no pasa el filtro se usa el default del servidor.
     const baseUrl =
       process.env.NEXT_PUBLIC_APP_URL ||
       (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : process.env.NEXT_PUBLIC_SITE_URL) ||
       '';
+    const rootDomain = process.env.NEXT_PUBLIC_ROOT_DOMAIN || '';
+    const returnUrlOptions = { allowedOrigins: [baseUrl, rootDomain], rootDomain };
+    const defaultSuccess = orderId ? `${baseUrl}/pedido/${orderId}?paid=1` : `${baseUrl}/`;
+    // `let` porque el token de seguimiento se añade al confirmar la orden.
+    let success = resolveAllowedReturnUrl(successUrl, returnUrlOptions) || defaultSuccess;
+    const cancel = resolveAllowedReturnUrl(cancelUrl, returnUrlOptions) || `${baseUrl}/`;
     const normCurrency = normalizeCurrency(currency);
-    const success = successUrl || (orderId ? `${baseUrl}/pedido/${orderId}?paid=1` : `${baseUrl}/`);
-    const cancel = cancelUrl || `${baseUrl}/`;
                 if (mode === 'subscription') {
       // ─────────────────────────────────────────────────────────────────────
       // PROMPT 12 (PRODUCCIÓN) — Billing SaaS end-to-end:
@@ -294,11 +315,24 @@ export async function POST(req) {
       return json({ ok: false, error: 'SUPABASE_SERVICE_ROLE_KEY no configurada', code: 'service_role_missing' }, 503);
     }
 
-    const { data: orderRow, error: orderErr } = await adminClient
-      .from('orders')
-      .select('id, store_id, items, total_amount, currency, coupon_code, delivery_method, delivery_zone, delivery_fee')
-      .eq('id', orderId)
-      .maybeSingle();
+    // Lectura tolerante: `tracking_token` puede no existir en esquemas antiguos.
+    let orderRow = null;
+    let orderErr = null;
+    let orderSelection = PAY_ORDER_FIELDS;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      ({ data: orderRow, error: orderErr } = await adminClient
+        .from('orders')
+        .select(orderSelection)
+        .eq('id', orderId)
+        .maybeSingle());
+
+      const missingCol = orderErr
+        && /Could not find the .* column/i.test(String(orderErr?.message || ''));
+      if (!missingCol) break;
+      orderSelection = PAY_ORDER_FIELDS_MIN;
+      orderErr = null;
+      orderRow = null;
+    }
     if (orderErr || !orderRow) {
       return json({ ok: false, error: 'Pedido no encontrado.', code: 'order_not_found' }, 404);
     }
@@ -308,6 +342,17 @@ export async function POST(req) {
     if (storeId && String(storeId) !== String(orderRow.store_id)) {
       return json({ ok: false, error: 'La orden no pertenece a esa tienda.', code: 'store_mismatch' }, 403);
     }
+
+    // Estado de la orden: nunca iniciar un segundo pago de un pedido ya pagado
+    // (o de uno cancelado/cerrado).
+    const payable = isPaymentEligibleStatus(orderRow);
+    if (!payable.ok) {
+      return json({ ok: false, error: payable.error, code: payable.code }, 409);
+    }
+
+    // El retorno de éxito debe conservar el token anti-enumeración del pedido,
+    // si no el cliente aterrizaría en una página de seguimiento "no encontrado".
+    success = appendTrackingToken(success, orderRow.tracking_token);
 
     const verified = await recomputeAuthoritativeTotal(adminClient, orderRow);
     if (!verified.ok) {

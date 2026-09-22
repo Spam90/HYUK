@@ -9,6 +9,11 @@ import { useTheme } from '@/components/theme/ThemeProvider';
 import { formatPrice, generateWhatsAppUrl, calculateCartTotal } from '@/lib/whatsapp/checkout';
 import { fetchCouponByCode, calculateDiscount } from '@/lib/coupons';
 import { track } from '@/lib/analytics';
+import {
+  normalizeDeliveryZones,
+  deliveryZoneFee,
+  isHomeDeliveryMethod,
+} from '@/lib/order-intake.mjs';
 
 export default function CartDrawer({ store, settings, isOpen = true }) {
   const { 
@@ -80,15 +85,18 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
   // Total final con descuento
   const finalTotal = Math.max(cartTotal - couponDiscount, 0);
 
-  // Zonas de delivery dinámicas (configurables vía settings.theme.deliveryZones)
-  const deliveryZones = settings?.theme?.deliveryZones || [
-    { label: 'Zona Centro', fee: 100 },
-    { label: 'Periferia', fee: 250 },
-    { label: 'Zona Norte', fee: 200 },
-    { label: 'Zona Este', fee: 180 },
-  ];
+  // Zonas de envío: ÚNICA fuente de verdad = configuración de la tienda
+  // (`profiles.settings.theme.deliveryZones`, exactamente la misma ruta que
+  // lee el trigger `orders_price_integrity`). El cliente YA NO define zonas ni
+  // tarifas por defecto: si la tienda no configuró zonas, no se cobra envío.
+  const deliveryZones = useMemo(
+    () => normalizeDeliveryZones(settings?.theme?.deliveryZones),
+    [settings]
+  );
 
-  const isHomeDelivery = deliveryMethod === 'A domicilio' || deliveryMethod === 'Envío a domicilio';
+  // Mismo predicado que la BD para decidir si aplica tarifa de envío
+  // (ILIKE '%domicilio%' OR '%delivery%' OR '%envio%').
+  const isHomeDelivery = isHomeDeliveryMethod(deliveryMethod);
   const totalWithDelivery = isHomeDelivery ? finalTotal + deliveryFee : finalTotal;
 
   // Aplicar cupón
@@ -143,6 +151,11 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
     }
     if (checkoutConfig.deliveryMethods?.length > 0 && !deliveryMethod) {
       alert('Por favor selecciona el tipo de entrega');
+      setIsSubmitting(false);
+      return;
+    }
+    if (isHomeDelivery && deliveryZones.length > 0 && !deliveryZone) {
+      alert('Por favor selecciona tu zona de envío');
       setIsSubmitting(false);
       return;
     }
@@ -260,6 +273,10 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
     }
     if (checkoutConfig.deliveryMethods?.length > 0 && !deliveryMethod) {
       alert('Por favor selecciona el tipo de entrega');
+      return;
+    }
+    if (isHomeDelivery && deliveryZones.length > 0 && !deliveryZone) {
+      alert('Por favor selecciona tu zona de envío');
       return;
     }
 
@@ -611,8 +628,8 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
                     </div>
                   )}
 
-                  {/* Zonas de delivery dinámicas */}
-                  {isHomeDelivery && (
+                  {/* Zonas de envío de la tienda (si configuró alguna) */}
+                  {isHomeDelivery && deliveryZones.length > 0 && (
                     <div className="bg-gray-50 dark:bg-zinc-800/50 rounded-xl p-3 border border-gray-200 dark:border-zinc-800">
                       <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-1.5">
                         <Bike className="w-3.5 h-3.5" /> Zona de envío
@@ -620,15 +637,16 @@ export default function CartDrawer({ store, settings, isOpen = true }) {
                       <select
                         value={deliveryZone?.label || ''}
                         onChange={(e) => {
-                          const zone = deliveryZones.find((z) => z.label === e.target.value);
-                          setDeliveryZone(zone || null);
-                          setDeliveryFee(zone ? zone.fee : 0);
+                          const zone = deliveryZones.find((z) => z.label === e.target.value) || null;
+                          setDeliveryZone(zone);
+                          // Misma regla que la BD: fee o, en su defecto, price.
+                          setDeliveryFee(zone ? deliveryZoneFee(zone) : 0);
                         }}
                         className="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-primary/50"
                       >
                         <option value="">Selecciona tu zona</option>
                         {deliveryZones.map((z, i) => (
-                          <option key={i} value={z.label}>{z.label} - {formatPrice(z.fee)}</option>
+                          <option key={i} value={z.label}>{z.label} - {formatPrice(z.fee, storeCurrency)}</option>
                         ))}
                       </select>
                     </div>

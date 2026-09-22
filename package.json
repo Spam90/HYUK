@@ -12,7 +12,7 @@
     "e2e": "playwright test",
     "e2e:ui": "playwright test --ui",
     "check:env": "node scripts/check-env.mjs",
-    "test": "node --test tests/checkout.test.mjs tests/checkout-core.test.mjs tests/checkout-security.test.mjs tests/coupons.test.mjs tests/domains.test.mjs tests/orders.test.mjs tests/payments.test.mjs tests/plans.test.mjs tests/rate-limit.test.mjs tests/sku-validation.test.mjs tests/tenant.test.mjs",
+    "test": "node --test tests/checkout.test.mjs tests/checkout-core.test.mjs tests/checkout-security.test.mjs tests/coupons.test.mjs tests/domains.test.mjs tests/orders.test.mjs tests/payments.test.mjs tests/plans.test.mjs tests/rate-limit.test.mjs tests/sku-validation.test.mjs tests/tenant.test.mjs tests/order-intake.test.mjs tests/checkout-hardening.test.mjs",
     "test:ci": "npm test"
   },
   "dependencies": {
