@@ -178,6 +178,7 @@ describe('normalizeOrderRequest — creación de pedido', () => {
     assert.equal(res.code, 'order_payload_invalid');
     assert.equal(res.status, 400);
   });
+});
 
 describe('normalizeIdempotencyKey / normalizeSlug', () => {
   it('normaliza una clave válida', () => {
