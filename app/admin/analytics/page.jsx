@@ -44,7 +44,7 @@ export default function AnalyticsPage() {
       }
 
       // Obtener todos los pedidos completados
-      // Si la tabla orders aÃºn no existe, las mÃ©tricas quedan en 0 (sin 404 en consola)
+      // Si la tabla orders aún no existe, las métricas quedan en 0 (sin 404 en consola)
       const db = await getDbStatus();
       if (!db.ordersTable) {
         setLoading(false);
@@ -95,13 +95,13 @@ export default function AnalyticsPage() {
         { label: 'Pedidos', event: 'purchase', count: funnelStages.purchase, icon: '✅' },
       ];
 
-      // Calcular mÃ©tricas
+      // Calcular métricas
       const totalSales = orders?.reduce((sum, order) => sum + parseFloat(order.total_amount), 0) || 0;
       const totalOrders = orders?.length || 0;
       const averageTicket = totalOrders > 0 ? totalSales / totalOrders : 0;
 
       const conversion = totalVisits > 0 ? (totalOrders / totalVisits) * 100 : 0;
-      // Producto mÃ¡s vendido
+      // Producto más vendido
       const productCount = {};
       orders?.forEach(order => {
         order.items?.forEach(item => {
@@ -111,7 +111,7 @@ export default function AnalyticsPage() {
 
       const topProduct = Object.entries(productCount).sort((a, b) => b[1] - a[1])[0];
 
-      // Ventas por dÃ­a (Ãºltimos 7 dÃ­as)
+      // Ventas por día (últimos 7 días)
       const last7Days = [];
       const today = new Date();
       for (let i = 6; i >= 0; i--) {
@@ -183,8 +183,8 @@ export default function AnalyticsPage() {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-text mb-2">AnalÃ­ticas de Ventas</h1>
-          <p className="text-text/60">MÃ©tricas y rendimiento de tu tienda</p>
+          <h1 className="text-3xl font-bold text-text mb-2">Analíticas de Ventas</h1>
+          <p className="text-text/60">Métricas y rendimiento de tu tienda</p>
         </div>
 
         {/* KPI Cards */}
@@ -303,7 +303,7 @@ export default function AnalyticsPage() {
                 <TrendingUp className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
               </div>
             </div>
-            <p className="text-sm text-text/60 mb-1">ConversiÃ³n</p>
+            <p className="text-sm text-text/60 mb-1">Conversión</p>
             <p className="text-3xl font-bold text-text">{analytics.conversion.toFixed(1)}%</p>
           </motion.div>
         </div>
@@ -317,7 +317,7 @@ export default function AnalyticsPage() {
         >
           <div className="flex items-center gap-2 mb-6">
             <Calendar className="w-5 h-5 text-primary" />
-            <h2 className="text-xl font-bold text-text">Ventas de los Ãšltimos 7 DÃ­as</h2>
+            <h2 className="text-xl font-bold text-text">Ventas de los Últimos 7 Días</h2>
           </div>
 
           <div className="flex items-end justify-between gap-2 h-64">
@@ -425,7 +425,7 @@ export default function AnalyticsPage() {
                 <span className="text-sm font-bold text-text">${analytics.averageTicket.toFixed(2)}</span>
               </div>
               <div className="flex items-center justify-between py-2">
-                <span className="text-sm text-text/60">Producto mÃ¡s vendido</span>
+                <span className="text-sm text-text/60">Producto más vendido</span>
                                 <span className="text-sm font-bold text-text line-clamp-1">
                   {analytics.topProduct?.name || 'N/A'}
                 </span>
@@ -458,16 +458,16 @@ export default function AnalyticsPage() {
                 <div>
                   <p className="text-sm font-medium text-text">Aumenta tu visibilidad</p>
                   <p className="text-xs text-text/60 mt-1">
-                    Comparte tu catÃ¡logo en redes sociales para atraer mÃ¡s clientes
+                    Comparte tu catálogo en redes sociales para atraer más clientes
                   </p>
                 </div>
               </div>
               <div className="flex items-start gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
                 <Award className="w-5 h-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-text">Optimiza tu menÃº</p>
+                  <p className="text-sm font-medium text-text">Optimiza tu menú</p>
                   <p className="text-xs text-text/60 mt-1">
-                    Destaca tus productos mÃ¡s populares en la portada
+                    Destaca tus productos más populares en la portada
                   </p>
                 </div>
               </div>

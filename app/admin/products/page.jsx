@@ -102,7 +102,7 @@ export default function ProductsPage() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        alert('Debes iniciar sesiÃ³n para guardar productos');
+        alert('Debes iniciar sesión para guardar productos');
         return;
       }
 
@@ -149,7 +149,7 @@ export default function ProductsPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Â¿EstÃ¡s seguro de eliminar este producto?')) return;
+    if (!confirm('¿Estás seguro de eliminar este producto?')) return;
     await supabase.from('products').delete().eq('id', id);
     loadData();
   };
@@ -221,7 +221,7 @@ export default function ProductsPage() {
           <div className="flex items-center gap-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Productos</h1>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Gestiona tu catÃ¡logo</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Gestiona tu catálogo</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -324,7 +324,7 @@ export default function ProductsPage() {
         {filteredProducts.length === 0 ? (
           <div className="text-center py-12 bg-white dark:bg-zinc-900 rounded-2xl border border-gray-200 dark:border-zinc-800">
             <Package className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-600 dark:text-gray-400">No hay productos aÃºn</p>
+            <p className="text-gray-600 dark:text-gray-400">No hay productos aún</p>
             <button
               onClick={() => setShowModal(true)}
               className="mt-4 text-primary font-medium hover:underline"
