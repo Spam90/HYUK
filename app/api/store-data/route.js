@@ -33,17 +33,43 @@ export async function GET(req) {
     const rl = RateLimiters.storeData.check(`user:${user.id}`);
     if (!rl.ok) return rateLimitResponse(rl.retryAfter);
 
-    const admin = createServiceClient();
-    if (!admin) {
-      return json(
-        { ok: false, error: 'SUPABASE_SERVICE_ROLE_KEY no configurada en el servidor' },
-        503
-      );
-    }
-
     const storeId = user.id; // SIEMPRE el dueño de la sesión
     const { searchParams } = new URL(req.url);
     const type = searchParams.get('type');
+
+    const admin = createServiceClient();
+    if (!admin) {
+      // 'stats' son KPIs best-effort: si SUPABASE_SERVICE_ROLE_KEY no está
+      // configurada en el entorno (p. ej. despliegue sin la secret en Vercel),
+      // devolvemos ceros en vez de 503 para que el dashboard no se rompa.
+      // Filosofía ya usada en countWith más abajo ("sin romper el dashboard")
+      // y en app/[slug]/page.jsx (createServiceClient() || supabase).
+      // El resto (products/categories/skus) requiere service_role y sigue con
+      // 503; sus consumidores cliente ya lo manejan con .catch(() => ({})).
+      if (type === 'stats') {
+        return json({
+          ok: true,
+          degraded: true,
+          data: {
+            products: 0,
+            categories: 0,
+            orders: 0,
+            pendingOrders: 0,
+            pageViews: 0,
+            whatsappClicks: 0,
+            addToCarts: 0,
+          },
+        });
+      }
+      return json(
+        {
+          ok: false,
+          error: 'SUPABASE_SERVICE_ROLE_KEY no configurada en el servidor',
+          code: 'service_role_missing',
+        },
+        503
+      );
+    }
 
     if (type === 'products') {
       const { data, error } = await admin

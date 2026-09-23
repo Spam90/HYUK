@@ -94,22 +94,32 @@ export default function AdminDashboard() {
 
       // Stats vía /api/store-data (service_role server-side) — evita las
       // políticas RLS rotas (request.store_slug) del rol autenticado.
-      const statsResponse = await fetch('/api/store-data?type=stats', { cache: 'no-store' });
-      if (!statsResponse.ok) throw new Error('stats_request_failed');
-      const statsRes = await statsResponse.json();
-      if (statsRes?.error) throw new Error('stats_request_failed');
-      const s = statsRes.data || {};
-
-      setStats({
-        // KPIs reales: visitas y clics WhatsApp vienen de analytics_events
-        // (endpoint /api/store-data?type=stats). "Pedidos" ya no se usa como
-        // visitas; pendingOrders/orders conservan su significado propio.
-        visits: s.pageViews || 0,
-        whatsappClicks: s.whatsappClicks || 0,
-        activeProducts: s.products || 0,
-        categories: s.categories || 0,
-        pendingOrders: s.pendingOrders || 0,
-      });
+      // Los stats son KPIs opcionales: un fallo del endpoint (p. ej.
+      // SUPABASE_SERVICE_ROLE_KEY no configurada en el entorno) NO debe
+      // bloquear el resto del dashboard. Si falla, se quedan en ceros
+      // (estado inicial) y se muestra un aviso no bloqueante.
+      try {
+        const statsResponse = await fetch('/api/store-data?type=stats', { cache: 'no-store' });
+        if (statsResponse.ok) {
+          const statsRes = await statsResponse.json();
+          if (!statsRes?.error) {
+            const s = statsRes.data || {};
+            setStats({
+              // KPIs reales: visitas y clics WhatsApp vienen de analytics_events
+              // (endpoint /api/store-data?type=stats). "Pedidos" ya no se usa como
+              // visitas; pendingOrders/orders conservan su significado propio.
+              visits: s.pageViews || 0,
+              whatsappClicks: s.whatsappClicks || 0,
+              activeProducts: s.products || 0,
+              categories: s.categories || 0,
+              pendingOrders: s.pendingOrders || 0,
+            });
+          }
+        }
+      } catch (statsErr) {
+        // Stats best-effort: no se rompe el dashboard, los KPIs quedan en ceros.
+        console.error('Stats no disponibles:', statsErr?.message);
+      }
     } catch (error) {
       console.error('Error loading dashboard:', error);
       setError('No pudimos cargar los datos del panel. Revisa tu conexión e inténtalo de nuevo.');
